@@ -28,7 +28,9 @@ splite3 database_name.db
 1. Open your terminal in the project directory.
 2. Install the sqlite3 package using npm:
 ```
-npm install sqlite3
+npm init -y
+npm install express sqlite3 cors
+
 ```
 3. Create or modify your server to include SQLite integration
 4. Example code to use SQLite in an Express-based server:

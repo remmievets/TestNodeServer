@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+        .board { display: grid; grid-template-columns: repeat(3, 100px); gap: 5px; margin: 20px auto; }
+        .cell { width: 100px; height: 100px; display: flex; justify-content: center; align-items: center; font-size: 2em; background: #f0f0f0; cursor: pointer; }
+        .cell.taken { cursor: not-allowed; }
+        .games-list { margin: 20px; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Tic-Tac-Toe</h1>
+    <div id="games-list" class="games-list"></div>
+    <button id="new-game">Start New Game</button>
+    <div id="status"></div>
+    <div class="board" id="board"></div>
+
+    <script>
+        // Fetch and display ongoing games
+        async function loadGames() {
+            const response = await fetch('/games');
+            const games = await response.json();
+
+            const gamesList = document.getElementById('games-list');
+            gamesList.innerHTML = '<h2>Ongoing Games</h2>';
+            games.forEach(game => {
+                const button = document.createElement('button');
+                button.textContent = `Game ${game.id}`;
+                button.addEventListener('click', () => loadGame(game.id));
+                gamesList.appendChild(button);
+            });
+        }
+
+        // Start a new game
+        document.getElementById('new-game').addEventListener('click', async () => {
+            const response = await fetch('/new-game', { method: 'POST' });
+            const data = await response.json();
+            loadGame(data.gameId);
+        });
+
+        // Load a specific game
+        async function loadGame(gameId) {
+            const response = await fetch(`/game/${gameId}`);
+            if (response.ok) {
+                const data = await response.json();
+                renderBoard(data.board);
+                document.getElementById('status').textContent = `Player ${data.currentPlayer}'s turn`;
+                window.history.pushState({}, '', `?gameId=${gameId}`);
+            } else {
+                alert('Game not found.');
+            }
+        }
+
+        // Render the board
+        function renderBoard(board) {
+            const boardDiv = document.getElementById('board');
+            boardDiv.innerHTML = '';
+            board.split('').forEach((cell, index) => {
+                const cellDiv = document.createElement('div');
+                cellDiv.className = `cell ${cell !== '-' ? 'taken' : ''}`;
+                cellDiv.textContent = cell !== '-' ? cell : '';
+                cellDiv.addEventListener('click', () => makeMove(index));
+                boardDiv.appendChild(cellDiv);
+            });
+        }
+
+        // Make a move
+        async function makeMove(position) {
+            const gameId = new URLSearchParams(window.location.search).get('gameId');
+            if (!gameId) return;
+
+            const response = await fetch('/move', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ gameId, position }),
+            });
+
+            const data = await response.json();
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            renderBoard(data.board);
+            if (data.winner) {
+                document.getElementById('status').textContent = data.winner === 'Draw' ? "It's a draw!" : `Player ${data.winner} wins!`;
+                window.history.pushState({}, '', '/'); // Clear gameId from the URL
+            } else {
+                document.getElementById('status').textContent = `Player ${data.currentPlayer}'s turn`;
+            }
+        }
+
+        // Load games on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGames();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const gameId = urlParams.get('gameId');
+            if (gameId) {
+                loadGame(gameId);
+            }
+        });
+    </script>
+</body>
+</html>
