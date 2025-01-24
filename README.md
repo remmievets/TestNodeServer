@@ -29,7 +29,7 @@ splite3 database_name.db
 2. Install the sqlite3 package using npm:
 ```
 npm init -y
-npm install express sqlite3 cors
+npm install express better-sqlite3 cors pug ws
 
 ```
 3. Create or modify your server to include SQLite integration
