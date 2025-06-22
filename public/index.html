@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic-Tac-Toe</title>
+    <title>Lord of the Rings Personal Server</title>
 </head>
 <body>
-    <h1>Welcome to Tic-Tac-Toe</h1>
+    <h1>Welcome to Lord of the Rings Server</h1>
     <h2>Active Games</h2>
     <ul id="game-list"></ul>
     <button id="new-game-btn">Create New Game</button>
@@ -16,10 +16,12 @@
         fetch('/games')
             .then(res => res.json())
             .then(games => {
+                console.log("List games");
+                console.log(games);
                 const gameList = document.getElementById('game-list');
                 games.forEach(game => {
                     const li = document.createElement('li');
-                    li.innerHTML = `<a href="/game.html?gameId=${game.id}">Game ID: ${game.id}</a>`;
+                    li.innerHTML = `<a href="/play.html?gameId=${game.id}">Game ID: ${game.id}</a>`;
                     gameList.appendChild(li);
                 });
             });
@@ -29,7 +31,7 @@
             fetch('/new-game', { method: 'POST' })
                 .then(res => res.json())
                 .then(data => {
-                    window.location.href = `/game.html?gameId=${data.gameId}`;
+                    window.location.href = `/play.html?gameId=${data.gameId}`;
                 });
         });
     </script>

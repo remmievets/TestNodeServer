@@ -1,0 +1,546 @@
+main {
+	background-color: slategray;
+}
+
+body.Frodo header.your_turn { background-color: hsl(60, 100%, 50%) }
+body.Sam header.your_turn { background-color: hsl(0, 100%, 50%) }
+body.Pipin header.your_turn { background-color: hsl(120, 100%, 40%) }
+body.Merry header.your_turn { background-color: hsl(240, 100%, 50%) }
+body.Fatty header.your_turn { background-color: hsl(30, 100%, 50%) }
+
+#log { background-color: hsl(35, 53%, 89%); }
+#turn_info { background-color: hsl(35, 25%, 50%); }
+
+#log .h { border-top: 1px solid black; border-bottom: 1px solid black; text-align: center; margin: 6px 0; }
+#log .h { background-color: hsl(35, 45%, 82%); }
+#log .h.turn { background-color: hsl(35, 45%, 70%); }
+#log .h.frodo { background-color: hsl(60, 100%, 50%) }
+#log .h.sam { background-color: hsl(0, 100%, 65%) }
+#log .h.pipin { background-color: hsl(120, 100%, 40%) }
+#log .h.merry { background-color: hsl(240, 100%, 70%) }
+#log .h.fatty { background-color: hsl(30, 100%, 50%) }
+
+#log .n { margin: 6px 0; }
+#log .m { margin-top: 6px; }
+
+#log .die {
+	display: inline-block;
+	vertical-align: -3px;
+	width: 12px;
+	height: 12px;
+	background-size: 600% 100%;
+	background-repeat: no-repeat;
+	background-image: url(images/die_black_pips.svg);
+	background-color: #fff;
+	border: 1px solid #444;
+}
+
+#log .d0 { background-position: -100% 0 }
+#log .d1 { background-position: 0% 0; }
+#log .d2 { background-position: 20% 0; }
+#log .d3 { background-position: 40% 0; }
+#log .d4 { background-position: 60% 0; }
+#log .d5 { background-position: 80% 0; }
+#log .d6 { background-position: 100% 0; }
+
+#log .number {
+	display: inline-block;
+	margin: 0;
+	text-indent: 0;
+	text-align: center;
+	width: 12px;
+	height: 12px;
+	line-height: 12px;
+	border: 1px solid #444;
+}
+
+#log .number.ar { background-color: gold; border-radius: 50%; }
+#log .number.br_a { background-color: hsl(211, 50%, 75%); }
+#log .number.br_b { background-color: hsl(15, 90%, 75%); }
+#log .number.br_f { background-color: hsl(103, 30%, 75%); }
+
+#log .tip { cursor: pointer; }
+#log .tip:hover { text-decoration: underline; }
+
+#log div { padding-left: 20px; text-indent: -12px; }
+#log div.i { padding-left: 32px; text-indent: -12px; }
+#log div.ii { padding-left: 44px; text-indent: -12px; }
+
+#turn_info {
+	position: relative;
+	white-space: normal;
+}
+
+#reshuffle {
+	position: absolute;
+	bottom: 6px;
+	right: 4px;
+	font-style: normal;
+	font-size: 16px;
+	line-height: 16px;
+	color: #000a;
+}
+
+#tooltip {
+	pointer-events: none;
+	position: fixed;
+	z-index: 600;
+	right: 240px;
+	top: 60px;
+}
+
+@media (max-width: 800px) {
+	#tooltip {
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		margin: auto;
+	}
+}
+
+#board {
+	width: 1650px;
+	height: 625px;
+	background-size: 1650px 625px;
+    background-repeat: no-repeat;
+	box-shadow: 1px 1px 8px #0008;
+}
+
+#board.hide_pieces #pieces { display: none; }
+#board.hide_markers #markers { display: none; }
+
+#mapwrap {
+	width: 1650px;
+	height: 825px;
+}
+
+#map {
+	width: 100%;
+	height: 100%;
+	background-size: 1650px 825px;
+    background-repeat: no-repeat;
+	box-shadow: 1px 1px 8px #0008;
+}
+
+#map.hide_pieces #pieces { display: none; }
+#map.hide_markers #markers { display: none; }
+
+#roles {
+	grid-column: 1;
+	grid-row: 1;
+}
+
+.frodo { background-color: hsl(60, 100%, 50%) }
+.sam { background-color: hsl(0, 100%, 65%) }
+.pipin { background-color: hsl(120, 100%, 40%) }
+.merry { background-color: hsl(240, 100%, 70%) }
+.fatty { background-color: hsl(30, 100%, 50%) }
+
+.role {
+	cursor: pointer;
+}
+
+.role_stat {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: end;
+	align-items: center;
+	gap: 4px;
+}
+
+.role_ring_icon,
+.role_ring_text,
+.role_heart_icon,
+.role_heart_text,
+.role_sun_icon,
+.role_sun_text,
+.role_shields_icon,
+.role_shields_text {
+	height: 24px;
+	top: 2px;
+	text-align: right;
+	background-repeat: no-repeat;
+}
+
+.role_ring_text,
+.role_heart_text,
+.role_sun_text,
+.role_shields_text {
+	width: 18px;
+	opacity: 0.9;
+}
+
+.role_ring_icon {
+    width: 17px;
+    background-position: 0 0px;
+    background-size: 17px 17px;
+    background-image: url(pieces/life001.png);
+    opacity: 0.9;
+}
+
+.role_heart_icon {
+    width: 17px;
+    background-position: 0 0px;
+    background-size: 17px 17px;
+    background-image: url(pieces/life005.png);
+    opacity: 0.9;
+}
+
+.role_sun_icon {
+    width: 17px;
+    background-position: 0 0px;
+    background-size: 17px 17px;
+    background-image: url(pieces/life008.png);
+    opacity: 0.9;
+}
+
+.role_shields_icon {
+    width: 17px;
+    background-position: 0 0px;
+    background-size: 17px 17px;
+    background-image: url(pieces/shields-back.jpg);
+    opacity: 0.9;
+}
+
+@media (max-width: 800px) {
+	#tooltip {
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		margin: auto;
+	}
+}
+
+@media (max-height: 800px) {
+	#turn_info {
+		display: none;
+	}
+}
+
+/* CARD ACTION POPUP MENU */
+
+#popup { max-width: 250px; }
+#popup li.title { text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+#popup li.disabled { display: none }
+
+#popup li.title {
+	background-color: moccasin;
+}
+
+/* SPACES */
+
+.space {
+	position: absolute;
+	border: 5px solid transparent;
+}
+
+.space.regular {
+	border-radius: 50%;
+}
+
+.space.fortified_port {
+	transform: rotate(45deg);
+}
+
+.space.sea {
+	border-radius: 12px;
+}
+
+.space.action {
+	border-color: white;
+	box-shadow: 0 0 2px 1px #000c, inset 0 0 2px 1px #000c;
+}
+
+.space.selected {
+	border-color: aqua;
+	box-shadow: 0 0 2px 1px #000c, inset 0 0 2px 1px #000c;
+}
+
+.space.tip {
+	border-color: lime;
+	box-shadow: 0 0 2px 1px #000c, inset 0 0 2px 1px #000c;
+}
+
+/* MARKERS */
+
+#combat {
+	position: absolute;
+	pointer-events: none;
+	width: 48px;
+	height: 48px;
+	background-image: url(images/bang.svg);
+	background-size: contain;
+	background-repeat: no-repeat;
+	z-index: 0;
+}
+
+.marker {
+	position: absolute;
+	background-size: 100%;
+	border: 1px solid black;
+	box-shadow: 1px 1px 4px #0008;
+}
+
+.marker.large {
+	width: 55px;
+	height: 55px;
+}
+
+.marker.tall {
+	width: 64px;
+	height: 130px;
+}
+
+.marker.small {
+	width: 45px;
+	height: 45px;
+}
+
+.marker.pc {
+	pointer-events: none;
+	border: none;
+	box-shadow: none;
+	width: 58px;
+	height: 66px;
+	filter: drop-shadow(1px 1px 2px #0008);
+}
+
+.marker.congress {
+	pointer-events: none;
+}
+
+.marker.cu {
+	pointer-events: none;
+	width: calc(60px - 8px - 8px);
+	height: calc(60px - 14px - 18px);
+	line-height: 28px;
+	padding: 14px 8px 18px 8px;
+	font-size: 28px;
+	font-weight: bold;
+	color: white;
+	text-shadow:
+		-1px -1px 2px #0008,
+		 1px  1px 2px #0008,
+		-1px  1px 2px #0008,
+		 1px -1px 2px #0008
+		;
+	border-radius: 50%;
+}
+
+.general.action {
+	box-shadow: 0 0 0 3px yellow, 0 0 2px 4px black;
+	z-index: 2;
+}
+
+.general.selected {
+	box-shadow: 0 0 0 3px aqua, 0 0 2px 4px black;
+	z-index: 1;
+}
+
+.general.tip {
+	box-shadow: 0 0 0 3px lime, 0 0 2px 4px black;
+}
+
+/* CARDS */
+
+#last_played {
+	margin: 4px auto;
+}
+
+.cards {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.card {
+	width: 125px;
+	height: 190px;
+	border-radius: 16px;
+	background-size: 100%;
+	background-color: hsl(35, 53%, 89%);
+	border: 1px solid black;
+	box-shadow: 1px 1px 4px #0008;
+}
+
+.card.action {
+	box-shadow: 0 0 0 3px white;
+}
+
+.card.selected {
+	box-shadow: 0 0 0 3px yellow;
+}
+
+.card.shrink {
+	width: 80px;
+	height: 123px;
+	border-radius: 8px;
+}
+
+#hand {
+  display: block;
+  padding: 1rem;
+  background: #222;
+}
+
+.player-hand {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border: 1px solid #555;
+  border-radius: 0.5rem;
+  background: #333;
+}
+
+.player-name {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+/* IMAGES @1X */
+
+.board-base { background-image: url(images/game-board-base.jpg); }
+
+.map-bree { background-image: url(images/bree.png); }
+.map-helms-deep { background-image: url(images/helms-deep.jpg); }
+.map-isengard { background-image: url(images/isengard.png); }
+.map-mordor { background-image: url(images/mordor.jpg); }
+.map-moria { background-image: url(images/moria.jpg); }
+.map-shelobs-lair { background-image: url(images/shelobs-lair.jpg); }
+
+
+.marker.french_navy { background-image: url(markers.1x/french_navy.png); }
+.marker.french_navy.tall { background-image: url(markers.1x/french_navy_tall.png); }
+
+.marker.turn { background-image: url(markers.1x/game_turn_regulars.png); }
+.marker.turn.no_regulars { background-image: url(markers.1x/game_turn_no_regulars.png); }
+.marker.french_alliance { background-image: url(markers.1x/french_alliance.png); }
+.marker.french_alliance.european_war { background-image: url(markers.1x/european_war.png); }
+.marker.congress { background-image: url(markers.1x/continental_congress.png); }
+.marker.congress { background-image: url(markers.1x/continental_congress.png); }
+.marker.control.british { background-image: url(markers.1x/colony_british.png); }
+.marker.control.american { background-image: url(markers.1x/colony_american.png); }
+
+.cu.american { background-image: url(markers.1x/cu_american.png); }
+.cu.british { background-image: url(markers.1x/cu_british.png); }
+.cu.french { background-image: url(markers.1x/cu_french.png); }
+
+.pc.american { background-image: url(markers.1x/pc_american.svg); }
+.pc.british { background-image: url(markers.1x/pc_british.svg); }
+
+/* CARDS @1X */
+
+.card_0{background-image:url(cards/quest000.png)}
+.card_1{background-image:url(cards/quest001.png)}
+.card_2{background-image:url(cards/quest002.png)}
+.card_3{background-image:url(cards/quest003.png)}
+.card_4{background-image:url(cards/quest004.png)}
+.card_5{background-image:url(cards/quest005.png)}
+.card_6{background-image:url(cards/quest006.png)}
+.card_7{background-image:url(cards/quest007.png)}
+.card_8{background-image:url(cards/quest008.png)}
+.card_9{background-image:url(cards/quest009.png)}
+.card_10{background-image:url(cards/quest010.png)}
+.card_11{background-image:url(cards/quest011.png)}
+.card_12{background-image:url(cards/quest012.png)}
+.card_13{background-image:url(cards/quest013.png)}
+.card_14{background-image:url(cards/quest014.png)}
+.card_15{background-image:url(cards/quest015.png)}
+.card_16{background-image:url(cards/quest016.png)}
+.card_17{background-image:url(cards/quest017.png)}
+.card_18{background-image:url(cards/quest018.png)}
+.card_19{background-image:url(cards/quest019.png)}
+.card_20{background-image:url(cards/quest020.png)}
+.card_21{background-image:url(cards/quest021.png)}
+.card_22{background-image:url(cards/quest022.png)}
+.card_23{background-image:url(cards/quest023.png)}
+.card_24{background-image:url(cards/quest024.png)}
+.card_25{background-image:url(cards/quest025.png)}
+.card_26{background-image:url(cards/quest026.png)}
+.card_27{background-image:url(cards/quest027.png)}
+.card_28{background-image:url(cards/quest028.png)}
+.card_29{background-image:url(cards/quest029.png)}
+.card_30{background-image:url(cards/quest030.png)}
+.card_31{background-image:url(cards/quest031.png)}
+.card_32{background-image:url(cards/quest032.png)}
+.card_33{background-image:url(cards/quest033.png)}
+.card_34{background-image:url(cards/quest034.png)}
+.card_35{background-image:url(cards/quest035.png)}
+.card_36{background-image:url(cards/quest036.png)}
+.card_37{background-image:url(cards/quest037.png)}
+.card_38{background-image:url(cards/quest038.png)}
+.card_39{background-image:url(cards/quest039.png)}
+.card_40{background-image:url(cards/quest040.png)}
+.card_41{background-image:url(cards/quest041.png)}
+.card_42{background-image:url(cards/quest042.png)}
+.card_43{background-image:url(cards/quest043.png)}
+.card_44{background-image:url(cards/quest044.png)}
+.card_45{background-image:url(cards/quest045.png)}
+.card_46{background-image:url(cards/quest046.png)}
+.card_47{background-image:url(cards/quest047.png)}
+.card_48{background-image:url(cards/quest048.png)}
+.card_49{background-image:url(cards/quest049.png)}
+.card_50{background-image:url(cards/quest050.png)}
+.card_51{background-image:url(cards/quest051.png)}
+.card_52{background-image:url(cards/quest052.png)}
+.card_53{background-image:url(cards/quest053.png)}
+.card_54{background-image:url(cards/quest054.png)}
+.card_55{background-image:url(cards/quest055.png)}
+.card_56{background-image:url(cards/quest056.png)}
+.card_57{background-image:url(cards/quest057.png)}
+.card_58{background-image:url(cards/quest058.png)}
+.card_59{background-image:url(cards/quest059.png)}
+.card_60{background-image:url(cards100/card_4.jpg)}
+.card_61{background-image:url(cards100/card_4.jpg)}
+.card_62{background-image:url(cards100/card_4.jpg)}
+.card_63{background-image:url(cards100/card_4.jpg)}
+.card_64{background-image:url(cards100/card_4.jpg)}
+.card_65{background-image:url(cards100/card_4.jpg)}
+.card_66{background-image:url(cards100/card_4.jpg)}
+.card_67{background-image:url(cards100/card_5.jpg)}
+.card_68{background-image:url(cards100/card_5.jpg)}
+.card_69{background-image:url(cards100/card_5.jpg)}
+.card_70{background-image:url(cards100/card_6.jpg)}
+.card_71{background-image:url(cards100/card_7.jpg)}
+.card_72{background-image:url(cards100/card_8.jpg)}
+.card_73{background-image:url(cards100/card_9.jpg)}
+.card_74{background-image:url(cards100/card_10.jpg)}
+.card_75{background-image:url(cards100/card_11.jpg)}
+.card_76{background-image:url(cards100/card_12.jpg)}
+.card_77{background-image:url(cards100/card_13.jpg)}
+.card_78{background-image:url(cards100/card_14.jpg)}
+.card_79{background-image:url(cards100/card_15.jpg)}
+.card_80{background-image:url(cards100/card_16.jpg)}
+.card_81{background-image:url(cards100/card_17.jpg)}
+.card_82{background-image:url(cards100/card_18.jpg)}
+.card_83{background-image:url(cards100/card_19.jpg)}
+.card_84{background-image:url(cards100/card_20.jpg)}
+.card_85{background-image:url(cards100/card_21.jpg)}
+.card_86{background-image:url(cards100/card_22.jpg)}
+.card_87{background-image:url(cards100/card_23.jpg)}
+.card_88{background-image:url(cards100/card_24.jpg)}
+.card_89{background-image:url(cards100/card_25.jpg)}
+.card_90{background-image:url(cards100/card_26.jpg)}
+.card_91{background-image:url(cards100/card_27.jpg)}
+.card_92{background-image:url(cards100/card_28.jpg)}
+.card_93{background-image:url(cards100/card_29.jpg)}
+.card_94{background-image:url(cards100/card_30.jpg)}
+.card_95{background-image:url(cards100/card_31.jpg)}
+.card_96{background-image:url(cards100/card_32.jpg)}
+.card_97{background-image:url(cards100/card_33.jpg)}
+.card_98{background-image:url(cards100/card_34.jpg)}
+.card_99{background-image:url(cards100/card_35.jpg)}
+.card_100{background-image:url(cards100/card_36.jpg)}
+.card_101{background-image:url(cards100/card_37.jpg)}
+.card_102{background-image:url(cards100/card_38.jpg)}
+.card_103{background-image:url(cards100/card_39.jpg)}
+.card_104{background-image:url(cards100/card_40.jpg)}
+.card_105{background-image:url(cards100/card_41.jpg)}
+.card_106{background-image:url(cards100/card_42.jpg)}
+.card_107{background-image:url(cards100/card_43.jpg)}
+.card_108{background-image:url(cards100/card_44.jpg)}
+.card_109{background-image:url(cards100/card_45.jpg)}
+.card_110{background-image:url(cards100/card_46.jpg)}
