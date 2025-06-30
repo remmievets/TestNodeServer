@@ -194,14 +194,20 @@ states.bagend_nazgul_appears = {
 		console.log("NAZGUL");
 		log("=! Nazgul Appears");
 		return {
-			player: game.ringBearer,
-			message: "Roll dice to receive 4 cards or pass",
+			message: "One player discard 2 hiding, otherwise sauron moves 1 space",
 			actions: {
-				"roll" : "Roll die",
-				"pass" : "Pass"
+				"discard" : "Discard",
+				"sauron" : "Move Sauron"
 			}
 		};
 	},
+	discard() {
+		console.log("Discard");
+	},
+	sauron() {
+		console.log("Move sauron 1 space");
+		//advance_state("bagend_nazgul_appears");
+	}
 }
 
 states.bagend_nazgul_appears_discard = {

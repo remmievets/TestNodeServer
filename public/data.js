@@ -1,5 +1,5 @@
 const data = {
-	"quest": [
+	"cards": [
 		{ 	/// 0
 			"type": "grey",
 			"quest": "hide",
@@ -300,9 +300,47 @@ const data = {
 			"quest": "wild",
 			"count": 1
 		},
-	],
-	"legendary": [
-		{ 	/// 00
+		{ 	/// gandalf 00
+			"name": "Gandalf: Foresight",
+			"type": "yellow",
+			"action": "One player: Rearrange top 3 tiles",
+		},
+		{ 	/// gandalf 01
+			"name": "Gandalf: Magic",
+			"type": "yellow",
+			"action": "After moving the event marker ignore the event",
+		},
+		{ 	/// gandalf 02
+			"name": "Gandalf: Healing",
+			"type": "yellow",
+			"action": "One player: Heal 2",
+		},
+		{ 	/// gandalf 03
+			"name": "Gandalf: Guidance",
+			"type": "yellow",
+			"action": "Active player: Wild 2",
+		},
+		{ 	/// gandalf 04
+			"name": "Gandalf: Persistence",
+			"type": "yellow",
+			"action": "One player: Draw 4 Hobbit cards",
+		},
+		{ 	/// gandalf 05
+			"name": "Gandalf: Defiance",
+			"type": "yellow",
+			"action": "Sauron does not move",
+		},
+		{ 	/// gandalf 06
+			"name": "Gandalf: Integrity",
+			"type": "yellow",
+			"action": "Instead of rolling the die, place it with the white side up",
+		},
+		{ 	/// gandalf 07
+			"name": "Gandalf: Firestorm",
+			"type": "yellow",
+			"action": "Defeat any 2 foes",
+		},
+		{ 	/// legendary 00
 			"name": "Bill the Pony",
 			"type": "yellow",
 			"action": "One player: Use this card as 1 shield or 1 life token",
@@ -625,6 +663,144 @@ const data = {
 			"count": 2,
 			"feature": "Shelob's Lair"
 		},
-	]
+	],
+	"legendary": [
+	],
+	"board": {
+		"badend": [
+			79,
+			297
+		],
+		"rivendell": [
+			289,
+			297
+		],
+		"moria": [
+			652,
+			179
+		],
+		"lothlorien": [
+			892,
+			179
+		],
+		"helmsdeep": [
+			1105,
+			280
+		],
+		"shelobslair": [
+			1328,
+			161
+		],
+		"mordor": [
+			1540,
+			233
+		],
+		"track_0": [
+			23,
+			410
+		],
+		"track_1": [
+			122,
+			410
+		],
+		"track_2": [
+			223,
+			410
+		],
+		"track_3": [
+			324,
+			410
+		],
+		"track_4": [
+			423,
+			410
+		],
+		"track_5": [
+			526,
+			410
+		],
+		"track_6": [
+			625,
+			410
+		],
+		"track_7": [
+			723,
+			410
+		],
+		"track_8": [
+			823,
+			410
+		],
+		"track_9": [
+			922,
+			410
+		],
+		"track_10": [
+			1024,
+			410
+		],
+		"track_11": [
+			1124,
+			410
+		],
+		"track_12": [
+			1223,
+			410
+		],
+		"track_13": [
+			1324,
+			410
+		],
+		"track_14": [
+			1427,
+			410
+		],
+		"track_15": [
+			1528,
+			410
+		],
+	},
+	"moria": {
+		"fight": [
+		],
+		"hide": [
+		],
+		"travel": [
+		],
+		"events": [
+		]
+	},
+	"helmsdeep": {
+		"fight": [
+		],
+		"friendship": [
+		],
+		"travel": [
+		],
+		"events": [
+		]
+	},
+	"shelobslair": {
+		"fight": [
+		],
+		"hide": [
+		],
+		"travel": [
+		],
+		"events": [
+		]
+	},
+	"mordor": {
+		"travel": [
+		],
+		"fight": [
+		],
+		"hide": [
+		],
+		"friendship": [
+		],
+		"events": [
+		]
+	},
 }
 if (typeof module === 'object') module.exports = data
