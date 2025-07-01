@@ -667,7 +667,7 @@ const data = {
 	"legendary": [
 	],
 	"board": {
-		"badend": [
+		"bagend": [
 			79,
 			297
 		],
@@ -759,6 +759,26 @@ const data = {
 			1528,
 			410
 		],
+		"frodo": [
+			0,
+			0
+		],
+		"sam": [
+			0,
+			50
+		],
+		"pipin": [
+			0,
+			100
+		],
+		"merry": [
+			50,
+			0
+		],
+		"fatty": [
+			50,
+			50
+		],
 	},
 	"moria": {
 		"fight": [
@@ -780,7 +800,7 @@ const data = {
 		"events": [
 		]
 	},
-	"shelobslair": {
+    "shelobslair": {
 		"fight": [
 		],
 		"hide": [

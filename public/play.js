@@ -142,6 +142,7 @@ let ui = {
     prompt: document.getElementById("prompt"),
 
     hand: document.getElementById("hand"),
+    mapw: document.getElementById("mapwrap"),
     map: document.getElementById("map"),
 
     last_played: document.getElementById("last_played"),
@@ -149,9 +150,9 @@ let ui = {
     spaces_element: document.getElementById("spaces"),
     markers_element: document.getElementById("markers"),
     pieces_element: document.getElementById("pieces"),
-	
-	location_marker : null,
-	sauron_marker : null,
+    
+    location_marker : null,
+    sauron_marker : null,
 
     players: {
         frodo : {
@@ -160,7 +161,7 @@ let ui = {
             heart: document.getElementById("heart_1_text"),
             sun: document.getElementById("sun_1_text"),
             shields: document.getElementById("shields_1_text"),
-			marker : null,
+            marker : null,
         },
         sam : {
             hand: document.getElementById("cards_sam"),
@@ -168,7 +169,7 @@ let ui = {
             heart: document.getElementById("heart_2_text"),
             sun: document.getElementById("sun_2_text"),
             shields: document.getElementById("shields_2_text"),
-			marker : null,
+            marker : null,
         },
         pipin : {
             hand: document.getElementById("cards_pipin"),
@@ -176,7 +177,7 @@ let ui = {
             heart: document.getElementById("heart_3_text"),
             sun: document.getElementById("sun_3_text"),
             shields: document.getElementById("shields_3_text"),
-			marker : null,
+            marker : null,
         },
         merry : {
             hand: document.getElementById("cards_merry"),
@@ -184,7 +185,7 @@ let ui = {
             heart: document.getElementById("heart_4_text"),
             sun: document.getElementById("sun_4_text"),
             shields: document.getElementById("shields_4_text"),
-			marker : null,
+            marker : null,
         },
         fatty : {
             hand: document.getElementById("cards_fatty"),
@@ -192,7 +193,7 @@ let ui = {
             heart: document.getElementById("heart_5_text"),
             sun: document.getElementById("sun_5_text"),
             shields: document.getElementById("shields_5_text"),
-			marker : null,
+            marker : null,
         }
     }
 }
@@ -224,13 +225,13 @@ function build_piece(cn) {
 }
 
 function show_piece(p, e) {
-	p.appendChild(e)
+    p.appendChild(e)
 }
 
 function show_piece_at(p, e, x, y) {
-	show_piece(p, e)
-	e.style.left = x + "px"
-	e.style.top = y + "px"
+    show_piece(p, e)
+    e.style.left = x + "px"
+    e.style.top = y + "px"
 }
 
 
@@ -254,22 +255,25 @@ function on_init(view) {
     // Update last played card
     // TBD
     
-    // Update tokens on board
-	if (!ui.sauron_marker) {
-		ui.sauron_marker = build_piece("");
-	}
-	if (!ui.location_marker) {
-		console.log("location update");
-		console.log(ui);
-		ui.location_marker = build_piece("steve");
-		show_piece_at(ui.tokens_element, ui.location_marker, 10, 10);
-	}
+    // Sauron location
+    if (!ui.sauron_marker) {
+        ui.sauron_marker = build_piece("marker sauron");
+    }
+    let space = "track_" + view.sauron;
+    show_piece_at(ui.tokens_element, ui.sauron_marker, data.board[space][0] + 25, data.board[space][1] + 75);
+
+    // Fellowship location
+    if (!ui.location_marker) {
+        ui.location_marker = build_piece("marker grey");
+    }
+    show_piece_at(ui.tokens_element, ui.location_marker, data.board[view.loc][0], data.board[view.loc][1]);
 
     // Loop players
     for (const player in view.players) {
         
         // Update player hand
-        const cardContainer = ui.players[player.toLowerCase()]["hand"];
+        let p = player.toLowerCase();
+        const cardContainer = ui.players[p].hand;
         cardContainer.replaceChildren();
         
         for (const card of view.players[player].hand) {
@@ -279,16 +283,29 @@ function on_init(view) {
         }
         
         // Update player stats
-        ui.players[player.toLowerCase()]["ring"].textContent = view.players[player].rings;
-        ui.players[player.toLowerCase()]["heart"].textContent = view.players[player].hearts;
-        ui.players[player.toLowerCase()]["sun"].textContent = view.players[player].suns;
-        ui.players[player.toLowerCase()]["shields"].textContent = view.players[player].shields;
+        ui.players[p].ring.textContent = view.players[player].rings;
+        ui.players[p].heart.textContent = view.players[player].hearts;
+        ui.players[p].sun.textContent = view.players[player].suns;
+        ui.players[p].shields.textContent = view.players[player].shields;
         
-        // Update player location
+        // Update player markers
+        if (!ui.players[p].marker) {
+            ui.players[p].marker = build_piece("marker " + p);
+        }
+        let pspace = "track_" + view.players[player].corruption;
+        show_piece_at(ui.tokens_element, ui.players[p].marker, data.board[pspace][0] + data.board[p][0], data.board[pspace][1] + data.board[p][1]);
     }
     
     
     // Update tokens on map
+    if (view.loc in data) {
+        console.log("does exist");
+        ui.map.className = view.loc;
+    }
+    else {
+        console.log("does not exist");
+        ui.mapw.className = "hide_map";
+    }
     // TBD
     
     // Update action buttons if available
