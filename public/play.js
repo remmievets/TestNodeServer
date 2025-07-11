@@ -236,8 +236,6 @@ function show_piece_at(p, e, x, y) {
 
 
 function on_init(view) {
-    console.log("on_init");
-    
     // LOG START
     // Initialize the log part of the display
     let container = document.getElementById("log");
@@ -299,11 +297,9 @@ function on_init(view) {
     
     // Update tokens on map
     if (view.loc in data) {
-        console.log("does exist");
         ui.map.className = view.loc;
     }
     else {
-        console.log("does not exist");
         ui.mapw.className = "hide_map";
     }
     // TBD
@@ -331,8 +327,6 @@ function on_init(view) {
 /* UPDATE UI */
 
 function on_update(view) {
-    console.log("on_update");
-    //console.log(view);
     on_init(view);
 }
 
@@ -407,7 +401,7 @@ function sub_icon(match) {
 }
 
 function on_log(text) {
-    console.log(text)
+    //console.log(text)
     let p = document.createElement("div")
 
     if (text.startsWith(">>")) {

@@ -148,7 +148,7 @@ states.bagend_gandalf = {
         console.log("GANDOLF");
         // Do initial phase of the game
         log("=t Bag End");
-        log("=! Gandalf Phase");
+        log("=! Gandalf");
         log("Deal 6 cards to every player");
         for (let i = 0; i <6; i++) {
             set_add(game.players.Frodo.hand, deal_card());
@@ -180,9 +180,15 @@ states.bagend_preparations = {
     },
     roll() {
         console.log("Roll");
+        log("D1");
+        log("D2");
+        log("D3");
+        log("D4");
+        log("D5");
+        log("D6");
     },
     pass() {
-        console.log("Pass");
+        log("Ring-bearer passes");
         advance_state("bagend_nazgul_appears");
     }
 }
@@ -205,8 +211,9 @@ states.bagend_nazgul_appears = {
         console.log("Discard");
     },
     sauron() {
-        console.log("Move sauron 1 space");
-        //advance_state("bagend_nazgul_appears");
+        log("Sauron moves 1 space");
+        game.sauron -= 1;
+        advance_state("rivendell_elrond");
     }
 }
 
@@ -216,9 +223,46 @@ states.bagend_nazgul_appears_discard = {
 }
 
 states.rivendell_elrond = {
+    prompt() {
+        console.log("ELROND");
+        // Do initial phase of the game
+        log("=t Rivendell");
+        log("=! Elrond");
+        log("Deal feature cards");
+        /*for (let i = 0; i <6; i++) {
+            set_add(game.players.Frodo.hand, deal_card());
+            set_add(game.players.Sam.hand, deal_card());
+            set_add(game.players.Pipin.hand, deal_card());
+            set_add(game.players.Merry.hand, deal_card());
+            set_add(game.players.Fatty.hand, deal_card());
+        }*/
+        // no prompt for client
+        return null; 
+    },
+    auto() {
+        advance_state("rivendell_council");
+    }
 }
 
 states.rivendell_council = {
+    prompt() {
+        log("=! Council");
+        return {
+            message: "One player discard 2 hiding, otherwise sauron moves 1 space",
+            actions: {
+                "discard" : "Discard",
+                "sauron" : "Move Sauron"
+            }
+        };
+    },
+    discard() {
+        console.log("Discard");
+    },
+    sauron() {
+        log("Sauron moves 1 space");
+        game.sauron -= 1;
+        advance_state("rivendell_elrond");
+    }
 }
 
 states.rivendell_fellowship = {

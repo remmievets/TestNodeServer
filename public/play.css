@@ -20,22 +20,19 @@ main {
 #log .die {
 	display: inline-block;
 	vertical-align: -3px;
-	width: 12px;
-	height: 12px;
-	background-size: 600% 100%;
-	background-repeat: no-repeat;
-	background-image: url(images/die_black_pips.svg);
+	width: 24px;
+	height: 24px;
+	background-size: 100%;
 	background-color: #fff;
 	border: 1px solid #444;
 }
 
-#log .d0 { background-position: -100% 0 }
-#log .d1 { background-position: 0% 0; }
-#log .d2 { background-position: 20% 0; }
-#log .d3 { background-position: 40% 0; }
-#log .d4 { background-position: 60% 0; }
-#log .d5 { background-position: 80% 0; }
-#log .d6 { background-position: 100% 0; }
+#log .d1 { background-image: url(pieces/die001.png); }
+#log .d2 { background-image: url(pieces/die002.png); }
+#log .d3 { background-image: url(pieces/die003.png); }
+#log .d4 { background-image: url(pieces/die004.png); }
+#log .d5 { background-image: url(pieces/die005.png); }
+#log .d6 { background-image: url(pieces/die006.png); }
 
 #log .number {
 	display: inline-block;
@@ -269,6 +266,12 @@ main {
 	width: 80px;
 	height: 123px;
 	border-radius: 8px;
+}
+
+#select {
+	display: block;
+	padding: 1rem;
+	background: #222;
 }
 
 #hand {
