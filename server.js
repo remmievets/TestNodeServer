@@ -180,12 +180,8 @@ states.bagend_preparations = {
     },
     roll() {
         console.log("Roll");
-        log("D1");
-        log("D2");
-        log("D3");
-        log("D4");
-        log("D5");
-        log("D6");
+        let b_roll = roll_d6();
+        log("D" + b_roll + " Roll");
     },
     pass() {
         log("Ring-bearer passes");
@@ -378,8 +374,7 @@ app.post('/move', (req, res) => {
     try {
         const { gameId, move } = req.body;
 
-        console.log(`Move`);
-        console.log(move);
+        console.log(`Move ` + move);
         
         // Based on the game state, execute the function passed
         execute_move(game, move);

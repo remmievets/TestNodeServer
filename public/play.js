@@ -347,12 +347,6 @@ function sub_space(_match, p1) {
     return `<span class="tip" onclick="on_click_space_tip(${x})" onmouseenter="on_focus_space_tip(${x})" onmouseleave="on_blur_space_tip(${x})">${n}</span>`
 }
 
-function sub_general(_match, p1) {
-    let x = p1 | 0
-    let n = data.generals[x].name
-    return `<span class="tip" onclick="on_click_general_tip(${x})" onmouseenter="on_focus_general_tip(${x})" onmouseleave="on_blur_general_tip(${x})">${n}</span>`
-}
-
 function sub_minus(_match, p1) {
     return "\u2212" + p1
 }
@@ -370,30 +364,6 @@ const ICONS = {
     D4: '<span class="die white d4"></span>',
     D5: '<span class="die white d5"></span>',
     D6: '<span class="die white d6"></span>',
-    A1: '<span class="number ar n1">1</span>',
-    A2: '<span class="number ar n2">2</span>',
-    A3: '<span class="number ar n3">3</span>',
-    A4: '<span class="number ar n4">4</span>',
-    A5: '<span class="number ar n5">5</span>',
-    A6: '<span class="number ar n6">6</span>',
-    AB1: '<span class="number br_a n1">1</span>',
-    AB2: '<span class="number br_a n2">2</span>',
-    AB3: '<span class="number br_a n3">3</span>',
-    AB4: '<span class="number br_a n4">4</span>',
-    AB5: '<span class="number br_a n5">5</span>',
-    AB6: '<span class="number br_a n6">6</span>',
-    BB1: '<span class="number br_b n1">1</span>',
-    BB2: '<span class="number br_b n2">2</span>',
-    BB3: '<span class="number br_b n3">3</span>',
-    BB4: '<span class="number br_b n4">4</span>',
-    BB5: '<span class="number br_b n5">5</span>',
-    BB6: '<span class="number br_b n6">6</span>',
-    FB1: '<span class="number br_f n1">1</span>',
-    FB2: '<span class="number br_f n2">2</span>',
-    FB3: '<span class="number br_f n3">3</span>',
-    FB4: '<span class="number br_f n4">4</span>',
-    FB5: '<span class="number br_f n5">5</span>',
-    FB6: '<span class="number br_f n6">6</span>',
 }
 
 function sub_icon(match) {
@@ -433,19 +403,6 @@ function on_log(text) {
         text = text.substring(3)
     }
 
-    if (
-        text.startsWith("Played ") ||
-        text.startsWith("Discarded ") ||
-        text.startsWith("Exchanged ") ||
-        text.startsWith("Retreated ") ||
-        text.startsWith("Surrendered ") ||
-        text === "Removed card."
-    )
-        p.className = "n"
-
-    if (text.startsWith("Moved G") || text.startsWith("Landing Party"))
-        p.className = "m"
-
     text = text.replace(/&/g, "&amp;")
     text = text.replace(/</g, "&lt;")
     text = text.replace(/>/g, "&gt;")
@@ -453,14 +410,9 @@ function on_log(text) {
     text = text.replace(/-(\d)/g, sub_minus)
 
     text = text.replace(/\b[D][1-6]\b/g, sub_icon)
-    text = text.replace(/\b[A][1-6]\b/g, sub_icon)
-    text = text.replace(/\bAB[1-6]\b/g, sub_icon)
-    text = text.replace(/\bBB[1-6]\b/g, sub_icon)
-    text = text.replace(/\bFB[1-6]\b/g, sub_icon)
 
     text = text.replace(/C(\d+)/g, sub_card)
     text = text.replace(/S(\d+)/g, sub_space)
-    text = text.replace(/G(\d+)/g, sub_general)
 
     p.innerHTML = text
     return p
