@@ -88,7 +88,9 @@ const initialGame = {
     },
     loc: "bagend",
     log: [],
+    selectHand: [],
     state: "",
+    priorState : "",
     sauron: 15,
     curFight : 0,
     curTravel : 0,
@@ -118,29 +120,32 @@ var view;
 function advance_state(newState) {
     game.state = newState;
     const state = states[newState];
-    //console.log(newState);
     
     if (state.prompt) {
-        //console.log("prompt");
-        game.prompt = state.prompt();
         // Send updated game information to client
+        game.prompt = state.prompt();
     } 
     if (state.auto) {
         // Continue auto execution chain
-        //console.log("auto");
         state.auto();
     }
 }
 
-function execute_move(view, move) {
-    const state = states[view.state];
+function execute_move(g, move) {
+    const state = states[g.state];
     
     if (state && typeof state[move] === "function") {
         // Call the function with view and any other needed arguments
         return state[move]();
     } else {
-        throw new Error(`State "${view.state}" does not support move "${move}"`);
+        throw new Error(`State "${g.state}" does not support move "${move}"`);
     }
+}
+
+states.action_discard = {
+    prompt() {
+    },
+    
 }
 
 states.bagend_gandalf = {
@@ -179,9 +184,12 @@ states.bagend_preparations = {
         };
     },
     roll() {
-        console.log("Roll");
-        let b_roll = roll_d6();
-        log("D" + b_roll + " Roll");
+        let myroll = RollDieAndProcessResults(game.ringBearer);
+        log("4 Cards available to distribute");
+        for (let i = 0; i <4; i++) {
+            set_add(game.selectHand, deal_card());
+        }        
+        advance_state("bagend_nazgul_appears");
     },
     pass() {
         log("Ring-bearer passes");
@@ -285,6 +293,46 @@ states.shelobs_lair = {
 states.mordor = {
 }
 
+function RollDieAndProcessResults(p) {
+    let b_roll = roll_d6();
+    console.log('Roll ' + p);
+    console.log(b_roll);
+    log(p + " rolls a D" + b_roll);
+    switch (b_roll) {
+        case 1:
+            game.players[p].corruption += 1;
+            log(p + " increases corruption by 1 to " + game.players[p].corruption);
+            break;
+        case 2:
+            if (p === "Sam") {
+                game.players[p].corruption += 1;
+                log(p + " increases corruption by 1 to " + game.players[p].corruption);
+            } else {
+                game.players[p].corruption += 2;
+                log(p + " increases corruption by 2 to " + game.players[p].corruption);
+            }
+            break;
+        case 3:
+            if (p === "Sam") {
+                game.players[p].corruption += 1;
+                log(p + " increases corruption by 1 to " + game.players[p].corruption);
+            } else {
+                game.players[p].corruption += 3;
+                log(p + " increases corruption by 3 to " + game.players[p].corruption);
+            }
+            break;
+        case 4:
+            break;
+        case 5:
+            game.sauron -= 1;
+            log("Sauron advances to space " + game.sauron);
+            break;
+        default:
+            break;
+    }
+    return b_roll;
+}
+
 function deal_card() {
     //if (game.deck.length === 0)
     //  reshuffle_deck()
@@ -317,7 +365,6 @@ function setup_game() {
     
     // Advance to first state and start executing
     advance_state("bagend_gandalf");
-    //console.log(game);
 }
 
 
@@ -374,6 +421,7 @@ app.post('/move', (req, res) => {
     try {
         const { gameId, move } = req.body;
 
+        // Output infomation about move action
         console.log(`Move ` + move);
         
         // Based on the game state, execute the function passed

@@ -153,6 +153,8 @@ let ui = {
     
     location_marker : null,
     sauron_marker : null,
+    
+    hand_select: document.getElementById("hand_select"),
 
     players: {
         frodo : {
@@ -294,7 +296,16 @@ function on_init(view) {
         show_piece_at(ui.tokens_element, ui.players[p].marker, data.board[pspace][0] + data.board[p][0], data.board[pspace][1] + data.board[p][1]);
     }
     
+    // Add cards to hand_select
+    const selContainer = ui.hand_select;
+    selContainer.replaceChildren();
     
+    for (const card of view.selectHand) {
+        const cardDiv = document.createElement("div");
+        cardDiv.classList.add("card", `card_${card}`);
+        selContainer.appendChild(cardDiv);
+    }    
+
     // Update tokens on map
     if (view.loc in data) {
         ui.map.className = view.loc;
