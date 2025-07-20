@@ -1,7 +1,7 @@
 "use strict"
 
 /*
-    global view, data, roles, send_action, action_button, confirm_action_button
+    global view, data, roles, send_action, action_button
 */
 
 // TODO: show "reshuffle" flag next to card deck display
@@ -57,14 +57,15 @@ let activeSpace = null;
 let offsetX = 0;
 let offsetY = 0;
 let wasDragged = false;
-/*
+
 const map = document.getElementById('board');
 const container = document.getElementById('tokens');
-*/
 
+
+/*
 const map = document.getElementById('map');
 const container = document.getElementById('spaces');
-
+*/
 
 function on_space_click(e) {
     if (activeSpace) return;
@@ -77,6 +78,7 @@ function on_space_click(e) {
     const {x, y} = getRelativeClickPosition(e);
     const space = on_create_space(x, y);
     container.appendChild(space);
+    makePlay('MOVE CLICK CLOCK');
 }
 
 function getRelativeClickPosition(e) {
@@ -138,7 +140,7 @@ let ui = {
     header: document.querySelector("header"),
     status: document.getElementById("status"),
     tooltip: document.getElementById("tooltip"),
-    actions: document.getElementById("actions"),
+    buttons: document.getElementById("actions"),
     prompt: document.getElementById("prompt"),
 
     hand: document.getElementById("hand"),
@@ -316,9 +318,9 @@ function on_init(view) {
     // TBD
     
     // Update action buttons if available
-    ui.actions.replaceChildren();
-    if (view.prompt.actions) {
-        const availableActions = view.prompt.actions;
+    ui.buttons.replaceChildren();
+    if (view.prompt.buttons) {
+        const availableActions = view.prompt.buttons;
         for (const [actionName, label] of Object.entries(availableActions)) {
             action_button(actionName, label);
         }
@@ -333,11 +335,17 @@ function on_init(view) {
     } else {
         ui.header.className = "";
     }
+    
+    // Give cards
+    if (view.prompt.action) {
+        send_action("DISTRIBUTE", `${view.prompt.action.cards[0]} Frodo`);
+    }
 }
 
 /* UPDATE UI */
 
 function on_update(view) {
+    console.log(view);
     on_init(view);
 }
 
@@ -345,18 +353,6 @@ function on_update(view) {
 
 
 /* LOG */
-
-function sub_space(_match, p1) {
-    let x = p1 | 0
-    let n = data.spaces[x].name
-    if (n === "Wilmington DE")
-        n = "Wilmington"
-    n = n.replaceAll(" ", "\xa0")
-    let co = data.spaces[x].colony
-    if (co)
-        n += "\xa0(" + data.colony_name[data.spaces[x].colony] + ")"
-    return `<span class="tip" onclick="on_click_space_tip(${x})" onmouseenter="on_focus_space_tip(${x})" onmouseleave="on_blur_space_tip(${x})">${n}</span>`
-}
 
 function sub_minus(_match, p1) {
     return "\u2212" + p1
@@ -423,7 +419,6 @@ function on_log(text) {
     text = text.replace(/\b[D][1-6]\b/g, sub_icon)
 
     text = text.replace(/C(\d+)/g, sub_card)
-    text = text.replace(/S(\d+)/g, sub_space)
 
     p.innerHTML = text
     return p

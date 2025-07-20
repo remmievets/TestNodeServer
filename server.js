@@ -76,7 +76,6 @@ const initialGame = {
     seed: 0,
     deck: [],
     gandalf: [],
-    lgendary: [],
     shields: [],
     story: [],
     players: {
@@ -92,14 +91,16 @@ const initialGame = {
     state: "",
     priorState : "",
     sauron: 15,
-    curFight : 0,
-    curTravel : 0,
-    curHide : 0,
-    curFriend : 0,
-    curEvent : 0,
     currentPlayer : "Frodo",
     ringBearer : "Frodo",
-    ringUsed: false,
+    conflict: {
+        fight : 0,
+        travel : 0,
+        hide : 0,
+        friendship : 0,
+        eventValue : 0,
+        ringUsed: false,
+    },
     prompt : {},
 };
 
@@ -117,35 +118,103 @@ var view;
 
 //////////////////////
 /* Game States */
-function advance_state(newState) {
-    game.state = newState;
-    const state = states[newState];
+function goto_prior_state() {
+    // Go back to prior state
+    game.state = game.priorState;
     
+    // Execute the state
+    execute_state(game.state);
+}
+
+function advance_state(newState) {
+    // Save the prior state
+    game.priorState = game.state;
+    
+    // Update to new state
+    game.state = newState;
+    
+    // Execute the new state
+    execute_state(game.state);
+}
+
+function execute_state(myState) {
+    // Lookup state information from array of states
+    const state = states[myState];
+    
+    // Execute state
     if (state.prompt) {
         // Send updated game information to client
         game.prompt = state.prompt();
-    } 
-    if (state.auto) {
+    }
+    else
+    {
+        game.prompt = null;
+    }
+    
+    if (!game.prompt && state.auto) {
         // Continue auto execution chain
         state.auto();
+    }    
+}
+
+function execute_button(g, buttonName) {
+    const state = states[g.state];
+    
+    if (state && typeof state[buttonName] === "function") {
+        // Call the function with view and any other needed arguments
+        return state[buttonName]();
+    } else {
+        throw new Error(`State "${g.state}" does not support move "${buttonName}"`);
     }
 }
 
-function execute_move(g, move) {
-    const state = states[g.state];
-    
-    if (state && typeof state[move] === "function") {
-        // Call the function with view and any other needed arguments
-        return state[move]();
-    } else {
-        throw new Error(`State "${g.state}" does not support move "${move}"`);
-    }
+function execute_distribute(g, card, player) {
+    game.number = g.number - 1;
+    execute_state(game.state);
 }
+
+/// States
+/// function prompt - required
+/// - Return to the user the following if user has an action to perform
+///   - message - Message to display to user which describes the action
+///   - player <optional> - An indication if this action is limited to one player or a group of players.  If not provided then any player can perform action
+///   - buttons <optional> - A list of buttons and the function to call if the user selects the button
+///   - action
+///     - name - type of action that client needs to implement
+///         - "distribute" - distribute <card id> <player name>
+///         - "discard" - discard <card id>
+///         - "pass" - pass <card id> <player name>
+///         - "play" - play <card id> [track, track, track]
+///     - cards - A list of cards which can be played / selected by the player(s) to support the action
+///     - state.number - The number of remaining actions the player(s) needs to make
+/// - Return null if no user action is needed
+/// function <button callback>()
+///   - Callback function from button press
+///   - No parameters
+/// function auto - required if prompt returns null
+///   - function to call after auto to advance function to the next State
 
 states.action_discard = {
     prompt() {
+        // Exit path for this state
+        if (game.number <= 0) {
+            console.log("NULL");
+            return null;
+        }
+        else {
+            console.log("GT");
+            return {
+                message: "Select cards to distribute",
+                action: {
+                    name: "DISTRIBUTE",
+                    cards: game.selectHand.slice()
+                }
+            };        
+        }
     },
-    
+    auto() {
+        advance_state("bagend_preparations");
+    },
 }
 
 states.bagend_gandalf = {
@@ -177,7 +246,7 @@ states.bagend_preparations = {
         return {
             player: game.ringBearer,
             message: "Roll dice to receive 4 cards or pass",
-            actions: {
+            buttons: {
                 "roll" : "Roll die",
                 "pass" : "Pass"
             }
@@ -188,8 +257,9 @@ states.bagend_preparations = {
         log("4 Cards available to distribute");
         for (let i = 0; i <4; i++) {
             set_add(game.selectHand, deal_card());
-        }        
-        advance_state("bagend_nazgul_appears");
+        }
+        game.number = 4;
+        advance_state("action_discard");
     },
     pass() {
         log("Ring-bearer passes");
@@ -205,7 +275,7 @@ states.bagend_nazgul_appears = {
         log("=! Nazgul Appears");
         return {
             message: "One player discard 2 hiding, otherwise sauron moves 1 space",
-            actions: {
+            buttons: {
                 "discard" : "Discard",
                 "sauron" : "Move Sauron"
             }
@@ -253,7 +323,7 @@ states.rivendell_council = {
         log("=! Council");
         return {
             message: "One player discard 2 hiding, otherwise sauron moves 1 space",
-            actions: {
+            buttons: {
                 "discard" : "Discard",
                 "sauron" : "Move Sauron"
             }
@@ -416,16 +486,29 @@ app.get('/game/:gameId', (req, res) => {
     res.json({id: req.params.gameId, board: game});
 });
 
+const moveHandlers = {
+    BUTTON: (game, button) => execute_button(game, button),
+    DISTRIBUTE: (game, card, player) => execute_distribute(game, card, player),
+};
+
 // Make a move
 app.post('/move', (req, res) => {
     try {
         const { gameId, move } = req.body;
 
         // Output infomation about move action
-        console.log(`Move ` + move);
+        console.log(`${move}`);
         
-        // Based on the game state, execute the function passed
-        execute_move(game, move);
+        // Split move into command and arguments
+        // Splits by any whitespace
+        const parts = move.trim().split(/\s+/);
+        const command = parts[0];
+        const args = parts.slice(1);
+        
+        // Dispatch to appropriate handler
+        const handler = moveHandlers[command];
+        if (!handler) throw new Error(`Unknown move command: ${move}`);
+        handler(game, ...args);
 
         // Respond with the updated board and next player
         res.json({ id: gameId, board: game });

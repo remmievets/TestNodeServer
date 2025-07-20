@@ -528,56 +528,18 @@ function action_button_imp(action, label, callback) {
         button.addEventListener("click", callback)
         document.getElementById("actions").prepend(button)
     }
-    /*if (view.actions && action in view.actions) {
-        button.classList.remove("hide")
-        if (view.actions[action]) {
-            if (label === undefined)
-                button.textContent = view.actions[action]
-            button.disabled = false
-        } else {
-            button.disabled = true
-        }
-    } else {
-        button.classList.add("hide")
-    }*/
 }
 
 function action_button(action, label) {
-    action_button_imp(action, label, evt => send_action(action))
-}
-
-function confirm_action_button(action, label, message) {
-    action_button_imp(action, label, evt => confirm_send_action(action, undefined, message))
+    action_button_imp(action, label, evt => send_action("BUTTON", action))
 }
 
 function send_action(verb, noun) {
-    console.log(verb)
-    console.log(noun)
-    makeMove(verb);
+    const mv = `${verb} ${noun}`;
+    console.log(mv);
+    makeMove(mv);
     
-    /*if (params.mode === "replay" || params.mode === "debug")
-        return false
-    // Reset action list here so we don't send more than one action per server prompt!
-    if (noun !== undefined) {
-        let realnoun = Array.isArray(noun) ? noun[0] : noun
-        if (view.actions && view.actions[verb] && view.actions[verb].includes(realnoun)) {
-            view.actions = null
-            send_message("action", [ verb, noun, game_cookie ])
-            return true
-        }
-    } else {
-        if (view.actions && view.actions[verb]) {
-            view.actions = null
-            send_message("action", [ verb, null, game_cookie ])
-            return true
-        }
-    }*/
     return false
-}
-
-function confirm_send_action(verb, noun, message) {
-    if (window.confirm(message))
-        send_action(verb, noun)
 }
 
 function send_query(q, param) {
@@ -1334,8 +1296,6 @@ function makeMove(move) {
         if (data.error) {
             alert(data.error);
         } else {
-            console.log("move");
-            console.log(data);
             on_update(data.board);
         }
     });
