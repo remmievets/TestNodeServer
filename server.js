@@ -42,7 +42,7 @@ db.prepare(`
 //////////////////////
 /* DATABASE FUNCTIONS */
 function create_new_game(gameState) {
-    const boardJson = JSON.stringify(gameState);    
+    const boardJson = JSON.stringify(gameState);
     const result = db.prepare(`INSERT INTO games (board) VALUES (?)`).run(boardJson);
     return result;
 }
@@ -54,10 +54,10 @@ function load_game(gameId) {
         return {raw: result, board: gameState };
     }
     return null;
-}       
+}
 
 function save_game(gameId, gameState) {
-    const boardJson = JSON.stringify(gameState);    
+    const boardJson = JSON.stringify(gameState);
     const result = db.prepare(`UPDATE games SET board = ? WHERE id = ?`).run(boardJson, gameId);
     return result;
 }
@@ -79,10 +79,10 @@ const initialGame = {
     shields: [],
     story: [],
     players: {
-        "Frodo": structuredClone(initialPlayer), 
-        "Sam": structuredClone(initialPlayer), 
-        "Pipin": structuredClone(initialPlayer), 
-        "Merry": structuredClone(initialPlayer), 
+        "Frodo": structuredClone(initialPlayer),
+        "Sam": structuredClone(initialPlayer),
+        "Pipin": structuredClone(initialPlayer),
+        "Merry": structuredClone(initialPlayer),
         "Fatty": structuredClone(initialPlayer)
     },
     loc: "bagend",
@@ -121,7 +121,7 @@ var view;
 function goto_prior_state() {
     // Go back to prior state
     game.state = game.priorState;
-    
+
     // Execute the state
     execute_state(game.state);
 }
@@ -129,10 +129,10 @@ function goto_prior_state() {
 function advance_state(newState) {
     // Save the prior state
     game.priorState = game.state;
-    
+
     // Update to new state
     game.state = newState;
-    
+
     // Execute the new state
     execute_state(game.state);
 }
@@ -140,7 +140,7 @@ function advance_state(newState) {
 function execute_state(myState) {
     // Lookup state information from array of states
     const state = states[myState];
-    
+
     // Execute state
     if (state.prompt) {
         // Send updated game information to client
@@ -150,16 +150,16 @@ function execute_state(myState) {
     {
         game.prompt = null;
     }
-    
+
     if (!game.prompt && state.auto) {
         // Continue auto execution chain
         state.auto();
-    }    
+    }
 }
 
 function execute_button(g, buttonName) {
     const state = states[g.state];
-    
+
     if (state && typeof state[buttonName] === "function") {
         // Call the function with view and any other needed arguments
         return state[buttonName]();
@@ -168,8 +168,29 @@ function execute_button(g, buttonName) {
     }
 }
 
-function execute_distribute(g, card, player) {
+function execute_distribute(g, card, p) {
+    // Find the index of the card in selectHand
+    const cardInt = parseInt(card, 10);
+    const index = game.selectHand.indexOf(cardInt);
+    if (index === -1) {
+        game.number = 0;
+        console.error("Card not found in selectHand");
+        return;
+    }
+
+    // Remove the card from selectHand
+    const [removeCard] = game.selectHand.splice(index, 1);
+
+    // Add the card to the target player's hand
+    game.players[p].hand.push(removeCard);
+    
+    // Create log record of transaction
+    log(`C${card} given to ${p}`);
+
+    // Decrease the number of remaining actions and execute the state
     game.number = g.number - 1;
+
+    // Execute the next state
     execute_state(game.state);
 }
 
@@ -198,18 +219,16 @@ states.action_discard = {
     prompt() {
         // Exit path for this state
         if (game.number <= 0) {
-            console.log("NULL");
             return null;
         }
         else {
-            console.log("GT");
             return {
                 message: "Select cards to distribute",
                 action: {
                     name: "DISTRIBUTE",
                     cards: game.selectHand.slice()
                 }
-            };        
+            };
         }
     },
     auto() {
@@ -232,7 +251,7 @@ states.bagend_gandalf = {
             set_add(game.players.Fatty.hand, deal_card());
         }
         // no prompt for client
-        return null; 
+        return null;
     },
     auto() {
         advance_state("bagend_preparations");
@@ -311,7 +330,7 @@ states.rivendell_elrond = {
             set_add(game.players.Fatty.hand, deal_card());
         }*/
         // no prompt for client
-        return null; 
+        return null;
     },
     auto() {
         advance_state("rivendell_council");
@@ -414,25 +433,25 @@ function setup_game() {
 
     // Wipe and reset game variable
     game = structuredClone(initialGame);
-    
+
     // Create seed
     game.seed = crypto.randomInt(1, 2**35-31)
-    
+
     // Create deck of cards
     create_deck(game.deck, 0, 60);
     shuffle(game.deck);
-    
+
     // Create deck of story tiles
     create_deck(game.story, 0, 23);
     shuffle(game.story);
-    
+
     // Create deck of gandalf cards
     create_deck(game.gandalf, 0, 7);
-    
+
     // Create a special shield list with 2 of each shield type for end of board bonus
     game.shields = [1, 1, 2, 2, 3, 3];
     shuffle(game.shields);
-    
+
     // Advance to first state and start executing
     advance_state("bagend_gandalf");
 }
@@ -457,13 +476,13 @@ app.get('/games', (req, res) => {
 // Endpoint to create a new game
 app.post('/new-game', (req, res) => {
     console.log(`create a new game`);
-    
+
     // Setup a new game
     setup_game();
 
     // Save in the database
     const result = create_new_game(game);
-    
+
     // Send information to webpage
     res.json({ gameId: result.lastInsertRowid, board: game });
 });
@@ -477,12 +496,12 @@ app.get('/game/:gameId', (req, res) => {
     }
     // set game information to game
     let gameboard = result.board;
-    
+
     // TEMP - Re-setup a new game
     setup_game();
     const save = save_game(req.params.gameId, game);
     // TEMP - end
-    
+
     res.json({id: req.params.gameId, board: game});
 });
 
@@ -498,13 +517,13 @@ app.post('/move', (req, res) => {
 
         // Output infomation about move action
         console.log(`${move}`);
-        
+
         // Split move into command and arguments
         // Splits by any whitespace
         const parts = move.trim().split(/\s+/);
         const command = parts[0];
         const args = parts.slice(1);
-        
+
         // Dispatch to appropriate handler
         const handler = moveHandlers[command];
         if (!handler) throw new Error(`Unknown move command: ${move}`);

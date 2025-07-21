@@ -127,11 +127,12 @@ function on_drag_ends(e) {
     }
 }
 
+/*
 map.addEventListener('click', on_space_click);
 document.addEventListener('mousemove', on_handle_move);
 document.addEventListener('mouseup', on_drag_ends);
 console.log(map);
-
+*/
 
 /* BUILD UI */
 
@@ -202,24 +203,31 @@ let ui = {
     }
 }
 
-let action_register = []
-
-function register_action(target, action, id) {
-    target.my_action = action
-    target.my_id = id
-    target.onmousedown = on_click_action
-    action_register.push(target)
+function reset_all_card_states() {
+    document.querySelectorAll("..card.action, .card.selected").forEach(card => {
+        card.classList.remove("action", "selected");
+        card.removeEventListener("click", on_click_action);
+    });
 }
 
-function is_action(action, arg) {
-    if (arg === undefined)
-        return !!(view.actions && view.actions[action] === 1)
-    return !!(view.actions && view.actions[action] && set_has(view.actions[action], arg))
+function enable_card_selection(cards) {
+    cards.forEach(cardId => {
+        const cardEl = document.querySelector(`.card_${cardId}`);
+        if (!cardEl) return;
+        cardEl.classList.add("action");
+        cardEl.addEventListener("click", on_click_action);
+    });
 }
 
 function on_click_action(evt) {
-    if (evt.button === 0)
-        send_action(evt.target.my_action, evt.target.my_id)
+    const cardEl = event.currentTarget;
+    if (cardEl.classList.contains("action")) {
+		cardEl.classList.remove("action");
+		cardEl.classList.add("selected");
+    } else if (cardEl.classList.contains("selected")) {
+		cardEl.classList.remove("selected");
+		cardEl.classList.add("action");
+	}
 }
 
 function build_piece(cn) {
@@ -338,7 +346,8 @@ function on_init(view) {
     
     // Give cards
     if (view.prompt.action) {
-        send_action("DISTRIBUTE", `${view.prompt.action.cards[0]} Frodo`);
+        enable_card_selection(view.prompt.action.cards);
+        //send_action("DISTRIBUTE", `${view.prompt.action.cards[0]} Frodo`);
     }
 }
 
@@ -360,7 +369,7 @@ function sub_minus(_match, p1) {
 
 function sub_card(_match, p1) {
     let x = p1 | 0
-    let n = data.cards[x].title
+    let n = data.cards[x].name
     return `<i class="tip" onmouseenter="on_focus_card_tip(${x})" onmouseleave="on_blur_card_tip(${x})">${n}</i>`
 }
 
@@ -378,7 +387,6 @@ function sub_icon(match) {
 }
 
 function on_log(text) {
-    //console.log(text)
     let p = document.createElement("div")
 
     if (text.startsWith(">>")) {
