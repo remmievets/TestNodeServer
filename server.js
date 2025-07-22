@@ -89,7 +89,7 @@ const initialGame = {
     log: [],
     selectHand: [],
     state: "",
-    priorState : "",
+    nextState : "",
     sauron: 15,
     currentPlayer : "Frodo",
     ringBearer : "Frodo",
@@ -114,21 +114,54 @@ var game;
 var view;
 
 //////////////////////
-/* Game State Stuff */
+/* Game helpers */
+
+function distribute_card_from_select(p, cardInt) {
+    const index = game.selectHand.indexOf(cardInt);
+    if (index === -1) {
+        game.number = 0;
+        console.error("Card not found in selectHand");
+        return;
+    }
+
+    // Remove the card from selectHand
+    const [removeCard] = game.selectHand.splice(index, 1);
+
+    // Add the card to the target player's hand
+    game.players[p].hand.push(removeCard);
+    
+    // Decrease the number of remaining actions and execute the state
+    game.number = game.number - 1;
+}
+
+function discard_card_from_player(p, cardInt) {
+    const index = game.players[p].hand.indexOf(cardInt);
+    if (index === -1) {
+        game.number = 0;
+        console.error("Card not found in ${p}");
+        return;
+    }
+    
+    // Remove the card from hand
+    const [removeCard] = game.players[p].hand.splice(index, 1);
+    
+    // Decrease the number of remaining actions and execute the State
+    game.number = game.number - 1;
+}
 
 //////////////////////
 /* Game States */
-function goto_prior_state() {
+function goto_next_state() {
     // Go back to prior state
-    game.state = game.priorState;
+    game.state = game.nextState;
 
     // Execute the state
     execute_state(game.state);
 }
 
-function advance_state(newState) {
-    // Save the prior state
-    game.priorState = game.state;
+function advance_state(newState, next = "") {
+    // Set next state if provided
+    game.nextState = next;
 
     // Update to new state
     game.state = newState;
@@ -157,41 +190,15 @@ function execute_state(myState) {
     }
 }
 
-function execute_button(g, buttonName) {
+function execute_button(g, buttonName, args) {
     const state = states[g.state];
 
     if (state && typeof state[buttonName] === "function") {
         // Call the function with view and any other needed arguments
-        return state[buttonName]();
+        return state[buttonName](args);
     } else {
         throw new Error(`State "${g.state}" does not support move "${buttonName}"`);
     }
-}
-
-function execute_distribute(g, card, p) {
-    // Find the index of the card in selectHand
-    const cardInt = parseInt(card, 10);
-    const index = game.selectHand.indexOf(cardInt);
-    if (index === -1) {
-        game.number = 0;
-        console.error("Card not found in selectHand");
-        return;
-    }
-
-    // Remove the card from selectHand
-    const [removeCard] = game.selectHand.splice(index, 1);
-
-    // Add the card to the target player's hand
-    game.players[p].hand.push(removeCard);
-    
-    // Create log record of transaction
-    log(`C${card} given to ${p}`);
-
-    // Decrease the number of remaining actions and execute the state
-    game.number = g.number - 1;
-
-    // Execute the next state
-    execute_state(game.state);
 }
 
 /// States
@@ -223,21 +230,39 @@ states.action_discard = {
         }
         else {
             return {
-                message: "Select cards to distribute",
-                action: {
-                    name: "DISTRIBUTE",
-                    cards: game.selectHand.slice()
-                }
+                message: `Select ${game.number} cards to discard`,
+                player: game.activePlayer,
+                buttons: {
+                    "discard" : "Discard",
+                },
+                cards: game.players[game.activePlayer].hand.slice(),
             };
         }
     },
+    discard(args) {
+        // ARGS "cardNumber cardNumber cardNumber ..."
+        for (let i = 0; i < args.length; i++) {
+            const card = parseInt(args[i], 10); // Convert to int if needed
+            discard_card_from_player(game.activePlayer, card);
+
+            // Create log record of transaction
+            log(`${game.activePlayer} discard C${card}`);        
+        }
+
+        // Execute the next state
+        execute_state(game.state);
+    },
     auto() {
-        advance_state("bagend_preparations");
+        goto_next_state();
     },
 }
 
 states.bagend_gandalf = {
     prompt() {
+        // no prompt for client
+        return null;
+    },
+    auto() {
         console.log("GANDOLF");
         // Do initial phase of the game
         log("=t Bag End");
@@ -250,16 +275,13 @@ states.bagend_gandalf = {
             set_add(game.players.Merry.hand, deal_card());
             set_add(game.players.Fatty.hand, deal_card());
         }
-        // no prompt for client
-        return null;
-    },
-    auto() {
         advance_state("bagend_preparations");
     }
 }
 
 states.bagend_preparations = {
     prompt() {
+        game.number = 0;
         console.log("PREPARATIONS");
         log("=! Preparations");
         return {
@@ -273,17 +295,79 @@ states.bagend_preparations = {
     },
     roll() {
         let myroll = RollDieAndProcessResults(game.ringBearer);
-        log("4 Cards available to distribute");
-        for (let i = 0; i <4; i++) {
-            set_add(game.selectHand, deal_card());
+        if (myroll == 4) {
+            console.log("ROLLED A 4");
+            // Setup to discard 2 cards
+            game.number = 2;
+            game.activePlayer = game.ringBearer;
+            advance_state("action_discard", "bagend_preparations_cards");
         }
-        game.number = 4;
-        advance_state("action_discard");
+        else {
+            // Goto state to deal 4 cards
+            advance_state("bagend_preparations_cards");
+        }
     },
     pass() {
         log("Ring-bearer passes");
         advance_state("bagend_nazgul_appears");
     }
+}
+
+states.bagend_preparations_cards = {
+    prompt() {
+        // no prompt for client
+        return null;
+    },
+    auto() {
+        log("4 Cards available to distribute");
+        for (let i = 0; i <4; i++) {
+            set_add(game.selectHand, deal_card());
+        }
+        game.number = 4;
+        advance_state("bagend_preparations_distribute");
+    }
+}
+
+states.bagend_preparations_distribute = {
+    prompt() {
+        // Exit path for this state
+        if (game.number <= 0) {
+            return null;
+        }
+        else {
+            return {
+                message: "Select cards to distribute",
+                buttons: {
+                    "distribute Frodo" : "Frodo",
+                    "distribute Sam" : "Sam",
+                    "distribute Pipin" : "Pipin",
+                    "distribute Merry" : "Merry",
+                    "distribute Fatty" : "Fatty",
+                },
+                cards: game.selectHand.slice(),
+            };
+        }
+    },
+    distribute(args) {
+        // ARGS
+        //      player cardNumber cardNumber cardNumber ...
+        // Distribute list of cards to player
+        const player = args[0];
+
+        for (let i = 1; i < args.length; i++) {
+            const card = parseInt(args[i], 10); // Convert to int if needed
+            distribute_card_from_select(player, card);
+
+            // Create log record of transaction
+            log(`C${card} given to ${player}`);        
+        }
+
+        // Execute the next state
+        execute_state(game.state);
+    },
+    auto() {
+        advance_state("bagend_nazgul_appears");
+    },
 }
 
 states.bagend_nazgul_appears = {
@@ -322,13 +406,27 @@ states.rivendell_elrond = {
         log("=t Rivendell");
         log("=! Elrond");
         log("Deal feature cards");
-        /*for (let i = 0; i <6; i++) {
-            set_add(game.players.Frodo.hand, deal_card());
-            set_add(game.players.Sam.hand, deal_card());
-            set_add(game.players.Pipin.hand, deal_card());
-            set_add(game.players.Merry.hand, deal_card());
-            set_add(game.players.Fatty.hand, deal_card());
-        }*/
+        let featureDeck = [];
+        create_deck(featureDeck, 102, 113);
+        shuffle(featureDeck);
+        
+        // Players in order
+        // TBD - Make this a function to return active players in order from ring bearer
+        const porder = ["Frodo", "Sam", "Pipin", "Merry", "Fatty"];
+        
+        // Deal cards round-robin until deck is empty
+        let i = 0;
+        while (featureDeck.length > 0) {
+            const player = porder[i % porder.length];
+            let card = featureDeck.pop();
+            log(`C${card} given to ${player}`);
+            set_add(game.players[player].hand, card);
+            i++;
+        }
+        
+        // Update Location
+        game.loc = "rivendell";
+        
         // no prompt for client
         return null;
     },
@@ -422,12 +520,6 @@ function RollDieAndProcessResults(p) {
     return b_roll;
 }
 
-function deal_card() {
-    //if (game.deck.length === 0)
-    //  reshuffle_deck()
-    return game.deck.pop()
-}
-
 function setup_game() {
     console.log("setup_game");
 
@@ -438,11 +530,11 @@ function setup_game() {
     game.seed = crypto.randomInt(1, 2**35-31)
 
     // Create deck of cards
-    create_deck(game.deck, 0, 60);
+    create_deck(game.deck, 0, 59);
     shuffle(game.deck);
 
     // Create deck of story tiles
-    create_deck(game.story, 0, 23);
+    create_deck(game.story, 0, 22);
     shuffle(game.story);
 
     // Create deck of gandalf cards
@@ -506,8 +598,7 @@ app.get('/game/:gameId', (req, res) => {
 });
 
 const moveHandlers = {
-    BUTTON: (game, button) => execute_button(game, button),
-    DISTRIBUTE: (game, card, player) => execute_distribute(game, card, player),
+    BUTTON: (game, button, args) => execute_button(game, button, args),
 };
 
 // Make a move
@@ -522,12 +613,13 @@ app.post('/move', (req, res) => {
         // Splits by any whitespace
         const parts = move.trim().split(/\s+/);
         const command = parts[0];
-        const args = parts.slice(1);
+        const func = parts[1];
+        const args = parts.slice(2);
 
         // Dispatch to appropriate handler
         const handler = moveHandlers[command];
         if (!handler) throw new Error(`Unknown move command: ${move}`);
-        handler(game, ...args);
+        handler(game, func, args);
 
         // Respond with the updated board and next player
         res.json({ id: gameId, board: game });
@@ -584,9 +676,18 @@ function shuffle_bigint(list) {
 
 function create_deck(list, startIndex, endIndex) {
     list.length = 0
-    for (let i=startIndex; i<endIndex; i++) {
+    for (let i=startIndex; i<=endIndex; i++) {
         list.push(i);
     }
+}
+
+function deal_card() {
+    if (game.deck.length === 0)
+        reshuffle_deck()
+    return game.deck.pop()
+}
+
+function reshuffle_deck() {
 }
 
 function roll_d6() {

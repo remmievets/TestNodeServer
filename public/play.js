@@ -204,7 +204,8 @@ let ui = {
 }
 
 function reset_all_card_states() {
-    document.querySelectorAll("..card.action, .card.selected").forEach(card => {
+    const cards = document.querySelectorAll(".card.action, .card.selected");
+    cards.forEach(card => {
         card.classList.remove("action", "selected");
         card.removeEventListener("click", on_click_action);
     });
@@ -325,15 +326,6 @@ function on_init(view) {
     }
     // TBD
     
-    // Update action buttons if available
-    ui.buttons.replaceChildren();
-    if (view.prompt.buttons) {
-        const availableActions = view.prompt.buttons;
-        for (const [actionName, label] of Object.entries(availableActions)) {
-            action_button(actionName, label);
-        }
-    }
-
     // Update prompt
     ui.prompt.textContent = view.prompt.message;
     
@@ -344,10 +336,22 @@ function on_init(view) {
         ui.header.className = "";
     }
     
-    // Give cards
-    if (view.prompt.action) {
-        enable_card_selection(view.prompt.action.cards);
+    // Update action buttons if available
+    ui.buttons.replaceChildren();
+    if (view.prompt.buttons) {
+        const availableActions = view.prompt.buttons;
+        for (const [actionName, label] of Object.entries(availableActions)) {
+            action_button(actionName, label);
+        }
+    }
+
+    // Update if there are selectable cards or not
+    if (view.prompt.cards) {
+        enable_card_selection(view.prompt.cards);
         //send_action("DISTRIBUTE", `${view.prompt.action.cards[0]} Frodo`);
+    }
+    else {
+        reset_all_card_states();
     }
 }
 
@@ -370,7 +374,8 @@ function sub_minus(_match, p1) {
 function sub_card(_match, p1) {
     let x = p1 | 0
     let n = data.cards[x].name
-    return `<i class="tip" onmouseenter="on_focus_card_tip(${x})" onmouseleave="on_blur_card_tip(${x})">${n}</i>`
+    return `<i class="tip">${n}</i>`
+    //return `<i class="tip" onmouseenter="on_focus_card_tip(${x})" onmouseleave="on_blur_card_tip(${x})">${n}</i>`
 }
 
 const ICONS = {

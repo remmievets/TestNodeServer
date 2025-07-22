@@ -143,221 +143,6 @@ function stop_blinker() {
 
 window.addEventListener("focus", stop_blinker)
 
-/* CHAT */
-
-let chat = null
-
-function init_chat() {
-    if (chat !== null) {
-        return
-    }
-
-    let chat_window = document.createElement("div")
-    chat_window.id = "chat_window"
-    chat_window.innerHTML = `
-        <div id="chat_header">Chat</div>
-        <div id="chat_x" onclick="toggle_chat()">\u274c</div>
-        <div id="chat_text"></div>
-        <form id="chat_form" action=""><input id="chat_input" autocomplete="off"></form>
-        `
-    document.body.appendChild(chat_window)
-
-    let chat_button = document.getElementById("chat_button")
-    chat_button.classList.remove("hide")
-
-    chat = {
-        is_visible: false,
-        text_element: document.getElementById("chat_text"),
-        last_day: null,
-        log: 0
-    }
-
-    drag_element_with_mouse("#chat_window", "#chat_header")
-
-    document.getElementById("chat_form").addEventListener("submit", e => {
-        let input = document.getElementById("chat_input")
-        e.preventDefault()
-        if (input.value) {
-            send_message("chat", input.value)
-            input.value = ""
-        } else {
-            hide_chat()
-        }
-    })
-
-    document.body.addEventListener("keydown", e => {
-        if (e.key === "Escape") {
-            if (chat.is_visible) {
-                e.preventDefault()
-                hide_chat()
-            }
-        }
-        if (e.key === "Enter") {
-            let chat_input = document.getElementById("chat_input")
-            let notepad_input = document.getElementById("notepad_input")
-            if (document.activeElement !== chat_input && document.activeElement !== notepad_input) {
-                e.preventDefault()
-                show_chat()
-            }
-        }
-    })
-}
-
-function update_chat(chat_id, raw_date, user, message) {
-    function format_time(date) {
-        let mm = date.getMinutes()
-        let hh = date.getHours()
-        if (mm < 10) mm = "0" + mm
-        if (hh < 10) hh = "0" + hh
-        return hh + ":" + mm
-    }
-    function add_date_line(date) {
-        let line = document.createElement("div")
-        line.className = "date"
-        line.textContent = "~ " + date + " ~"
-        chat.text_element.appendChild(line)
-    }
-    function add_chat_line(time, user, message) {
-        let line = document.createElement("div")
-        if (user)
-            line.textContent = "[" + time + "] " + user + " \xbb " + message
-        else
-            line.textContent = "[" + time + "] " + message
-        chat.text_element.appendChild(line)
-        chat.text_element.scrollTop = chat.text_element.scrollHeight
-    }
-    if (chat_id > chat.log) {
-        chat.log = chat_id
-        let date = new Date(raw_date * 1000)
-        let day = date.toDateString()
-        if (day !== chat.last_day) {
-            add_date_line(day)
-            chat.last_day = day
-        }
-        add_chat_line(format_time(date), user, message)
-    }
-}
-
-function fetch_chat() {
-    send_message("getchat", chat.log)
-}
-
-function update_chat_new() {
-    let button = document.getElementById("chat_button")
-    start_blinker("NEW MESSAGE")
-    if (chat && chat.is_visible)
-        fetch_chat()
-    else
-        button.classList.add("new")
-}
-
-function update_chat_old() {
-    let button = document.getElementById("chat_button")
-    document.getElementById("chat_button").classList.remove("new")
-}
-
-function show_chat() {
-    if (!chat.is_visible) {
-        document.getElementById("chat_button").classList.remove("new")
-        document.getElementById("chat_window").classList.add("show")
-        document.getElementById("chat_input").focus()
-        chat.is_visible = true
-        fetch_chat()
-    }
-}
-
-function hide_chat() {
-    if (chat.is_visible) {
-        document.getElementById("chat_window").classList.remove("show")
-        document.getElementById("chat_input").blur()
-        chat.is_visible = false
-    }
-}
-
-function toggle_chat() {
-    if (chat.is_visible)
-        hide_chat()
-    else
-        show_chat()
-}
-
-/* NOTEPAD */
-
-let notepad = null
-
-function init_notepad() {
-    if (notepad !== null)
-        return
-
-    add_main_menu_item("Notepad", toggle_notepad)
-
-    let notepad_window = document.createElement("div")
-    notepad_window.id = "notepad_window"
-    notepad_window.innerHTML = `
-        <div id="notepad_header">Notepad: ${player}</div>
-        <div id="notepad_x" onclick="toggle_notepad()">\u274c</div>
-        <textarea id="notepad_input" maxlength="16000" oninput="dirty_notepad()"></textarea>
-        <div id="notepad_footer"><button id="notepad_save" onclick="save_notepad()" disabled>Save</button></div>
-        `
-    document.body.appendChild(notepad_window)
-
-    notepad = {
-        is_visible: false,
-        is_dirty: false,
-    }
-
-    drag_element_with_mouse("#notepad_window", "#notepad_header")
-}
-
-function dirty_notepad() {
-    if (!notepad.is_dirty) {
-        notepad.is_dirty = true
-        document.getElementById("notepad_save").disabled = false
-    }
-}
-
-function save_notepad() {
-    if (notepad.is_dirty) {
-        let text = document.getElementById("notepad_input").value
-        send_message("putnote", text)
-        notepad.is_dirty = false
-        document.getElementById("notepad_save").disabled = true
-    }
-}
-
-function load_notepad() {
-    send_message("getnote")
-}
-
-function update_notepad(text) {
-    document.getElementById("notepad_input").value = text
-}
-
-function show_notepad() {
-    if (!notepad.is_visible) {
-        load_notepad()
-        document.getElementById("notepad_window").classList.add("show")
-        document.getElementById("notepad_input").focus()
-        notepad.is_visible = true
-    }
-}
-
-function hide_notepad() {
-    if (notepad.is_visible) {
-        save_notepad()
-        document.getElementById("notepad_window").classList.remove("show")
-        document.getElementById("notepad_input").blur()
-        notepad.is_visible = false
-    }
-}
-
-function toggle_notepad() {
-    if (notepad.is_visible)
-        hide_notepad()
-    else
-        show_notepad()
-}
-
 /* REMATCH & REPLAY BUTTONS WHEN GAME OVER */
 
 function on_game_over() {
@@ -497,28 +282,7 @@ try {
 
 /* ACTIONS */
 
-function action_button_with_argument(verb, noun, label) {
-    if (params.mode === "replay")
-        return
-    let id = verb + "_" + noun + "_button"
-    let button = document.getElementById(id)
-    if (!button) {
-        button = document.createElement("button")
-        button.id = id
-        button.innerHTML = label
-        button.addEventListener("click", evt => send_action(verb, noun))
-        document.getElementById("actions").prepend(button)
-    }
-    if (view.actions && view.actions[verb] && view.actions[verb].includes(noun)) {
-        button.classList.remove("hide")
-    } else {
-        button.classList.add("hide")
-    }
-}
-
 function action_button_imp(action, label, callback) {
-    if (params.mode === "replay")
-        return
     let id = action + "_button"
     let button = document.getElementById(id)
     if (!button) {
@@ -534,8 +298,26 @@ function action_button(action, label) {
     action_button_imp(action, label, evt => send_action("BUTTON", action))
 }
 
+function get_selected_card_ids() {
+    const selectedCards = document.querySelectorAll(".card.selected");
+	const ids = [];
+    
+	selectedCards.forEach(card => {
+		// Look through the card's class list
+		card.classList.forEach(cls => {
+			if (cls.startsWith("card_")) {
+				const id = cls.slice(5); // Extract just the number part
+				ids.push(id);
+			}
+		});
+	});
+
+	return ids.join(" ");    
+}
+
 function send_action(verb, noun) {
-    const mv = `${verb} ${noun}`;
+    const cardList = get_selected_card_ids();
+    const mv = `${verb} ${noun} ${cardList}`;
     console.log(mv);
     makeMove(mv);
     
@@ -608,7 +390,6 @@ document.querySelector("main").insertAdjacentHTML("beforeend", "<div style='heig
 document.querySelector("header").insertAdjacentHTML("beforeend", "<div id='actions'>")
 document.querySelector("header").insertAdjacentHTML("beforeend", "<div id='prompt'>")
 
-add_icon_button(0, "chat_button", "chat-bubble", toggle_chat).classList.add("hide")
 add_icon_button(0, "zoom_button", "magnifying-glass", () => toggle_zoom())
 add_icon_button(0, "log_button", "scroll-quill", toggle_log)
 

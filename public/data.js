@@ -730,7 +730,7 @@ const data = {
 			297
 		],
 		"rivendell": [
-			289,
+			389,
 			297
 		],
 		"moria": [
@@ -743,15 +743,15 @@ const data = {
 		],
 		"helmsdeep": [
 			1105,
-			280
+			297
 		],
 		"shelobslair": [
 			1328,
-			161
+			179
 		],
 		"mordor": [
 			1540,
-			233
+			245
 		],
 		"track_0": [
 			23,
