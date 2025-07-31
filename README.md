@@ -10,6 +10,12 @@ from linux start server
 node server.js
 ```
 
+Formay a file or group of files
+```
+npx prettier --write server.js
+npx prettier --write "**/*.js"
+```
+
 Access from Chrome on Windows using 
 ```
 http://localhost:3000
