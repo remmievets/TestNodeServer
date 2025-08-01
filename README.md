@@ -1,3 +1,37 @@
+# Lord of the Rings Personal Server
+
+# Setup Instructions
+
+1. Install git - https://git-scm.com/downloads
+2. Install js node - https://nodejs.org/en/download
+3. Clone repository to your machine - ```git clone https://github.com/remmievets/TestNodeServer.git```
+4. Install npm packages that are needed for the server - ```npm install```
+
+## Using nvm
+
+1. Install nvm
+
+```
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+```
+
+2. Reload shell configuration
+
+```
+source ~/.bashrc
+```
+
+3. Install Node.js
+
+```
+nvm install 18
+nvm use 18
+node -v
+npm -v
+```
+
+nvm allows you to install and use multiple versions of Node.js.
+
 # Running Server
 
 Login to Linux from powershell

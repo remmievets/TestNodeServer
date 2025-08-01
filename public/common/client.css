@@ -491,6 +491,7 @@ menu li.disabled:hover img {
 
 /* MAP */
 
+/*
 #mapwrap {
 	position: relative;
 	margin: 0 auto;
@@ -504,12 +505,7 @@ menu li.disabled:hover img {
 #mapwrap[data-fit="width"], #mapwrap[data-fit="both"] {
 	max-width: 100%;
 }
-
-#mapwrap #map {
-	position: absolute;
-	isolation: isolate;
-	transform-origin: 0 0;
-}
+*/
 
 /* CHAT WINDOW */
 
