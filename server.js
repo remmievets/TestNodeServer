@@ -315,9 +315,12 @@ states.bagend_preparations = {
     },
     roll() {
         // Roll die and process result
-        RollDieAndProcessResults(game.ringBearer, 'bagend_preparations_cards');
-        // Goto state to deal 4 cards
-        advance_state('bagend_preparations_cards');
+        const dr = RollDieAndProcessResults(game.ringBearer, 'bagend_preparations_cards');
+        
+        if (dr !== 4) {
+            // Goto state to deal 4 cards
+            advance_state('bagend_preparations_cards');
+        }
     },
     pass() {
         log('Ring-bearer passes');

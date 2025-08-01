@@ -230,8 +230,8 @@ main {
 }
 
 .card {
-	width: 125px;
-	height: 190px;
+	width: 187px;
+	height: 285px;
 	border-radius: 16px;
 	background-size: 100%;
 	background-color: hsl(35, 53%, 89%);
@@ -257,12 +257,14 @@ main {
 	display: block;
 	padding: 1rem;
 	background: #222;
+	width: 1650px;
 }
 
 #hand {
 	display: block;
 	padding: 1rem;
 	background: #222;
+	width: 1650px;
 }
 
 .player-hand {
@@ -271,6 +273,7 @@ main {
 	border: 1px solid #555;
 	border-radius: 0.5rem;
 	background: #333;
+	width: 1650px;
 }
 
 .player-name {
