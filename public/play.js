@@ -308,15 +308,23 @@ function on_init(view) {
     const selContainer = ui.hand_select;
     selContainer.replaceChildren();
 
-    for (const card of view.selectHand) {
-        const cardDiv = document.createElement('div');
-        cardDiv.classList.add('card', `card_${card}`);
-        selContainer.appendChild(cardDiv);
+    if (view.selectHand.length > 0) {
+        ui.hand_select.className = 'cards player-hand';
+        for (const card of view.selectHand) {
+            const cardDiv = document.createElement('div');
+            cardDiv.classList.add('card', `card_${card}`);
+            selContainer.appendChild(cardDiv);
+        }
+    }
+    else
+    {
+        ui.hand_select.className = 'hidden';
     }
 
     // Update tokens on map
     if (view.loc in data) {
         ui.map.className = view.loc;
+        ui.mapw.className = '';
     } else {
         ui.mapw.className = 'hide_map';
     }

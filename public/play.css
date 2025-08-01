@@ -81,6 +81,7 @@ main {
 	background-size: 1650px 625px;
 	background-repeat: no-repeat;
 	box-shadow: 1px 1px 8px #0008;
+	position: relative;
 }
 
 #board.hide_tokens #tokens { display: none; }
@@ -98,6 +99,7 @@ main {
 	background-size: 1650px 825px;
 	background-repeat: no-repeat;
 	box-shadow: 1px 1px 8px #0008;
+	position: relative;
 }
 
 #map.hide_markers #markers { display: none; }
@@ -260,6 +262,10 @@ main {
 	width: 1650px;
 }
 
+.hidden {
+	display: none;
+}
+
 #hand {
 	display: block;
 	padding: 1rem;
@@ -286,12 +292,12 @@ main {
 
 .board-base { background-image: url(images/game-board-base.jpg); }
 
-.map.bree { background-image: url(images/bree.png); }
-.map.moria { background-image: url(images/moria.jpg); }
-.map.helmsdeep { background-image: url(images/helms-deep.jpg); }
-.map.isengard { background-image: url(images/isengard.png); }
-.map.shelobslair { background-image: url(images/shelobs-lair.jpg); }
-.map.mordor { background-image: url(images/mordor.jpg); }
+#map.bree { background-image: url(images/bree.png); }
+#map.moria { background-image: url(images/moria.jpg); }
+#map.helmsdeep { background-image: url(images/helms-deep.jpg); }
+#map.isengard { background-image: url(images/isengard.png); }
+#map.shelobslair { background-image: url(images/shelobs-lair.jpg); }
+#map.mordor { background-image: url(images/mordor.jpg); }
 
 /* MARKERS @1X */
 

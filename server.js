@@ -274,10 +274,6 @@ states.action_discard = {
 };
 
 states.bagend_gandalf = {
-    prompt() {
-        // no prompt for client
-        return null;
-    },
     auto() {
         console.log('GANDOLF');
         // Do initial phase of the game
@@ -329,10 +325,6 @@ states.bagend_preparations = {
 };
 
 states.bagend_preparations_cards = {
-    prompt() {
-        // no prompt for client
-        return null;
-    },
     auto() {
         log('4 Cards available to distribute');
         for (let i = 0; i < 4; i++) {
@@ -414,10 +406,6 @@ states.bagend_nazgul_appears_discard = {
 };
 
 states.rivendell_elrond = {
-    prompt() {
-        // no prompt for client
-        return null;
-    },
     auto() {
         console.log('ELROND');
         // Do initial phase of the game
@@ -492,7 +480,14 @@ states.rivendell_fellowship = {
     },
 };
 
-states.moria = {};
+states.moria = {
+    auto() {
+        log('=t Moria');
+
+        // Update Location
+        game.loc = 'moria';
+    },
+};
 
 states.lothlorien_gladriel = {};
 
