@@ -361,7 +361,6 @@ function on_init(view) {
 /* UPDATE UI */
 
 function on_update(view) {
-    console.log(view);
     on_init(view);
 }
 

@@ -987,18 +987,20 @@ if (window.innerWidth <= 800) document.querySelector('aside').classList.add('hid
 function loadGame() {
     fetch(`/game/${gameId}`)
         .then((res) => res.json())
-        .then((game) => {
+        .then((data) => {
             console.log('This is a fetch message');
-            console.log(game);
-            on_init(game.board);
+            console.log(data);
+            on_init(data.game);
         });
     // TEMP TO TEST MOVE LOGIC
+    /*
     const cells = document.querySelectorAll('.card');
     cells.forEach((cell) => {
         cell.addEventListener('click', () => {
             makeMove('MOVE CLICK');
         });
     });
+    */
     // TEMP end
 }
 
@@ -1013,7 +1015,8 @@ function makeMove(move) {
             if (data.error) {
                 alert(data.error);
             } else {
-                on_update(data.board);
+                console.log(data);
+                on_update(data.game);
             }
         });
 }
