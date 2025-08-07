@@ -331,30 +331,32 @@ function on_init(view) {
     // TBD
 
     // Update prompt
-    ui.prompt.textContent = view.prompt.message;
-
-    // Assign header a color based on player
-    if (view.prompt.player) {
-        ui.header.className = view.prompt.player.toLowerCase();
-    } else {
-        ui.header.className = '';
-    }
-
-    // Update action buttons if available
-    ui.buttons.replaceChildren();
-    if (view.prompt.buttons) {
-        const availableActions = view.prompt.buttons;
-        for (const [actionName, label] of Object.entries(availableActions)) {
-            action_button(actionName, label);
+    if (view.prompt) {
+        ui.prompt.textContent = view.prompt.message;
+        
+        // Assign header a color based on player
+        if (view.prompt.player) {
+            ui.header.className = view.prompt.player.toLowerCase();
+        } else {
+            ui.header.className = '';
         }
-    }
 
-    // Update if there are selectable cards or not
-    if (view.prompt.cards) {
-        enable_card_selection(view.prompt.cards);
-        //send_action("DISTRIBUTE", `${view.prompt.action.cards[0]} Frodo`);
-    } else {
-        reset_all_card_states();
+        // Update action buttons if available
+        ui.buttons.replaceChildren();
+        if (view.prompt.buttons) {
+            const availableActions = view.prompt.buttons;
+            for (const [actionName, label] of Object.entries(availableActions)) {
+                action_button(actionName, label);
+            }
+        }
+
+        // Update if there are selectable cards or not
+        if (view.prompt.cards) {
+            enable_card_selection(view.prompt.cards);
+            //send_action("DISTRIBUTE", `${view.prompt.action.cards[0]} Frodo`);
+        } else {
+            reset_all_card_states();
+        }
     }
 }
 

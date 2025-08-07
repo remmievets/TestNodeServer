@@ -22,14 +22,6 @@ const gameId = search_params.get('gameId');
 let game_log = [];
 let game_cookie = 0;
 
-let snap_active = [];
-let snap_cache = [];
-let snap_count = 0;
-let snap_this = 0;
-let snap_view = null;
-
-var replay_panel = null;
-
 /* PUBLIC UTILITY FUNCTIONS */
 
 function scroll_into_view(e) {
@@ -201,7 +193,6 @@ let old_active = null;
 function on_update_header() {
     if (typeof on_prompt === 'function') document.getElementById('prompt').innerHTML = on_prompt(view.prompt);
     else document.getElementById('prompt').textContent = view.prompt;
-    if (params.mode === 'replay') return;
     if (snap_view) document.querySelector('header').classList.add('replay');
     else document.querySelector('header').classList.remove('replay');
     if (view.actions) {
@@ -215,38 +206,11 @@ function on_update_header() {
     old_active = view.active;
 }
 
-function on_update_roles() {
-    if (view.active !== undefined) for (let role in roles) roles[role].element.classList.toggle('active', view.active === role);
-}
+//function on_update_roles() {
+//    if (view.active !== undefined) for (let role in roles) roles[role].element.classList.toggle('active', view.active === role);
+//}
 
 /* LOG */
-
-function on_update_log(change_start, end) {
-    let div = document.getElementById('log');
-
-    let to_delete = div.children.length - change_start;
-    while (to_delete-- > 0) div.removeChild(div.lastChild);
-
-    for (let i = div.children.length; i < end; ++i) {
-        let text = game_log[i];
-        if (params.mode === 'debug' && typeof text === 'object') {
-            let entry = document.createElement('a');
-            entry.href = '#' + text[0];
-            if (text[3] !== null) entry.textContent = '\u25b6 ' + text[1] + ' ' + text[2] + ' ' + text[3];
-            else entry.textContent = '\u25b6 ' + text[1] + ' ' + text[2];
-            entry.style.display = 'block';
-            entry.style.textDecoration = 'none';
-            div.appendChild(entry);
-        } else if (typeof on_log === 'function') {
-            div.appendChild(on_log(text, i));
-        } else {
-            let entry = document.createElement('div');
-            entry.textContent = text;
-            div.appendChild(entry);
-        }
-    }
-    scroll_log_to_end();
-}
 
 function scroll_log_to_end() {
     let div = document.getElementById('log');
@@ -392,13 +356,13 @@ function add_main_menu_item_link(text, url) {
     popup.insertBefore(item, sep);
 }
 
-add_main_menu_separator();
-if (params.mode === 'play' && params.role !== 'Observer') {
-    add_main_menu_item_link('Go home', '/games/active');
-    add_main_menu_item_link('Go to next game', '/games/next');
-} else {
-    add_main_menu_item_link('Go home', '/');
+function resetGame() {
 }
+
+add_main_menu_separator();
+add_main_menu_item('Reset game', resetGame);
+add_main_menu_separator();
+add_main_menu_item_link('Go home', '/');
 
 function close_toolbar_menus(self) {
     for (let node of document.querySelectorAll('#toolbar > details')) if (node !== self) node.removeAttribute('open');
@@ -447,73 +411,6 @@ function toggle_fullscreen() {
 
 if ('ontouchstart' in window) {
     document.querySelector('header').ondblclick = toggle_fullscreen;
-}
-
-/* SNAPSHOT VIEW */
-
-replay_panel = document.createElement('div');
-replay_panel.id = 'replay_panel';
-
-function add_replay_button(id, callback) {
-    let button = document.createElement('div');
-    button.className = 'replay_button';
-    button.id = id;
-    button.onclick = callback;
-    replay_panel.appendChild(button);
-    return button;
-}
-
-add_replay_button('replay_first', on_snap_first);
-add_replay_button('replay_prev', on_snap_prev);
-add_replay_button('replay_step_prev', null).classList.add('hide');
-add_replay_button('replay_step_next', null).classList.add('hide');
-add_replay_button('replay_next', on_snap_next);
-add_replay_button('replay_last', null).classList.add('hide');
-add_replay_button('replay_play', on_snap_stop);
-add_replay_button('replay_stop', null).classList.add('hide');
-
-function request_snap(snap_id) {
-    if (snap_id >= 1 && snap_id <= snap_count) {
-        snap_this = snap_id;
-        if (snap_cache[snap_id]) show_snap(snap_id);
-        else send_message('getsnap', snap_id);
-    }
-}
-
-function show_snap(snap_id) {
-    if (snap_view === null) snap_view = view;
-    view = snap_cache[snap_id];
-    view.prompt = 'Replay ' + snap_id + ' / ' + snap_count + ' \u2013 ' + snap_active[snap_id];
-    on_update_header();
-    on_update_roles();
-    on_update();
-    on_update_log(view.log, view.log);
-}
-
-function on_snap_first() {
-    request_snap(1);
-}
-
-function on_snap_prev() {
-    if (!snap_view) request_snap(snap_count);
-    else if (snap_this > 1) request_snap(snap_this - 1);
-}
-
-function on_snap_next() {
-    if (!snap_view) on_snap_stop();
-    else if (snap_this < snap_count) request_snap(snap_this + 1);
-    else on_snap_stop();
-}
-
-function on_snap_stop() {
-    if (snap_view) {
-        view = snap_view;
-        snap_view = null;
-        on_update_header();
-        on_update_roles();
-        on_update();
-        on_update_log(game_log.length, game_log.length);
-    }
 }
 
 /* SHIFT KEY CSS TOGGLE */
@@ -992,16 +889,6 @@ function loadGame() {
             console.log(data);
             on_init(data.game);
         });
-    // TEMP TO TEST MOVE LOGIC
-    /*
-    const cells = document.querySelectorAll('.card');
-    cells.forEach((cell) => {
-        cell.addEventListener('click', () => {
-            makeMove('MOVE CLICK');
-        });
-    });
-    */
-    // TEMP end
 }
 
 function makeMove(move) {
