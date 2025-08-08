@@ -646,6 +646,7 @@ function set_delete(set, item) {
 }
 
 const moveHandlers = {
+    RESET: (game, button, args) => setup_game(),
     BUTTON: (game, button, args) => execute_button(game, button, args),
 };
 
@@ -685,36 +686,6 @@ function parseAction(gameId, move) {
     return game;
 }
 
-/*
-// Make a move
-app.post('/move', (req, res) => {
-    try {
-        const { gameId, move } = req.body;
-
-        // Output infomation about move action
-        console.log(`${move}`);
-
-        // Split move into command and arguments
-        // Splits by any whitespace
-        const parts = move.trim().split(/\s+/);
-        const command = parts[0];
-        const func = parts[1];
-        const args = parts.slice(2);
-
-        // Dispatch to appropriate handler
-        const handler = moveHandlers[command];
-        if (!handler) throw new Error(`Unknown move command: ${move}`);
-        handler(game, func, args);
-
-        // Respond with the updated board and next player
-        res.json({ id: gameId, board: game });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-*/
-
 
 /////////////////////////////////////////
 // Export the functions
@@ -724,4 +695,3 @@ module.exports = {
     getGameView,
     parseAction,
 };
-

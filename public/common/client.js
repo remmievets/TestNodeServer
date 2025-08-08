@@ -2,25 +2,10 @@
 
 /* global on_update, on_reply, on_log */
 
-/* PUBLIC GLOBALS */
-
-var roles = null;
-var player = 'Observer';
-var view = null;
-
 /* PRIVATE GLOBALS */
 
 var search_params = new URLSearchParams(window.location.search);
-var params = {
-    title_id: window.location.pathname.split('/')[1],
-    game_id: search_params.get('game') || 0,
-    role: search_params.get('role') || 'Observer',
-    mode: search_params.get('mode') || 'play',
-};
 const gameId = search_params.get('gameId');
-
-let game_log = [];
-let game_cookie = 0;
 
 /* PUBLIC UTILITY FUNCTIONS */
 
@@ -107,109 +92,6 @@ function drag_element_with_mouse(element_sel, grabber_sel) {
     grabber.addEventListener('mousedown', md);
 }
 
-/* TITLE BLINKER */
-
-let blink_title = document.title;
-let blink_timer = 0;
-
-function start_blinker(message) {
-    let tick = false;
-    if (blink_timer) stop_blinker();
-    if (!document.hasFocus()) {
-        document.title = message;
-        blink_timer = setInterval(function () {
-            document.title = tick ? message : blink_title;
-            tick = !tick;
-        }, 1000);
-    }
-}
-
-function stop_blinker() {
-    document.title = blink_title;
-    clearInterval(blink_timer);
-    blink_timer = 0;
-}
-
-window.addEventListener('focus', stop_blinker);
-
-/* REMATCH & REPLAY BUTTONS WHEN GAME OVER */
-
-function on_game_over() {
-    remove_resign_menu();
-
-    add_icon_button(1, 'replay_button', 'sherlock-holmes-mirror', function goto_replay() {
-        search_params.delete('role');
-        search_params.set('mode', 'replay');
-        window.location.search = search_params;
-    });
-
-    if (player !== 'Observer') {
-        add_icon_button(1, 'rematch_button', 'cycle', function goto_rematch() {
-            window.location = '/rematch/' + params.game_id;
-        });
-    }
-}
-
-/* PLAYER ROLE LIST */
-
-function init_role_element(role_id, role_name) {
-    let e_role = document.createElement('div');
-    e_role.id = role_id;
-    e_role.className = 'role';
-    e_role.innerHTML =
-        `<div class="role_name"><span>${role_name}</span></div>` +
-        `<div class="role_stat"></div>` +
-        `<div class="role_user"></div>` +
-        `<div class="role_info"></div>`;
-    document.getElementById('roles').appendChild(e_role);
-    return e_role;
-}
-
-function init_player_names(players) {
-    roles = {};
-    for (let pp of players) {
-        let class_name = pp.role.replace(/\W/g, '_');
-        let id = 'role_' + class_name;
-        let e = document.getElementById(id);
-        if (!e) e = init_role_element(id, pp.role);
-        let obj = (roles[pp.role] = {
-            class_name: class_name,
-            id: id,
-            element: e,
-            name: e.querySelector('.role_name'),
-            stat: e.querySelector('.role_stat'),
-            user: e.querySelector('.role_user'),
-        });
-        if (pp.name) obj.user.innerHTML = `<a href="/user/${pp.name}" target="_blank">${pp.name}</a>`;
-        else obj.user.textContent = 'NONE';
-    }
-}
-
-/* HEADER */
-
-let is_your_turn = false;
-let old_active = null;
-
-function on_update_header() {
-    if (typeof on_prompt === 'function') document.getElementById('prompt').innerHTML = on_prompt(view.prompt);
-    else document.getElementById('prompt').textContent = view.prompt;
-    if (snap_view) document.querySelector('header').classList.add('replay');
-    else document.querySelector('header').classList.remove('replay');
-    if (view.actions) {
-        document.querySelector('header').classList.add('your_turn');
-        if (!is_your_turn || old_active !== view.active) start_blinker('YOUR TURN');
-        is_your_turn = true;
-    } else {
-        document.querySelector('header').classList.remove('your_turn');
-        is_your_turn = false;
-    }
-    old_active = view.active;
-}
-
-//function on_update_roles() {
-//    if (view.active !== undefined) for (let role in roles) roles[role].element.classList.toggle('active', view.active === role);
-//}
-
 /* LOG */
 
 function scroll_log_to_end() {
@@ -267,45 +149,7 @@ function send_action(verb, noun) {
     return false;
 }
 
-function send_query(q, param) {
-    if (typeof replay_query === 'function') replay_query(q, param);
-    else if (snap_view) send_message('querysnap', [snap_this, q, param]);
-    else send_message('query', [q, param]);
-}
-
-function send_save() {
-    send_message('save');
-}
-
-function send_restore() {
-    send_message('restore', window.localStorage[params.title_id + '/save']);
-}
-
-/* REPLAY */
-
-function init_replay() {
-    let script = document.createElement('script');
-    script.src = '/common/replay.js';
-    document.body.appendChild(script);
-}
-
 /* MAIN MENU */
-
-function confirm_resign() {
-    if (window.confirm('Are you sure that you want to resign?')) send_message('resign');
-}
-
-function add_resign_menu() {
-    if (Object.keys(roles).length > 1) {
-        let popup = document.querySelector('#toolbar details menu');
-        popup.insertAdjacentHTML('beforeend', '<li class="resign separator">');
-        popup.insertAdjacentHTML('beforeend', '<li class="resign" onclick="confirm_resign()">Resign');
-    }
-}
-
-function remove_resign_menu() {
-    for (let e of document.querySelectorAll('.resign')) e.remove();
-}
 
 function add_icon_button(where, id, img, fn) {
     let button = document.getElementById(id);
@@ -357,6 +201,7 @@ function add_main_menu_item_link(text, url) {
 }
 
 function resetGame() {
+    makeMove('RESET');
 }
 
 add_main_menu_separator();
@@ -885,8 +730,8 @@ function loadGame() {
     fetch(`/game/${gameId}`)
         .then((res) => res.json())
         .then((data) => {
-            console.log('This is a fetch message');
-            console.log(data);
+            console.log('Load Game');
+            console.log(data.game);
             on_init(data.game);
         });
 }
