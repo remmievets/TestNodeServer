@@ -218,6 +218,15 @@ main {
 	height: 44px;
 }
 
+.space {
+	position: absolute;
+	background-size: cover;
+	background-color: black;
+	background-repeat: no-repeat;
+	width: 44px;
+	height: 44px;
+}
+
 /* CARDS */
 
 #last_played {

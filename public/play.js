@@ -53,13 +53,18 @@ let offsetX = 0;
 let offsetY = 0;
 let wasDragged = false;
 
+/*
 const map = document.getElementById('board');
 const container = document.getElementById('tokens');
-
-/*
-const map = document.getElementById('map');
-const container = document.getElementById('spaces');
 */
+
+const map = document.getElementById('map');
+const container = document.getElementById('markers');
+
+map.addEventListener('click', on_space_click);
+document.addEventListener('mousemove', on_handle_move);
+document.addEventListener('mouseup', on_drag_ends);
+console.log(map);
 
 function on_space_click(e) {
     if (activeSpace) return;
@@ -72,7 +77,6 @@ function on_space_click(e) {
     const { x, y } = getRelativeClickPosition(e);
     const space = on_create_space(x, y);
     container.appendChild(space);
-    makePlay('MOVE CLICK CLOCK');
 }
 
 function getRelativeClickPosition(e) {
@@ -120,13 +124,6 @@ function on_drag_ends(e) {
         activeSpace = null;
     }
 }
-
-/*
-map.addEventListener('click', on_space_click);
-document.addEventListener('mousemove', on_handle_move);
-document.addEventListener('mouseup', on_drag_ends);
-console.log(map);
-*/
 
 /* BUILD UI */
 
