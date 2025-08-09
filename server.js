@@ -120,7 +120,7 @@ app.get('/game/:gameId', (req, res) => {
     try {
         // Reload from database
         const game = load_game(req.params.gameId);
-        
+
         // Update the game information back to database state
         tba.updateGame(req.params.gameId, game);
 

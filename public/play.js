@@ -312,9 +312,7 @@ function on_init(view) {
             cardDiv.classList.add('card', `card_${card}`);
             selContainer.appendChild(cardDiv);
         }
-    }
-    else
-    {
+    } else {
         ui.hand_select.className = 'hidden';
     }
 
@@ -330,7 +328,7 @@ function on_init(view) {
     // Update prompt
     if (view.prompt) {
         ui.prompt.textContent = view.prompt.message;
-        
+
         // Assign header a color based on player
         if (view.prompt.player) {
             ui.header.className = view.prompt.player.toLowerCase();

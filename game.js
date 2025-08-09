@@ -3,7 +3,6 @@
 // Modules
 const crypto = require('crypto');
 
-
 //////////////////////
 // Database const
 const initialPlayer = {
@@ -253,7 +252,7 @@ states.bagend_preparations = {
     roll() {
         // Roll die and process result
         const dr = RollDieAndProcessResults(game.ringBearer, 'bagend_preparations_cards');
-        
+
         if (dr !== 4) {
             // Goto state to deal 4 cards
             advance_state('bagend_preparations_cards');
@@ -422,11 +421,26 @@ states.rivendell_fellowship = {
 };
 
 states.moria = {
-    auto() {
-        log('=t Moria');
+    prompt() {
+        log('=! Moria');
 
         // Update Location
         game.loc = 'moria';
+        return {
+            message: 'Advance to',
+            buttons: {
+                next: 'Next',
+            },
+        };
+    },
+    auto() {
+        log('=! Moria');
+
+        // Update Location
+        game.loc = 'moria';
+    },
+    next() {
+        advance_state('helms_deep');
     },
 };
 
@@ -436,11 +450,77 @@ states.lothlorien_recovery = {};
 
 states.lothlorien_test_of_gladriel = {};
 
-states.helms_deep = {};
+states.helms_deep = {
+    prompt() {
+        log('=! Helms Deep');
 
-states.shelobs_lair = {};
+        // Update Location
+        game.loc = 'helmsdeep';
+        return {
+            message: 'Advance to',
+            buttons: {
+                next: 'Next',
+            },
+        };
+    },
+    auto() {
+        log('=! Helms Deep');
 
-states.mordor = {};
+        // Update Location
+        game.loc = 'helmsdeep';
+    },
+    next() {
+        advance_state('shelobs_lair');
+    },
+};
+
+states.shelobs_lair = {
+    prompt() {
+        log('=! Shelobs Lair');
+
+        // Update Location
+        game.loc = 'shelobslair';
+        return {
+            message: 'Advance to',
+            buttons: {
+                next: 'Next',
+            },
+        };
+    },
+    auto() {
+        log('=! Shelobs Lair');
+
+        // Update Location
+        game.loc = 'shelobslair';
+    },
+    next() {
+        advance_state('mordor');
+    },
+};
+
+states.mordor = {
+    prompt() {
+        log('=! Mordor');
+
+        // Update Location
+        game.loc = 'mordor';
+        return {
+            message: 'Advance to',
+            buttons: {
+                next: 'Next',
+            },
+        };
+    },
+    auto() {
+        log('=! Mordor');
+
+        // Update Location
+        game.loc = 'mordor';
+    },
+    next() {
+        log('No were to go');
+    },
+};
 
 function RollDieAndProcessResults(p, nextState) {
     let b_roll = roll_d6();
@@ -685,7 +765,6 @@ function parseAction(gameId, move) {
 
     return game;
 }
-
 
 /////////////////////////////////////////
 // Export the functions
