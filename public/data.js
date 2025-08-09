@@ -948,8 +948,8 @@ const data = {
             { x: 1302, y: 746, action: 'sun' },
             { x: 1369, y: 746, action: 'shield' },
             { x: 1440, y: 746, action: 'sun' },
-            { x: 1507, y: 746, action: 'shield' },
-            { x: 1575, y: 746, action: 'sun' },
+            { x: 1507, y: 746, action: 'shield'},
+            { x: 1575, y: 746, action: 'sun'},
         ],
         events: [
             { x: 25, y: 32 },
