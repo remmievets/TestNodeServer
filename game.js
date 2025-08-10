@@ -3,6 +3,9 @@
 // Modules
 const crypto = require('crypto');
 
+// Game module
+const util = require('./public/common/util.js');
+
 //////////////////////
 // Database const
 const initialPlayer = {
@@ -227,7 +230,7 @@ states.bagend_gandalf = {
         // Deal cards round-robin until deck is empty
         for (let i = 0; i < 6 * porder.length; i++) {
             const player = porder[i % porder.length];
-            set_add(game.players[player].hand, deal_card());
+            util.set_add(game.players[player].hand, deal_card());
         }
 
         // Go to next state
@@ -252,7 +255,7 @@ states.bagend_preparations = {
     roll() {
         // Roll die and process result
         const dr = RollDieAndProcessResults(game.ringBearer, 'bagend_preparations_cards');
-
+        
         if (dr !== 4) {
             // Goto state to deal 4 cards
             advance_state('bagend_preparations_cards');
@@ -268,7 +271,7 @@ states.bagend_preparations_cards = {
     auto() {
         log('4 Cards available to distribute');
         for (let i = 0; i < 4; i++) {
-            set_add(game.selectHand, deal_card());
+            util.set_add(game.selectHand, deal_card());
         }
         game.number = 4;
         advance_state('bagend_preparations_distribute');
@@ -354,7 +357,7 @@ states.rivendell_elrond = {
         log('Deal feature cards');
         let featureDeck = [];
         create_deck(featureDeck, 102, 113);
-        shuffle(featureDeck);
+        util.shuffle(featureDeck);
 
         // Players in order
         const porder = get_active_players_in_order();
@@ -365,7 +368,7 @@ states.rivendell_elrond = {
             const player = porder[i % porder.length];
             let card = featureDeck.pop();
             log(`C${card} given to ${player}`);
-            set_add(game.players[player].hand, card);
+            util.set_add(game.players[player].hand, card);
             i++;
         }
 
@@ -578,21 +581,22 @@ function setup_game() {
 
     // Create seed
     game.seed = crypto.randomInt(1, 2 ** 35 - 31);
+    util.set_seed(game.seed);
 
     // Create deck of cards
     create_deck(game.deck, 0, 59);
-    shuffle(game.deck);
+    util.shuffle(game.deck);
 
     // Create deck of story tiles
     create_deck(game.story, 0, 22);
-    shuffle(game.story);
+    util.shuffle(game.story);
 
     // Create deck of gandalf cards
     create_deck(game.gandalf, 0, 7);
 
     // Create a special shield list with 2 of each shield type for end of board bonus
     game.shields = [1, 1, 2, 2, 3, 3];
-    shuffle(game.shields);
+    util.shuffle(game.shields);
 
     // Advance to first state and start executing
     advance_state('bagend_gandalf');
@@ -601,41 +605,6 @@ function setup_game() {
 /* COMMON LIBRARY */
 function log(s) {
     game.log.push(s);
-}
-
-function random(range) {
-    // An MLCG using integer arithmetic with doubles.
-    // https://www.ams.org/journals/mcom/1999-68-225/S0025-5718-99-00996-5/S0025-5718-99-00996-5.pdf
-    // m = 2**35 − 31
-    return (game.seed = (game.seed * 200105) % 34359738337) % range;
-}
-
-function random_bigint(range) {
-    // Largest MLCG that will fit its state in a double.
-    // Uses BigInt for arithmetic, so is an order of magnitude slower.
-    // https://www.ams.org/journals/mcom/1999-68-225/S0025-5718-99-00996-5/S0025-5718-99-00996-5.pdf
-    // m = 2**53 - 111
-    return (game.seed = Number((BigInt(game.seed) * 5667072534355537n) % 9007199254740881n)) % range;
-}
-
-function shuffle(list) {
-    // Fisher-Yates shuffle
-    for (let i = list.length - 1; i > 0; --i) {
-        let j = random(i + 1);
-        let tmp = list[j];
-        list[j] = list[i];
-        list[i] = tmp;
-    }
-}
-
-function shuffle_bigint(list) {
-    // Fisher-Yates shuffle
-    for (let i = list.length - 1; i > 0; --i) {
-        let j = random_bigint(i + 1);
-        let tmp = list[j];
-        list[j] = list[i];
-        list[i] = tmp;
-    }
 }
 
 function create_deck(list, startIndex, endIndex) {
@@ -653,76 +622,7 @@ function deal_card() {
 function reshuffle_deck() {}
 
 function roll_d6() {
-    return random(6) + 1;
-}
-
-// Array remove and insert (faster than splice)
-
-function array_remove(array, index) {
-    let n = array.length;
-    for (let i = index + 1; i < n; ++i) array[i - 1] = array[i];
-    array.length = n - 1;
-}
-
-function array_insert(array, index, item) {
-    for (let i = array.length; i > index; --i) array[i] = array[i - 1];
-    array[index] = item;
-}
-
-function array_insert_pair(array, index, key, value) {
-    for (let i = array.length; i > index; i -= 2) {
-        array[i] = array[i - 2];
-        array[i + 1] = array[i - 1];
-    }
-    array[index] = key;
-    array[index + 1] = value;
-}
-
-// Set as plain sorted array
-
-function set_clear(set) {
-    set.length = 0;
-}
-
-function set_has(set, item) {
-    let a = 0;
-    let b = set.length - 1;
-    while (a <= b) {
-        let m = (a + b) >> 1;
-        let x = set[m];
-        if (item < x) b = m - 1;
-        else if (item > x) a = m + 1;
-        else return true;
-    }
-    return false;
-}
-
-function set_add(set, item) {
-    let a = 0;
-    let b = set.length - 1;
-    while (a <= b) {
-        let m = (a + b) >> 1;
-        let x = set[m];
-        if (item < x) b = m - 1;
-        else if (item > x) a = m + 1;
-        else return;
-    }
-    array_insert(set, a, item);
-}
-
-function set_delete(set, item) {
-    let a = 0;
-    let b = set.length - 1;
-    while (a <= b) {
-        let m = (a + b) >> 1;
-        let x = set[m];
-        if (item < x) b = m - 1;
-        else if (item > x) a = m + 1;
-        else {
-            array_remove(set, m);
-            return;
-        }
-    }
+    return util.random(6) + 1;
 }
 
 const moveHandlers = {
@@ -765,6 +665,7 @@ function parseAction(gameId, move) {
 
     return game;
 }
+
 
 /////////////////////////////////////////
 // Export the functions

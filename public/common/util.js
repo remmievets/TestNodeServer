@@ -1,41 +1,15 @@
 // === COMMON LIBRARY ===
+var seed_value;
 
-function clear_undo() {
-    if (game.undo) {
-        game.undo.length = 0;
-    }
-}
-
-function push_undo() {
-    if (game.undo) {
-        let copy = {};
-        for (let k in game) {
-            let v = game[k];
-            if (k === 'undo') continue;
-            else if (k === 'log') v = v.length;
-            else if (typeof v === 'object' && v !== null) v = object_copy(v);
-            copy[k] = v;
-        }
-        game.undo.push(copy);
-    }
-}
-
-function pop_undo() {
-    if (game.undo) {
-        let save_log = game.log;
-        let save_undo = game.undo;
-        game = save_undo.pop();
-        save_log.length = game.log;
-        game.log = save_log;
-        game.undo = save_undo;
-    }
+function set_seed(seed) {
+    seed_value = seed;
 }
 
 function random(range) {
     // An MLCG using integer arithmetic with doubles.
     // https://www.ams.org/journals/mcom/1999-68-225/S0025-5718-99-00996-5/S0025-5718-99-00996-5.pdf
     // m = 2**35 − 31
-    return (game.seed = (game.seed * 200105) % 34359738337) % range;
+    return (seed_value = (seed_value * 200105) % 34359738337) % range;
 }
 
 function random_bigint(range) {
@@ -43,7 +17,7 @@ function random_bigint(range) {
     // Uses BigInt for arithmetic, so is an order of magnitude slower.
     // https://www.ams.org/journals/mcom/1999-68-225/S0025-5718-99-00996-5/S0025-5718-99-00996-5.pdf
     // m = 2**53 - 111
-    return (game.seed = Number((BigInt(game.seed) * 5667072534355537n) % 9007199254740881n)) % range;
+    return (seed_value = Number((BigInt(seed_value) * 5667072534355537n) % 9007199254740881n)) % range;
 }
 
 function shuffle(list) {
@@ -305,4 +279,33 @@ function map_group_by(items, callback) {
         }
     }
     return groups;
+}
+
+if (typeof module === 'object') {
+    module.exports = {
+        set_seed,
+        random,
+        random_bigint,
+        shuffle,
+        shuffle_bigint,
+        object_copy,
+        array_remove,
+        array_remove_item,
+        array_insert,
+        array_remove_pair,
+        array_insert_pair,
+        set_clear,
+        set_add,
+        set_delete,
+        set_toggle,
+        map_clear,
+        map_has,
+        map_get,
+        map_set,
+        map_delete,
+        map_for_each,
+        object_diff,
+        object_group_by,
+        map_group_by
+    };
 }
