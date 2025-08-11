@@ -48,83 +48,6 @@ const CARDS = data.cards;
 
 /* ANIMATION */
 
-let activeSpace = null;
-let offsetX = 0;
-let offsetY = 0;
-let wasDragged = false;
-
-/*
-const map = document.getElementById('board');
-const container = document.getElementById('tokens');
-*/
-
-const map = document.getElementById('map');
-const container = document.getElementById('markers');
-
-map.addEventListener('click', on_space_click);
-document.addEventListener('mousemove', on_handle_move);
-document.addEventListener('mouseup', on_drag_ends);
-console.log(map);
-
-function on_space_click(e) {
-    if (activeSpace) return;
-    if (wasDragged) {
-        console.log('ignored container click');
-        wasDragged = false;
-        return;
-    }
-    console.log('container click');
-    const { x, y } = getRelativeClickPosition(e);
-    const space = on_create_space(x, y);
-    container.appendChild(space);
-}
-
-function getRelativeClickPosition(e) {
-    const rect = container.getBoundingClientRect();
-    return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-    };
-}
-
-function on_create_space(x, y) {
-    console.log('create space');
-    const space = document.createElement('div');
-    space.classList.add('space');
-    space.style.left = `${x}px`;
-    space.style.top = `${y}px`;
-    space.style.width = '58px';
-    space.style.height = '58px';
-
-    space.addEventListener('mousedown', on_drag_start);
-    return space;
-}
-
-function on_handle_move(e) {
-    if (!activeSpace) return;
-    console.log('handle move');
-    wasDragged = true;
-    const { x, y } = getRelativeClickPosition(e);
-    activeSpace.style.left = `${x - offsetX}px`;
-    activeSpace.style.top = `${y - offsetY}px`;
-}
-
-function on_drag_start(e) {
-    console.log('drag start');
-    activeSpace = e.target;
-    offsetX = e.offsetX;
-    offsetY = e.offsetY;
-    activeSpace.style.cursor = 'grabbing';
-}
-
-function on_drag_ends(e) {
-    console.log('drag end');
-    if (activeSpace) {
-        activeSpace.style.cursor = 'grab';
-        activeSpace = null;
-    }
-}
-
 /* BUILD UI */
 
 let ui = {
@@ -147,6 +70,11 @@ let ui = {
 
     location_marker: null,
     sauron_marker: null,
+    event_marker: null,
+    fight_marker: null,
+    friendship_marker: null,
+    hide_marker: null,
+    travel_marker: null,
 
     hand_select: document.getElementById('hand_select'),
 
@@ -317,13 +245,41 @@ function on_init(view) {
     }
 
     // Update tokens on map
+    ui.markers_element.replaceChildren();
     if (view.loc in data) {
+        // Make sure location is viewable
         ui.map.className = view.loc;
         ui.mapw.className = '';
+        
+        // Put markers on board
+        if (data[view.loc].events) {
+            ui.event_marker = build_piece('marker grey');
+            const f = view.conflict.eventValue;
+            show_piece_at(ui.markers_element, ui.event_marker, data[view.loc].events[f].x, data[view.loc].events[f].y);
+        }
+        if (data[view.loc].friendship) {
+            ui.friendship_marker = build_piece('marker grey');
+            const f = view.conflict.friendship;
+            show_piece_at(ui.markers_element, ui.friendship_marker, data[view.loc].friendship[f].x, data[view.loc].friendship[f].y);
+        }
+        if (data[view.loc].fight) {
+            ui.fight_marker = build_piece('marker grey');
+            const f = view.conflict.fight;
+            show_piece_at(ui.markers_element, ui.fight_marker, data[view.loc].fight[f].x, data[view.loc].fight[f].y);
+        }
+        if (data[view.loc].hide) {
+            ui.hide_marker = build_piece('marker grey');
+            const f = view.conflict.hide;
+            show_piece_at(ui.markers_element, ui.hide_marker, data[view.loc].hide[f].x, data[view.loc].hide[f].y);
+        }
+        if (data[view.loc].travel) {
+            ui.travel_marker = build_piece('marker grey');
+            const f = view.conflict.travel;
+            show_piece_at(ui.markers_element, ui.travel_marker, data[view.loc].travel[f].x, data[view.loc].travel[f].y);
+        }
     } else {
         ui.mapw.className = 'hide_map';
     }
-    // TBD
 
     // Update prompt
     if (view.prompt) {

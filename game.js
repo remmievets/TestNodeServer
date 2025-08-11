@@ -255,7 +255,7 @@ states.bagend_preparations = {
     roll() {
         // Roll die and process result
         const dr = RollDieAndProcessResults(game.ringBearer, 'bagend_preparations_cards');
-        
+
         if (dr !== 4) {
             // Goto state to deal 4 cards
             advance_state('bagend_preparations_cards');
@@ -665,7 +665,6 @@ function parseAction(gameId, move) {
 
     return game;
 }
-
 
 /////////////////////////////////////////
 // Export the functions

@@ -306,6 +306,6 @@ if (typeof module === 'object') {
         map_for_each,
         object_diff,
         object_group_by,
-        map_group_by
+        map_group_by,
     };
 }
