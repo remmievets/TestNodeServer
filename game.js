@@ -55,9 +55,6 @@ var states = {};
 /// @brief All information about the current game
 var game;
 
-/// @brief Reduced information of game which is sent to client
-var view;
-
 //////////////////////
 /* Game helpers */
 
@@ -153,7 +150,7 @@ function execute_button(g, buttonName, args) {
 
     if (state && typeof state[buttonName] === 'function') {
         // Call the function with view and any other needed arguments
-        return state[buttonName](args);
+        state[buttonName](args);
     } else {
         throw new Error(`State "${g.state}" does not support move "${buttonName}"`);
     }

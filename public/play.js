@@ -250,7 +250,7 @@ function on_init(view) {
         // Make sure location is viewable
         ui.map.className = view.loc;
         ui.mapw.className = '';
-        
+
         // Put markers on board
         if (data[view.loc].events) {
             ui.event_marker = build_piece('marker grey');

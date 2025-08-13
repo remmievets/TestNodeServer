@@ -73,4 +73,3 @@ function on_drag_ends(e) {
         activeSpace = null;
     }
 }
-
