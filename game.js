@@ -5,10 +5,12 @@ const crypto = require('crypto');
 
 // Game module
 const util = require('./public/common/util.js');
+const data = require('./public/data.js');
 
 //////////////////////
 // Database const
 const initialPlayer = {
+    active: true,
     hand: [],
     rings: 0,
     hearts: 0,
@@ -19,10 +21,15 @@ const initialPlayer = {
 
 const initialGame = {
     seed: 0,
+    /// @brief Full deck of cards (hidden)
     deck: [],
+    /// @brief All available gandalf cards
     gandalf: [],
+    /// @brief End of conflict board shields (hidden)
     shields: [],
+    /// @brief Story tiles for a conflict (hidden)
     story: [],
+    /// @brief Player information
     players: {
         Frodo: structuredClone(initialPlayer),
         Sam: structuredClone(initialPlayer),
@@ -33,11 +40,12 @@ const initialGame = {
     loc: 'bagend',
     log: [],
     selectHand: [],
-    state: '',
-    nextState: '',
+    state: null,
+    nextState: { state: null, args: null },
     sauron: 15,
     currentPlayer: 'Frodo',
     ringBearer: 'Frodo',
+    /// @brief Conflict board information
     conflict: {
         fight: 0,
         travel: 0,
@@ -46,7 +54,12 @@ const initialGame = {
         eventValue: 0,
         ringUsed: false,
     },
-    prompt: {},
+    /// @brief Keep track of information for a state
+    action: {
+        count: 0,
+    },
+    /// @brief Prompt to display for the client
+    prompt: null,
 };
 
 /// @brief Information about the states of execution in the game
@@ -58,13 +71,25 @@ var game;
 //////////////////////
 /* Game helpers */
 
-function get_active_players_in_order() {
+function get_active_player_list() {
     const porder = ['Frodo', 'Sam', 'Pipin', 'Merry', 'Fatty'];
-    const start = porder.indexOf(game.ringBearer);
+    return porder.filter((p) => game.players[p] && game.players[p].active);
+}
+
+function get_next_player(p) {
+    const porder = get_active_player_list();
+    const start = porder.indexOf(p);
+    const idx = (start + 1) % porder.length;
+    return porder[idx];
+}
+
+function get_active_players_in_order(p) {
+    const porder = get_active_player_list();
+    const start = porder.indexOf(p);
 
     const orderedPlayers = [];
 
-    // TBD - Check that players are still active
+    // Add players to ordered list if player is active
     for (let i = 0; i < porder.length; i++) {
         const idx = (start + i) % porder.length;
         orderedPlayers.push(porder[idx]);
@@ -73,12 +98,38 @@ function get_active_players_in_order() {
     return orderedPlayers;
 }
 
+function count_card_type_by_player(p, cardType) {
+    let cardValue = 0;
+    let cardArray = [];
+
+    for (const c of game.players[p].hand) {
+        if (cardType === 'card') {
+            cardValue += 1;
+            cardArray.push(c);
+        } else if (data.cards[c].quest) {
+            if (data.cards[c].quest == cardType) {
+                cardValue += data.cards[c].count;
+                cardArray.push(c);
+            } else if (data.cards[c].quest === 'wild') {
+                // Include all wild cards into the count
+                cardValue += data.cards[c].count;
+                cardArray.push(c);
+            } else if (p === 'Frodo' && data.cards[c].type === 'white') {
+                // Frodo special ability
+                cardValue += data.cards[c].count;
+                cardArray.push(c);
+            }
+        }
+    }
+
+    return { value: cardValue, cardList: cardArray };
+}
+
 function distribute_card_from_select(p, cardInt) {
     const index = game.selectHand.indexOf(cardInt);
     if (index === -1) {
-        game.number = 0;
         console.error('Card not found in selectHand');
-        return;
+        return false;
     }
 
     // Remove the card from selectHand
@@ -87,62 +138,92 @@ function distribute_card_from_select(p, cardInt) {
     // Add the card to the target player's hand
     game.players[p].hand.push(removeCard);
 
-    // Decrease the number of remaining actions and execute the state
-    game.number = game.number - 1;
+    return true;
 }
 
+/// @brief Lookup card by int number and discard from player hand
+/// @return the count value of the card, or -1 if card not found.
 function discard_card_from_player(p, cardInt) {
     const index = game.players[p].hand.indexOf(cardInt);
     if (index === -1) {
-        game.number = 0;
         console.error('Card not found in ${p}');
-        return;
+        return -1;
     }
 
     // Remove the card from hand
     const [removeCard] = game.players[p].hand.splice(index, 1);
 
-    // Decrease the number of remaining actions and execute the State
-    game.number = game.number - 1;
+    let rc = 0;
+    if (data.cards[cardInt].count) {
+        rc = data.cards[cardInt].count;
+    }
+
+    return rc;
 }
 
 //////////////////////
 /* Game State Utility Functions */
 function goto_next_state() {
     // Go back to prior state
-    game.state = game.nextState;
+    game.state = game.nextState.state;
 
-    // Execute the state
-    execute_state(game.state);
+    // If possible execute the initialization function for the state
+    const curstate = states[game.state];
+    if (curstate.init) {
+        if (game.nextState.args) {
+            curstate.init(game.nextState.args);
+        } else {
+            curstate.init();
+        }
+    }
+
+    game.nextState.state = null;
+    game.nextState.args = null;
 }
 
-function advance_state(newState, next = '') {
-    // Set next state if provided
-    game.nextState = next;
+function set_next_state(state, args = null) {
+    // When switching to an action you need to setup the state to enter after the action is complete
+    game.nextState.state = state;
+    game.nextState.args = args;
+}
 
+function advance_state(newState, args = null) {
     // Update to new state
     game.state = newState;
 
-    // Execute the new state
-    execute_state(game.state);
+    // If possible execute the initialization function for the state
+    const curstate = states[game.state];
+    if (curstate.init) {
+        if (args) {
+            curstate.init(args);
+        } else {
+            curstate.init();
+        }
+    }
 }
 
-function execute_state(myState) {
-    // Lookup state information from array of states
-    const state = states[myState];
+function execute_state() {
+    let curstate;
 
-    // Execute state
-    if (state.prompt) {
-        // Send updated game information to client
-        game.prompt = state.prompt();
-    } else {
-        game.prompt = null;
-    }
+    do {
+        // Lookup state information from array of states
+        curstate = states[game.state];
 
-    if (!game.prompt && state.auto) {
-        // Continue auto execution chain
-        state.auto();
-    }
+        // Execute state
+        if (curstate.prompt) {
+            game.prompt = curstate.prompt();
+        } else {
+            game.prompt = null;
+        }
+
+        // If prompt is null and fini exists, call it (advance to another state, etc.)
+        if (!game.prompt && curstate.fini) {
+            curstate.fini();
+        }
+    } while (!game.prompt);
+    //} while (!game.prompt && states[game.state] !== curstate);
+    // ^ repeat until we actually have a prompt
+    //    (the !== check prevents infinite loops if fini doesn't change state)
 }
 
 function execute_button(g, buttonName, args) {
@@ -180,18 +261,33 @@ function execute_button(g, buttonName, args) {
 ///   - function to call after auto to advance function to the next State
 
 states.action_discard = {
+    init(a) {
+        /// a.value - The number of items to Discard
+        /// a.type - 'card', or specific card type to discard 'wild'/'hide',etc
+        console.log(a);
+        game.action.count = a.value;
+        game.action.type = a.type;
+    },
     prompt() {
+        // Find card list
+        const cardInfo = count_card_type_by_player(game.currentPlayer, game.action.type);
+
+        // Check that count is not higher than hand size, otherwise adjust count.
+        if (game.action.count > cardInfo.value) {
+            game.action.count = cardInfo.value;
+        }
+
         // Exit path for this state
-        if (game.number <= 0) {
+        if (game.action.count <= 0) {
             return null;
         } else {
             return {
-                message: `Select ${game.number} cards to discard`,
-                player: game.activePlayer,
+                message: `Select ${game.action.count} cards to discard`,
+                player: game.currentPlayer,
                 buttons: {
                     discard: 'Discard',
                 },
-                cards: game.players[game.activePlayer].hand.slice(),
+                cards: cardInfo.cardList.slice(),
             };
         }
     },
@@ -199,22 +295,100 @@ states.action_discard = {
         // ARGS "cardNumber cardNumber cardNumber ..."
         for (let i = 0; i < args.length; i++) {
             const card = parseInt(args[i], 10); // Convert to int if needed
-            discard_card_from_player(game.activePlayer, card);
+            if (discard_card_from_player(game.currentPlayer, card) >= 0) {
+                game.action.count = game.action.count - 1;
+            }
 
             // Create log record of transaction
-            log(`${game.activePlayer} discard C${card}`);
+            log(`${game.currentPlayer} discard C${card}`);
         }
-
-        // Execute the next state
-        execute_state(game.state);
     },
-    auto() {
+    fini() {
         goto_next_state();
     },
 };
 
+states.action_roll_die = {
+    init() {
+        // Die has not been rolled yet
+        game.action.count = -1;
+    },
+    prompt() {
+        /// TBD eventually update the options if certain yellow or gandalf cards are available
+        if (game.action.count === -1) {
+            return {
+                player: game.currentPlayer,
+                message: 'Press button to roll die',
+                buttons: {
+                    roll: 'Roll',
+                },
+            };
+        } else {
+            return {
+                player: game.currentPlayer,
+                message: 'Press button to resolve effects',
+                buttons: {
+                    resolve: 'Resolve',
+                },
+            };
+        }
+    },
+    roll() {
+        game.action.count = roll_d6();
+        console.log('Roll ' + game.action.count);
+        log(game.currentPlayer + ' rolls a D' + game.action.count);
+    },
+    resolve() {
+        const p = game.currentPlayer;
+        switch (game.action.count) {
+            case 1:
+                game.players[p].corruption += 1;
+                log(p + ' increases corruption by 1 to ' + game.players[p].corruption);
+                goto_next_state();
+                break;
+            case 2:
+                if (p === 'Sam') {
+                    game.players[p].corruption += 1;
+                    log(p + ' increases corruption by 1 to ' + game.players[p].corruption);
+                } else {
+                    game.players[p].corruption += 2;
+                    log(p + ' increases corruption by 2 to ' + game.players[p].corruption);
+                }
+                goto_next_state();
+                break;
+            case 3:
+                if (p === 'Sam') {
+                    game.players[p].corruption += 1;
+                    log(p + ' increases corruption by 1 to ' + game.players[p].corruption);
+                } else {
+                    game.players[p].corruption += 3;
+                    log(p + ' increases corruption by 3 to ' + game.players[p].corruption);
+                }
+                goto_next_state();
+                break;
+            case 4:
+                // Setup to discard 2 cards or 1 if same is rolling
+                let discardCount = 2;
+                if (p === 'Sam') {
+                    discardCount = 1;
+                }
+                advance_state('action_discard', { value: discardCount, type: 'card' });
+                break;
+            case 5:
+                game.sauron -= 1;
+                log('Sauron advances to space ' + game.sauron);
+                goto_next_state();
+                break;
+            default:
+                // No damage
+                goto_next_state();
+                break;
+        }
+    },
+};
+
 states.bagend_gandalf = {
-    auto() {
+    fini() {
         console.log('GANDOLF');
         // Do initial phase of the game
         log('=t Bag End');
@@ -222,7 +396,7 @@ states.bagend_gandalf = {
         log('Deal 6 cards to every player');
 
         // Players in order
-        const porder = get_active_players_in_order();
+        const porder = get_active_players_in_order(game.ringBearer);
 
         // Deal cards round-robin until deck is empty
         for (let i = 0; i < 6 * porder.length; i++) {
@@ -236,10 +410,12 @@ states.bagend_gandalf = {
 };
 
 states.bagend_preparations = {
-    prompt() {
-        game.number = 0;
+    init() {
         console.log('PREPARATIONS');
         log('=! Preparations');
+        log('Ring-bearer may roll and reveal 4 hobbit cards face up to distribute');
+    },
+    prompt() {
         return {
             player: game.ringBearer,
             message: 'Roll dice to receive 4 cards or pass',
@@ -250,13 +426,8 @@ states.bagend_preparations = {
         };
     },
     roll() {
-        // Roll die and process result
-        const dr = RollDieAndProcessResults(game.ringBearer, 'bagend_preparations_cards');
-
-        if (dr !== 4) {
-            // Goto state to deal 4 cards
-            advance_state('bagend_preparations_cards');
-        }
+        set_next_state('bagend_preparations_cards');
+        advance_state('action_roll_die');
     },
     pass() {
         log('Ring-bearer passes');
@@ -265,20 +436,22 @@ states.bagend_preparations = {
 };
 
 states.bagend_preparations_cards = {
-    auto() {
+    fini() {
         log('4 Cards available to distribute');
         for (let i = 0; i < 4; i++) {
             util.set_add(game.selectHand, deal_card());
         }
-        game.number = 4;
-        advance_state('bagend_preparations_distribute');
+        advance_state('bagend_preparations_distribute', 4);
     },
 };
 
 states.bagend_preparations_distribute = {
+    init(cardCount) {
+        game.action.count = cardCount;
+    },
     prompt() {
         // Exit path for this state
-        if (game.number <= 0) {
+        if (game.action.count <= 0) {
             return null;
         } else {
             return {
@@ -302,36 +475,55 @@ states.bagend_preparations_distribute = {
 
         for (let i = 1; i < args.length; i++) {
             const card = parseInt(args[i], 10); // Convert to int if needed
-            distribute_card_from_select(player, card);
+            if (distribute_card_from_select(player, card)) {
+                // Decrease action count if distribute was successful
+                game.action.count = game.action.count - 1;
+            }
 
             // Create log record of transaction
             log(`C${card} given to ${player}`);
         }
-
-        // Execute the next state
-        execute_state(game.state);
     },
-    auto() {
+    fini() {
         advance_state('bagend_nazgul_appears');
     },
 };
 
 states.bagend_nazgul_appears = {
+    init() {
+        console.log('NAZGUL');
+        log('=! Nazgul Appears');
+        log('Group must discard 2 hiding or move sauron');
+    },
     // Have player select which player should discard cards
     // Actions are each player which can meet requirement and pass (which moves sauron 1 space)
     prompt() {
-        console.log('NAZGUL');
-        log('=! Nazgul Appears');
+        const plist = get_active_players_in_order(game.currentPlayer);
+
+        // Build buttons dynamically
+        const buttons = {
+            sauron: 'Move Sauron',
+        };
+        for (const p of plist) {
+            const val = count_card_type_by_player(p, 'hide');
+            console.log(`${p}: ${val.value}`);
+
+            if (val.value >= 2) {
+                buttons[`discard ${p}`] = p;
+            }
+        }
+
         return {
             message: 'One player discard 2 hiding, otherwise sauron moves 1 space',
-            buttons: {
-                discard: 'Discard',
-                sauron: 'Move Sauron',
-            },
+            buttons,
         };
     },
-    discard() {
-        console.log('Discard');
+    discard(args) {
+        const p = args[0];
+        log(`${p} discards 2 hiding`);
+        game.currentPlayer = p;
+        set_next_state('rivendell_elrond');
+        advance_state('action_discard', { value: 2, type: 'hide' });
     },
     sauron() {
         log('Sauron moves 1 space');
@@ -340,13 +532,8 @@ states.bagend_nazgul_appears = {
     },
 };
 
-states.bagend_nazgul_appears_discard = {
-    // Player must select 2 hide cards to discard (or wild)
-    // Actions are select 2 hide cards from hand, go back to select players
-};
-
 states.rivendell_elrond = {
-    auto() {
+    fini() {
         console.log('ELROND');
         // Do initial phase of the game
         log('=t Rivendell');
@@ -357,7 +544,8 @@ states.rivendell_elrond = {
         util.shuffle(featureDeck);
 
         // Players in order
-        const porder = get_active_players_in_order();
+        game.currentPlayer = game.ringBearer;
+        const porder = get_active_players_in_order(game.ringBearer);
 
         // Deal cards round-robin until deck is empty
         let i = 0;
@@ -377,47 +565,108 @@ states.rivendell_elrond = {
 };
 
 states.rivendell_council = {
-    prompt() {
+    init() {
         log('=! Council');
-        return {
-            message: 'EACH PLAYER: Pass 1 card to the left',
-            buttons: {
-                discard: 'Discard',
-                sauron: 'Move Sauron',
-            },
-        };
+        log('EACH PLAYER: Pass 1 card face down to left');
+        game.currentPlayer = game.ringBearer;
+        game.action.count = get_active_player_list().length;
+        game.action.pass = [];
     },
-    discard() {
-        log('Discard');
-        game.number = 5;
-        advance_state('rivendell_fellowship');
+    prompt() {
+        if (game.action.count > 0) {
+            const np = get_next_player(game.currentPlayer);
+            const list = game.players[game.currentPlayer].hand.slice();
+            return {
+                player: game.currentPlayer,
+                message: 'Pass 1 card to the left',
+                buttons: {
+                    pass: `Pass card to ${np}`,
+                },
+                cards: list.slice(),
+            };
+        } else {
+            return null;
+        }
     },
-    sauron() {
-        log('Sauron moves 1 space');
-        game.number = 5;
-        advance_state('rivendell_fellowship');
+    pass(args) {
+        // Verify the correct value was passed
+        if (args.length === 1) {
+            // Save a list of each card that was passed to complete this action with
+            game.action.pass.push(args[0]);
+            
+            // Generate log
+            log(`${game.currentPlayer} selects C${args[0]} to pass left`);
+            
+            // Decrease count and advance to next player
+            game.action.count = game.action.count - 1;
+            game.currentPlayer = get_next_player(game.currentPlayer);
+        } else {
+            console.log('Invalid selection');
+        }
+    },
+    fini() {
+        // Initiate all trades
+        for (const c of game.action.pass) {
+            // Convert to int
+            const card = parseInt(c, 10);
+            // Discard card from current player
+            discard_card_from_player(game.currentPlayer, card);
+            // Advance to next player and give them the card
+            game.currentPlayer = get_next_player(game.currentPlayer);
+            game.players[game.currentPlayer].hand.push(card);
+        }
+        
+        // Advance to next state
+        game.action.pass = [];        
+        advance_state('rivendell_fellowship', 'first');
     },
 };
 
 states.rivendell_fellowship = {
+    init(a) {
+        console.log(a);
+        if (a === 'first') {
+            log('=! Fellowship');
+            log('EACH PLAYER: Discard 1 friendship or roll die');
+            game.currentPlayer = game.ringBearer;
+            game.action.count = get_active_player_list().length;
+        } else {
+            game.action.count = a.cnt;
+            game.currentPlayer = a.p;
+        }
+    },
     prompt() {
-        log('=! Fellowship');
-        return {
-            message: 'EACH PLAYER: Discard friendship otherwise roll',
-            buttons: {
-                discard: 'Discard',
+        if (game.action.count > 0) {
+            // Build buttons dynamically
+            const buttons = {
                 roll: 'Roll die',
-            },
-        };
+            };
+
+            const np = get_next_player(game.currentPlayer);
+            const list = game.players[game.currentPlayer].hand.slice();
+            return {
+                player: game.currentPlayer,
+                message: 'Select an option to resolve fellowship',
+                buttons,
+                cards: list.slice(),
+            };
+        } else {
+            return null;
+        }
     },
     discard() {
         log('Discard');
-        advance_state('moria');
     },
     roll() {
-        log('roll die');
-        advance_state('moria');
+        // Setup to come back to this state
+        const np = get_next_player(game.currentPlayer);
+        game.action.count = game.action.count - 1;
+        set_next_state('rivendell_fellowship', {p:np, cnt:game.action.count});
+        advance_state('action_roll_die');
     },
+    fini() {
+        advance_state('moria');
+    }
 };
 
 states.moria = {
@@ -433,7 +682,7 @@ states.moria = {
             },
         };
     },
-    auto() {
+    fini() {
         log('=! Moria');
 
         // Update Location
@@ -463,7 +712,7 @@ states.helms_deep = {
             },
         };
     },
-    auto() {
+    fini() {
         log('=! Helms Deep');
 
         // Update Location
@@ -487,7 +736,7 @@ states.shelobs_lair = {
             },
         };
     },
-    auto() {
+    fini() {
         log('=! Shelobs Lair');
 
         // Update Location
@@ -511,7 +760,7 @@ states.mordor = {
             },
         };
     },
-    auto() {
+    fini() {
         log('=! Mordor');
 
         // Update Location
@@ -521,54 +770,6 @@ states.mordor = {
         log('No were to go');
     },
 };
-
-function RollDieAndProcessResults(p, nextState) {
-    let b_roll = roll_d6();
-    console.log('Roll ' + p);
-    console.log(b_roll);
-    log(p + ' rolls a D' + b_roll);
-    switch (b_roll) {
-        case 1:
-            game.players[p].corruption += 1;
-            log(p + ' increases corruption by 1 to ' + game.players[p].corruption);
-            break;
-        case 2:
-            if (p === 'Sam') {
-                game.players[p].corruption += 1;
-                log(p + ' increases corruption by 1 to ' + game.players[p].corruption);
-            } else {
-                game.players[p].corruption += 2;
-                log(p + ' increases corruption by 2 to ' + game.players[p].corruption);
-            }
-            break;
-        case 3:
-            if (p === 'Sam') {
-                game.players[p].corruption += 1;
-                log(p + ' increases corruption by 1 to ' + game.players[p].corruption);
-            } else {
-                game.players[p].corruption += 3;
-                log(p + ' increases corruption by 3 to ' + game.players[p].corruption);
-            }
-            break;
-        case 4:
-            // Setup to discard 2 cards
-            if (p === 'Sam') {
-                game.number = 1;
-            } else {
-                game.number = 2;
-            }
-            game.activePlayer = p;
-            advance_state('action_discard', nextState);
-            break;
-        case 5:
-            game.sauron -= 1;
-            log('Sauron advances to space ' + game.sauron);
-            break;
-        default:
-            break;
-    }
-    return b_roll;
-}
 
 function setup_game() {
     console.log('setup_game');
@@ -632,12 +833,15 @@ const moveHandlers = {
 function startGame(gameId) {
     console.log(`START GAME ${gameId}`);
     setup_game();
+    execute_state();
     return game;
 }
 
 function updateGame(gameId, gameData) {
     console.log(`UPDATE GAME ${gameId}`);
     game = gameData;
+    util.set_seed(game.seed);
+    execute_state();
 }
 
 function getGameView(gameId) {
@@ -659,6 +863,7 @@ function parseAction(gameId, move) {
     const handler = moveHandlers[command];
     if (!handler) throw new Error(`Unknown move command: ${move}`);
     handler(game, func, args);
+    execute_state();
 
     return game;
 }

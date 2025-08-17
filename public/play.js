@@ -58,6 +58,7 @@ let ui = {
     buttons: document.getElementById('actions'),
     prompt: document.getElementById('prompt'),
 
+    select: document.getElementById('select'),
     hand: document.getElementById('hand'),
     mapw: document.getElementById('mapwrap'),
     map: document.getElementById('map'),
@@ -132,10 +133,17 @@ function reset_all_card_states() {
 
 function enable_card_selection(cards) {
     cards.forEach((cardId) => {
-        const cardEl = document.querySelector(`.card_${cardId}`);
-        if (!cardEl) return;
-        cardEl.classList.add('action');
-        cardEl.addEventListener('click', on_click_action);
+        const cardEl = hand.querySelector(`.card_${cardId}`);
+        if (cardEl) {
+            cardEl.classList.add('action');
+            cardEl.addEventListener('click', on_click_action);
+        } else {
+            const cardE2 = select.querySelector(`.card_${cardId}`);
+            if (cardE2) {
+                cardE2.classList.add('action');
+                cardE2.addEventListener('click', on_click_action);
+            }
+        }
     });
 }
 
