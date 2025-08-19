@@ -284,15 +284,11 @@ states.action_discard = {
             return {
                 message: `Select ${game.action.count} cards to discard`,
                 player: game.currentPlayer,
-                buttons: {
-                    discard: 'Discard',
-                },
                 cards: cardInfo.cardList.slice(),
             };
         }
     },
-    discard(args) {
-        // ARGS "cardNumber cardNumber cardNumber ..."
+    card(args) {
         for (let i = 0; i < args.length; i++) {
             const card = parseInt(args[i], 10); // Convert to int if needed
             if (discard_card_from_player(game.currentPlayer, card) >= 0) {
@@ -455,36 +451,34 @@ states.bagend_preparations_distribute = {
             return null;
         } else {
             return {
+                player: game.currentPlayer,
                 message: 'Select cards to distribute',
                 buttons: {
-                    'distribute Frodo': 'Frodo',
-                    'distribute Sam': 'Sam',
-                    'distribute Pipin': 'Pipin',
-                    'distribute Merry': 'Merry',
-                    'distribute Fatty': 'Fatty',
+                    'pick Frodo': 'To Frodo',
+                    'pick Sam': 'To Sam',
+                    'pick Pipin': 'To Pipin',
+                    'pick Merry': 'To Merry',
+                    'pick Fatty': 'To Fatty',
                 },
                 cards: game.selectHand.slice(),
             };
         }
     },
-    distribute(args) {
-        // ARGS
-        //      player cardNumber cardNumber cardNumber ...
-        // Distribute list of cards to player
-        const player = args[0];
-
-        for (let i = 1; i < args.length; i++) {
-            const card = parseInt(args[i], 10); // Convert to int if needed
-            if (distribute_card_from_select(player, card)) {
-                // Decrease action count if distribute was successful
-                game.action.count = game.action.count - 1;
-            }
-
-            // Create log record of transaction
-            log(`C${card} given to ${player}`);
+    card(args) {
+        const card = parseInt(args[0], 10); // Convert to int if needed
+        if (distribute_card_from_select(game.currentPlayer, card)) {
+            // Decrease action count if distribute was successful
+            game.action.count = game.action.count - 1;
         }
+
+        // Create log record of transaction
+        log(`C${card} given to ${game.currentPlayer}`);
     },
-    fini() {
+    pick(args) {
+        const player = args[0];
+        game.currentPlayer = player;
+    },
+    fini() {        
         advance_state('bagend_nazgul_appears');
     },
 };
@@ -493,10 +487,9 @@ states.bagend_nazgul_appears = {
     init() {
         console.log('NAZGUL');
         log('=! Nazgul Appears');
-        log('Group must discard 2 hiding or move sauron');
+        log('One player must discard 2 hiding or move sauron');
+        game.currentPlayer = game.ringBearer;
     },
-    // Have player select which player should discard cards
-    // Actions are each player which can meet requirement and pass (which moves sauron 1 space)
     prompt() {
         const plist = get_active_players_in_order(game.currentPlayer);
 
@@ -579,24 +572,21 @@ states.rivendell_council = {
             return {
                 player: game.currentPlayer,
                 message: 'Pass 1 card to the left',
-                buttons: {
-                    pass: `Pass card to ${np}`,
-                },
                 cards: list.slice(),
             };
         } else {
             return null;
         }
     },
-    pass(args) {
+    card(args) {
         // Verify the correct value was passed
         if (args.length === 1) {
             // Save a list of each card that was passed to complete this action with
             game.action.pass.push(args[0]);
-            
+
             // Generate log
             log(`${game.currentPlayer} selects C${args[0]} to pass left`);
-            
+
             // Decrease count and advance to next player
             game.action.count = game.action.count - 1;
             game.currentPlayer = get_next_player(game.currentPlayer);
@@ -615,9 +605,9 @@ states.rivendell_council = {
             game.currentPlayer = get_next_player(game.currentPlayer);
             game.players[game.currentPlayer].hand.push(card);
         }
-        
+
         // Advance to next state
-        game.action.pass = [];        
+        game.action.pass = [];
         advance_state('rivendell_fellowship', 'first');
     },
 };
@@ -642,31 +632,40 @@ states.rivendell_fellowship = {
                 roll: 'Roll die',
             };
 
-            const np = get_next_player(game.currentPlayer);
-            const list = game.players[game.currentPlayer].hand.slice();
+            const cardInfo = count_card_type_by_player(game.currentPlayer, 'friendship');
             return {
                 player: game.currentPlayer,
-                message: 'Select an option to resolve fellowship',
+                message: 'Discard friendship or roll die',
                 buttons,
-                cards: list.slice(),
+                cards: cardInfo.cardList.slice(),
             };
         } else {
             return null;
         }
     },
-    discard() {
-        log('Discard');
+    card(a) {
+        const card = parseInt(a[0], 10); // Convert to int if needed
+        if (discard_card_from_player(game.currentPlayer, card) >= 0) {
+            game.action.count = game.action.count - 1;
+            
+            // Advance to next player
+            const np = get_next_player(game.currentPlayer);
+            game.currentPlayer = np;
+            
+            // Create log record of transaction
+            log(`${game.currentPlayer} discard C${card}`);
+        }
     },
     roll() {
         // Setup to come back to this state
         const np = get_next_player(game.currentPlayer);
         game.action.count = game.action.count - 1;
-        set_next_state('rivendell_fellowship', {p:np, cnt:game.action.count});
+        set_next_state('rivendell_fellowship', { p: np, cnt: game.action.count });
         advance_state('action_roll_die');
     },
     fini() {
         advance_state('moria');
-    }
+    },
 };
 
 states.moria = {
