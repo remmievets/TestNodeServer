@@ -421,76 +421,76 @@ const data = {
             count: 1,
         },
         {
-            /// gandalf 00
+            /// gandalf 00 (60)
             name: 'Gandalf: Foresight',
             type: 'yellow',
             action: 'One player: Rearrange top 3 tiles',
         },
         {
-            /// gandalf 01
+            /// gandalf 01 (61)
             name: 'Gandalf: Magic',
             type: 'yellow',
             action: 'After moving the event marker ignore the event',
         },
         {
-            /// gandalf 02
+            /// gandalf 02 (62)
             name: 'Gandalf: Healing',
             type: 'yellow',
             action: 'One player: Heal 2',
         },
         {
-            /// gandalf 03
+            /// gandalf 03 (63)
             name: 'Gandalf: Guidance',
             type: 'yellow',
             action: 'Active player: Wild 2',
         },
         {
-            /// gandalf 04
+            /// gandalf 04 (64)
             name: 'Gandalf: Persistence',
             type: 'yellow',
             action: 'One player: Draw 4 Hobbit cards',
         },
         {
-            /// gandalf 05
+            /// gandalf 05 (65)
             name: 'Gandalf: Defiance',
             type: 'yellow',
             action: 'Sauron does not move',
         },
         {
-            /// gandalf 06
+            /// gandalf 06 (66)
             name: 'Gandalf: Integrity',
             type: 'yellow',
             action: 'Instead of rolling the die, place it with the white side up',
         },
         {
-            /// gandalf 07
+            /// gandalf 07 (67)
             name: 'Gandalf: Firestorm',
             type: 'yellow',
             action: 'Defeat any 2 foes',
         },
         {
-            /// legendary 00
+            /// legendary 00 (68)
             name: 'Bill the Pony',
             type: 'yellow',
             action: 'One player: Use this card as 1 shield or 1 life token',
             feature: 'Bree',
         },
         {
-            /// 01
+            /// 01  (69)
             name: 'Fire Brand',
             type: 'yellow',
             action: 'Defeat any 1 Foe',
             feature: 'Bree',
         },
         {
-            /// 02
+            /// 02 (70)
             name: "Gandalf's Letter",
             type: 'yellow',
             action: 'Call one Gandalf card without discarding 5 shields',
             feature: 'Bree',
         },
         {
-            /// 03
+            /// 03 (71)
             name: 'Barliman Butterbur',
             type: 'white',
             quest: 'friendship',
@@ -498,7 +498,7 @@ const data = {
             feature: 'Bree',
         },
         {
-            /// 04
+            /// 04 (72)
             name: 'Glorfindel',
             type: 'white',
             quest: 'travel',
@@ -506,7 +506,7 @@ const data = {
             feature: 'Bree',
         },
         {
-            /// 05
+            /// 05 (73)
             name: 'Tom Bombadil',
             type: 'white',
             quest: 'hide',
@@ -514,7 +514,7 @@ const data = {
             feature: 'Bree',
         },
         {
-            /// 06
+            /// 06 (74)
             name: 'Strider',
             type: 'grey',
             quest: 'travel',
@@ -522,7 +522,7 @@ const data = {
             feature: 'Bree',
         },
         {
-            /// 07
+            /// 07 (75)
             name: 'Farmer Maggot',
             type: 'grey',
             quest: 'travel',
@@ -530,7 +530,7 @@ const data = {
             feature: 'Bree',
         },
         {
-            /// 08
+            /// 08 (76)
             name: 'Shadowfax',
             type: 'grey',
             quest: 'travel',
@@ -538,7 +538,7 @@ const data = {
             feature: "Helm's Deep",
         },
         {
-            /// 09
+            /// 09 (77)
             name: 'Riders of Rohan',
             type: 'grey',
             quest: 'fight',
@@ -546,7 +546,7 @@ const data = {
             feature: "Helm's Deep",
         },
         {
-            /// 10
+            /// 10 (78)
             name: 'Theoden',
             type: 'white',
             quest: 'travel',
@@ -554,7 +554,7 @@ const data = {
             feature: "Helm's Deep",
         },
         {
-            /// 11
+            /// 11 (79)
             name: 'Eomer',
             type: 'white',
             quest: 'friendship',
@@ -562,7 +562,7 @@ const data = {
             feature: "Helm's Deep",
         },
         {
-            /// 12
+            /// 12 (80)
             name: 'Treebeard',
             type: 'grey',
             quest: 'fight',
@@ -570,21 +570,21 @@ const data = {
             feature: 'Isengard',
         },
         {
-            /// 13
+            /// 13 (81)
             name: 'Ent Draught',
             type: 'yellow',
             action: 'One player: May pass shields to one other player',
             feature: 'Isengard',
         },
         {
-            /// 14
+            /// 14 (82)
             name: 'Pipe-Weed',
             type: 'yellow',
             action: 'You may allocate 3 heals among the players',
             feature: 'Isengard',
         },
         {
-            /// 15
+            /// 15 (83)
             name: 'Ents',
             type: 'white',
             quest: 'travel',
@@ -592,7 +592,7 @@ const data = {
             feature: 'Isengard',
         },
         {
-            /// 16
+            /// 16 (84)
             name: 'Gandalf the White',
             type: 'white',
             quest: 'wild',
@@ -600,21 +600,21 @@ const data = {
             feature: 'Isengard',
         },
         {
-            /// 17
+            /// 17 (85)
             name: 'Elessar',
             type: 'yellow',
             action: 'One player: heal',
             feature: 'Lothlorien',
         },
         {
-            /// 18
+            /// 18 (86)
             name: 'Phial',
             type: 'yellow',
             action: 'Active player: Do not reveal the next tile',
             feature: 'Lothlorien',
         },
         {
-            /// 19
+            /// 19 (87)
             name: 'Arwen',
             type: 'grey',
             quest: 'wild',
@@ -622,7 +622,7 @@ const data = {
             feature: 'Lothlorien',
         },
         {
-            /// 20
+            /// 20 (88)
             name: 'Bow',
             type: 'grey',
             quest: 'fight',
@@ -630,7 +630,7 @@ const data = {
             feature: 'Lothlorien',
         },
         {
-            /// 21
+            /// 21 (89)
             name: 'Elven Rope',
             type: 'grey',
             quest: 'travel',
@@ -638,7 +638,7 @@ const data = {
             feature: 'Lothlorien',
         },
         {
-            /// 22
+            /// 22 (90)
             name: 'Elven Cloak',
             type: 'grey',
             quest: 'hide',
@@ -646,7 +646,7 @@ const data = {
             feature: 'Lothlorien',
         },
         {
-            /// 23
+            /// 23 (91)
             name: 'Boat',
             type: 'grey',
             quest: 'travel',
@@ -654,7 +654,7 @@ const data = {
             feature: 'Lothlorien',
         },
         {
-            /// 24
+            /// 24 (92)
             name: 'Brooch',
             type: 'grey',
             quest: 'friendship',
@@ -662,14 +662,14 @@ const data = {
             feature: 'Lothlorien',
         },
         {
-            /// 25
+            /// 25 (93)
             name: 'Lembas',
             type: 'yellow',
             action: 'One player: Draw Hobbit cards to increase hand to 6 cards',
             feature: 'Lothlorien',
         },
         {
-            /// 26
+            /// 26 (94)
             name: 'Galadriel',
             type: 'grey',
             quest: 'wild',
@@ -677,7 +677,7 @@ const data = {
             feature: 'Lothlorien',
         },
         {
-            /// 27
+            /// 27 (95)
             name: 'Box of Earth',
             type: 'grey',
             quest: 'wild',
@@ -685,14 +685,14 @@ const data = {
             feature: 'Lothlorien',
         },
         {
-            /// 28
+            /// 28 (96)
             name: 'Bow',
             type: 'yellow',
             action: 'One player: Do not roll one die',
             feature: 'Lothlorien',
         },
         {
-            /// 29
+            /// 29 (97)
             name: 'Ghan',
             type: 'white',
             quest: 'travel',
@@ -700,7 +700,7 @@ const data = {
             feature: 'Mordor',
         },
         {
-            /// 30
+            /// 30 (98)
             name: 'Army of the Dead',
             type: 'grey',
             quest: 'fight',
@@ -708,7 +708,7 @@ const data = {
             feature: 'Mordor',
         },
         {
-            /// 31
+            /// 31 (99)
             name: 'Eowyn',
             type: 'white',
             quest: 'wild',
@@ -716,7 +716,7 @@ const data = {
             feature: 'Mordor',
         },
         {
-            /// 32
+            /// 32 (100)
             name: 'Book',
             type: 'grey',
             quest: 'hide',
@@ -724,7 +724,7 @@ const data = {
             feature: 'Moria',
         },
         {
-            /// 33
+            /// 33 (101)
             name: 'Pipe',
             type: 'grey',
             quest: 'friendship',
@@ -732,14 +732,14 @@ const data = {
             feature: 'Moria',
         },
         {
-            /// 34
+            /// 34 (102)
             name: 'Bow',
             type: 'yellow',
             action: 'One player: Ignore effects after one die roll',
             feature: 'Rivendell',
         },
         {
-            /// 35
+            /// 35 (103)
             name: 'Sting',
             type: 'grey',
             quest: 'wild',
@@ -747,7 +747,7 @@ const data = {
             feature: 'Rivendell',
         },
         {
-            /// 36
+            /// 36 (104)
             name: 'Boromir',
             type: 'white',
             quest: 'fight',
@@ -755,7 +755,7 @@ const data = {
             feature: 'Rivendell',
         },
         {
-            /// 37
+            /// 37 (105)
             name: 'Aragorn',
             type: 'white',
             quest: 'wild',
@@ -763,14 +763,14 @@ const data = {
             feature: 'Rivendell',
         },
         {
-            /// 38
+            /// 38 (106)
             name: 'Athelas',
             type: 'yellow',
             action: 'One player: Ignore any effects of missing life tokens once only',
             feature: 'Rivendell',
         },
         {
-            /// 39
+            /// 39 (107)
             name: 'Legolas',
             type: 'white',
             quest: 'hide',
@@ -778,21 +778,21 @@ const data = {
             feature: 'Rivendell',
         },
         {
-            /// 40
+            /// 40 (108)
             name: 'Staff',
             type: 'yellow',
             action: 'Ignore one tile showing a sundial and three items',
             feature: 'Rivendell',
         },
         {
-            /// 41
+            /// 41 (109)
             name: 'Miruvor',
             type: 'yellow',
             action: 'One player: May pass 1 card to another player',
             feature: 'Rivendell',
         },
         {
-            /// 42
+            /// 42 (110)
             name: 'Glamdring',
             type: 'grey',
             quest: 'wild',
@@ -800,7 +800,7 @@ const data = {
             feature: 'Rivendell',
         },
         {
-            /// 43
+            /// 43 (111)
             name: 'Gandalf',
             type: 'white',
             quest: 'travel',
@@ -808,7 +808,7 @@ const data = {
             feature: 'Rivendell',
         },
         {
-            /// 44
+            /// 44 (112)
             name: 'Gimli',
             type: 'white',
             quest: 'fight',
@@ -816,7 +816,7 @@ const data = {
             feature: 'Rivendell',
         },
         {
-            /// 45
+            /// 45 (113)
             name: 'Anduril',
             type: 'grey',
             quest: 'fight',
@@ -824,7 +824,7 @@ const data = {
             feature: 'Rivendell',
         },
         {
-            /// 46 - Roll a die as well
+            /// 46 (114) - Roll a die as well
             name: 'Gollum',
             type: 'white',
             quest: 'wild',
@@ -832,7 +832,7 @@ const data = {
             feature: "Shelob's Lair",
         },
         {
-            /// 47
+            /// 47 (115)
             name: 'Faramir',
             type: 'white',
             quest: 'travel',
@@ -886,7 +886,7 @@ const data = {
         ],
         hide: [
             { x: 354, y: 743 },
-            { x: 426, y: 743, action: 'card', cards: [0] }, //tbd book card number
+            { x: 426, y: 743, action: 'card', cards: [100] },
             { x: 494, y: 743, action: 'ring' },
             { x: 564, y: 743, action: 'heart' },
             { x: 633, y: 743, action: 'ring' },
@@ -931,11 +931,11 @@ const data = {
         friendship: [
             { x: 354, y: 743 },
             { x: 426, y: 743, action: 'roll' },
-            { x: 494, y: 743, action: 'card', cards: [0] }, // Theoden card
+            { x: 494, y: 743, action: 'card', cards: [78] }, // Theoden card
             { x: 564, y: 743, action: 'ring' },
-            { x: 633, y: 743, action: 'card', cards: [0] }, // Shadowfax
+            { x: 633, y: 743, action: 'card', cards: [76] }, // Shadowfax
             { x: 701, y: 743, action: 'ring' },
-            { x: 769, y: 743, action: 'card', cards: [0] }, // Eomer
+            { x: 769, y: 743, action: 'card', cards: [79] }, // Eomer
             { x: 832, y: 743, action: 'ring' },
         ],
         travel: [
@@ -977,7 +977,7 @@ const data = {
         ],
         hide: [
             { x: 281, y: 738 },
-            { x: 348, y: 738, action: 'card', cards: [0] }, // faramir
+            { x: 348, y: 738, action: 'card', cards: [115] }, // faramir
             { x: 419, y: 738, action: 'ring' },
             { x: 487, y: 738, action: 'heart' },
             { x: 555, y: 738, action: 'ring' },
@@ -1049,11 +1049,11 @@ const data = {
         friendship: [
             { x: 356, y: 190 },
             { x: 422, y: 190, action: 'shield' },
-            { x: 489, y: 190, action: 'card', cards: [0] }, // Army of the dead
+            { x: 489, y: 190, action: 'card', cards: [98] }, // Army of the dead
             { x: 560, y: 190, action: 'shield' },
-            { x: 628, y: 190, action: 'card', cards: [0] }, // Ghan
+            { x: 628, y: 190, action: 'card', cards: [97] }, // Ghan
             { x: 696, y: 190, action: 'shield' },
-            { x: 764, y: 190, action: 'card', cards: [0] }, // Eowyn
+            { x: 764, y: 190, action: 'card', cards: [99] }, // Eowyn
             { x: 832, y: 190, action: 'heal' },
         ],
         events: [
@@ -1066,5 +1066,37 @@ const data = {
             { x: 22, y: 719, name: 'the ring is mine!' },
         ],
     },
+    players: {
+        Frodo: '=f',
+        Sam: '=s',
+        Pipin: '=p',
+        Merry: '=m',
+        Fatty: '=y',
+    },
+    tiles: [
+        { type: 'travel' },     // 0
+        { type: 'travel' },     // 1
+        { type: 'travel' },     // 2
+        { type: 'fight' },      // 3
+        { type: 'fight' },      // 4
+        { type: 'fight' },      // 5
+        { type: 'hide' },       // 6
+        { type: 'hide' },       // 7
+        { type: 'hide' },       // 8
+        { type: 'friendship' }, // 9
+        { type: 'friendship' }, // 10
+        { type: 'friendship' }, // 11
+        { type: 'event' },      // 12
+        { type: 'event' },      // 13
+        { type: 'event' },      // 14
+        { type: 'event' },      // 15
+        { type: 'event' },      // 16
+        { type: 'event' },      // 17
+        { type: 'ring' },       // 18
+        { type: 'ring' },       // 19
+        { type: 'event_cards' },// 20
+        { type: 'event_life' }, // 21
+        { type: 'sauron' }      // 22
+    ],
 };
 if (typeof module === 'object') module.exports = data;

@@ -356,6 +356,36 @@ function sub_icon(match) {
     return ICONS[match] || match;
 }
 
+const TILES = {
+    T0: '<span class="tile t0"></span>',
+    T1: '<span class="tile t1"></span>',
+    T2: '<span class="tile t2"></span>',
+    T3: '<span class="tile t3"></span>',
+    T4: '<span class="tile t4"></span>',
+    T5: '<span class="tile t5"></span>',
+    T6: '<span class="tile t6"></span>',
+    T7: '<span class="tile t7"></span>',
+    T8: '<span class="tile t8"></span>',
+    T9: '<span class="tile t9"></span>',
+    T10: '<span class="tile t10"></span>',
+    T11: '<span class="tile t11"></span>',
+    T12: '<span class="tile t12"></span>',
+    T13: '<span class="tile t13"></span>',
+    T14: '<span class="tile t14"></span>',
+    T15: '<span class="tile t15"></span>',
+    T16: '<span class="tile t16"></span>',
+    T17: '<span class="tile t17"></span>',
+    T18: '<span class="tile t18"></span>',
+    T19: '<span class="tile t19"></span>',
+    T20: '<span class="tile t20"></span>',
+    T21: '<span class="tile t21"></span>',
+    T22: '<span class="tile t22"></span>',
+};
+
+function sub_tile(match) {
+    return TILES[match] || match;
+}
+
 function on_log(text) {
     let p = document.createElement('div');
 
@@ -378,13 +408,13 @@ function on_log(text) {
         p.className = 'h sam';
         text = text.substring(3);
     } else if (text.startsWith('=p')) {
-        p.className = 'h sam';
+        p.className = 'h pipin';
         text = text.substring(3);
     } else if (text.startsWith('=m')) {
-        p.className = 'h sam';
+        p.className = 'h merry';
         text = text.substring(3);
     } else if (text.startsWith('=y')) {
-        p.className = 'h sam';
+        p.className = 'h fatty';
         text = text.substring(3);
     }
 
@@ -395,6 +425,8 @@ function on_log(text) {
     text = text.replace(/-(\d)/g, sub_minus);
 
     text = text.replace(/\b[D][1-6]\b/g, sub_icon);
+
+    text = text.replace(/T(\d+)/g, sub_tile);
 
     text = text.replace(/C(\d+)/g, sub_card);
 

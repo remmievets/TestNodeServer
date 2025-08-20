@@ -478,7 +478,7 @@ states.bagend_preparations_distribute = {
         const player = args[0];
         game.currentPlayer = player;
     },
-    fini() {        
+    fini() {
         advance_state('bagend_nazgul_appears');
     },
 };
@@ -647,11 +647,11 @@ states.rivendell_fellowship = {
         const card = parseInt(a[0], 10); // Convert to int if needed
         if (discard_card_from_player(game.currentPlayer, card) >= 0) {
             game.action.count = game.action.count - 1;
-            
+
             // Advance to next player
             const np = get_next_player(game.currentPlayer);
             game.currentPlayer = np;
-            
+
             // Create log record of transaction
             log(`${game.currentPlayer} discard C${card}`);
         }
@@ -669,26 +669,95 @@ states.rivendell_fellowship = {
 };
 
 states.moria = {
-    prompt() {
-        log('=! Moria');
+    init() {
+        log('=t Moria');
 
-        // Update Location
+        // Setup board
         game.loc = 'moria';
-        return {
-            message: 'Advance to',
-            buttons: {
-                next: 'Next',
-            },
-        };
+
+        // Create deck of story tiles
+        create_deck(game.story, 0, 22);
+        util.shuffle(game.story);
+
+        // Update conflict board spaces
+        game.eventValue = 0;
+        game.fight = 0;
+        game.friendship = 0;
+        game.hide = 0;
+        game.travel = 0;
+        game.ringUsed = false;
+
+        // Start player is ring bearer
+        game.currentPlayer = game.ringBearer;
     },
     fini() {
-        log('=! Moria');
-
-        // Update Location
-        game.loc = 'moria';
+        advance_state('turn_reveal_tiles', 'first');
     },
-    next() {
-        advance_state('helms_deep');
+};
+
+states.turn_reveal_tiles = {
+    init(a) {
+        if (a === 'first') {
+            log(data.players[game.currentPlayer] + ' ' + game.currentPlayer);
+        }
+    },
+    prompt() {
+        // Build buttons dynamically
+        const buttons = {
+            reveal_tile: 'Pull tile',
+        };
+        // Do we have yellow card or gandalf card that are playable
+        /// TBD
+        // Can ring be used
+        if (game.conflict.ringUsed === false) {
+            buttons['use_ring'] = 'Use the one ring';
+        }
+        return {
+            player: game.currentPlayer,
+            message: 'Select option',
+            buttons,
+        };
+    },
+    reveal_tile() {
+        // Pull a tile and advance to resolving the tile
+        const t = game.story.pop();
+        log('T' + t);
+        advance_state('turn_resolve_tile', t);
+    },
+    use_ring() {
+        log('Use ring');
+    },
+};
+
+states.turn_resolve_tile = {
+    init(a) {
+        // Save the tile we are attempting to resolve
+        game.action.lasttile = a;
+    },
+    prompt() {
+        // Build buttons dynamically
+        const buttons = {
+            resolve_tile: 'Resolve',
+        };
+        // Do we have yellow card or gandalf card that are playable
+        /// TBD
+        // Can ring be used
+        if (game.conflict.ringUsed === false) {
+            buttons['use_ring'] = 'Use the one ring';
+        }
+        return {
+            player: game.currentPlayer,
+            message: 'Select option',
+            buttons,
+        };
+    },
+    resolve_tile() {
+        console.log(game.action.lasttile);
+        console.log(data.tiles[game.action.lasttile]);
+        log('resolve tile ' + data.tiles[game.action.lasttile].type);
+    },
+    use_ring() {
+        log('Use ring');
     },
 };
 
@@ -784,10 +853,6 @@ function setup_game() {
     create_deck(game.deck, 0, 59);
     util.shuffle(game.deck);
 
-    // Create deck of story tiles
-    create_deck(game.story, 0, 22);
-    util.shuffle(game.story);
-
     // Create deck of gandalf cards
     create_deck(game.gandalf, 0, 7);
 
@@ -844,7 +909,6 @@ function updateGame(gameId, gameData) {
 }
 
 function getGameView(gameId) {
-    console.log(`GAME VIEW ${gameId}`);
     return game;
 }
 

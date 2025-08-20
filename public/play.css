@@ -35,6 +35,41 @@ main {
 #log .d5 { background-image: url(pieces/die005.png); }
 #log .d6 { background-image: url(pieces/die006.png); }
 
+#log .tile {
+	display: inline-block;
+	vertical-align: -3px;
+	width: 96px;
+	height: 96px;
+	background-size: 100%;
+	background-color: #fff;
+	border: 1px solid #444;
+	border-radius: 8px;
+}
+
+#log .t0 { background-image: url(pieces/story000.png); }
+#log .t1 { background-image: url(pieces/story001.png); }
+#log .t2 { background-image: url(pieces/story002.png); }
+#log .t3 { background-image: url(pieces/story003.png); }
+#log .t4 { background-image: url(pieces/story004.png); }
+#log .t5 { background-image: url(pieces/story005.png); }
+#log .t6 { background-image: url(pieces/story006.png); }
+#log .t7 { background-image: url(pieces/story007.png); }
+#log .t8 { background-image: url(pieces/story008.png); }
+#log .t9 { background-image: url(pieces/story009.png); }
+#log .t10 { background-image: url(pieces/story010.png); }
+#log .t11 { background-image: url(pieces/story011.png); }
+#log .t12 { background-image: url(pieces/story012.png); }
+#log .t13 { background-image: url(pieces/story013.png); }
+#log .t14 { background-image: url(pieces/story014.png); }
+#log .t15 { background-image: url(pieces/story015.png); }
+#log .t16 { background-image: url(pieces/story016.png); }
+#log .t17 { background-image: url(pieces/story017.png); }
+#log .t18 { background-image: url(pieces/story018.png); }
+#log .t19 { background-image: url(pieces/story019.png); }
+#log .t20 { background-image: url(pieces/story020.png); }
+#log .t21 { background-image: url(pieces/story021.png); }
+#log .t22 { background-image: url(pieces/story022.png); }
+
 #log .tip { cursor: pointer; }
 #log .tip:hover { text-decoration: underline; }
 
