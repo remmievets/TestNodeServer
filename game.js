@@ -491,16 +491,15 @@ states.bagend_nazgul_appears = {
         game.currentPlayer = game.ringBearer;
     },
     prompt() {
-        const plist = get_active_players_in_order(game.currentPlayer);
-
         // Build buttons dynamically
         const buttons = {
             sauron: 'Move Sauron',
         };
+        
+        // Determine which players are active and have cards to play this action
+        const plist = get_active_players_in_order(game.currentPlayer);
         for (const p of plist) {
             const val = count_card_type_by_player(p, 'hide');
-            console.log(`${p}: ${val.value}`);
-
             if (val.value >= 2) {
                 buttons[`discard ${p}`] = p;
             }
@@ -668,6 +667,12 @@ states.rivendell_fellowship = {
     },
 };
 
+states.lothlorien_gladriel = {};
+
+states.lothlorien_recovery = {};
+
+states.lothlorien_test_of_gladriel = {};
+
 states.moria = {
     init() {
         log('=t Moria');
@@ -710,7 +715,7 @@ states.turn_reveal_tiles = {
         /// TBD
         // Can ring be used
         if (game.conflict.ringUsed === false) {
-            buttons['use_ring'] = 'Use the one ring';
+            buttons['use_ring'] = 'Use Power of the Ring';
         }
         return {
             player: game.currentPlayer,
@@ -721,11 +726,13 @@ states.turn_reveal_tiles = {
     reveal_tile() {
         // Pull a tile and advance to resolving the tile
         const t = game.story.pop();
+        log(game.currentPlayer + ' draws a tile');
         log('T' + t);
         advance_state('turn_resolve_tile', t);
     },
     use_ring() {
-        log('Use ring');
+        log('Use ring - restart board');
+        advance_state('moria');
     },
 };
 
@@ -733,39 +740,103 @@ states.turn_resolve_tile = {
     init(a) {
         // Save the tile we are attempting to resolve
         game.action.lasttile = a;
+        // Keep track of count for discard (so far no discards)
+        game.action.number = 0;
     },
     prompt() {
         // Build buttons dynamically
         const buttons = {
-            resolve_tile: 'Resolve',
         };
         // Do we have yellow card or gandalf card that are playable
         /// TBD
         // Can ring be used
         if (game.conflict.ringUsed === false) {
-            buttons['use_ring'] = 'Use the one ring';
+            buttons['use_ring'] = 'Use Power of the Ring';
         }
+        // Does the tile contain options?
+        const t = data.tiles[game.action.lasttile].type;
+        switch (t) {
+            case 'ring':
+                buttons['resolve_ring'] = 'Resolve Tile';
+                break;
+            case 'event':
+                buttons['resolve_event'] = 'Resolve Tile';
+                break;
+            case 'event_cards':
+                // TBD - discard 3 cards as a group
+                buttons['resolve_event'] = 'Resolve Tile';
+                break;
+            case 'event_life':
+                // TBD - discard 1 card, 1 life token, 1 shield as a group
+                buttons['resolve_event'] = 'Resolve Tile';
+                break;
+            case 'sauron':
+                // Move sauron or one player takes 2 corruption
+                // Determine which players are active and can take corruption
+                const plist = get_active_players_in_order(game.currentPlayer);
+                for (const p of plist) {
+                    buttons[`resolve_corruption ${p}`] = p;
+                }
+                buttons['resolve_sauron'] = 'Move Sauron';
+                break;
+            default:
+                // Good tile - determine if tile is on board
+                // If game includes board element and it is not complete
+                //      Allow only one option for advance on single path
+                // else
+                //      Allow advancement on any not completed path on the board
+                if (data[game.loc][t] && game.conflict[t] < data[game.loc][t].length) {
+                    buttons[`resolve_path ${t}`] = 'Resolve Tile';
+                } else {
+                    // Player can advance any track that is not complete
+                }
+                break;
+        }
+        // Return prompt information
         return {
             player: game.currentPlayer,
             message: 'Select option',
             buttons,
         };
     },
-    resolve_tile() {
-        console.log(game.action.lasttile);
-        console.log(data.tiles[game.action.lasttile]);
-        log('resolve tile ' + data.tiles[game.action.lasttile].type);
+    resolve_ring() {
+        log(game.ringBearer + ' increases corruption by 1');
+        game.players[game.ringBearer].corruption += 1;
+        // TBD - check who is still alive
+        // Draw another tile
+        advance_state('turn_reveal_tiles');
+    },
+    resolve_event() {
+        log('resolve event ' + data.tiles[game.action.lasttile].type);
+        game.conflict.eventValue += 1;
+        // Draw another tile
+        advance_state('turn_reveal_tiles');
+    },
+    resolve_corruption(p) {
+        log(p + ' increases corruption by 2');
+        game.players[p].corruption += 2;
+        // TBD - check who is still alive
+        // Draw another tile
+        advance_state('turn_reveal_tiles');
+    },
+    resolve_sauron() {
+        game.sauron -= 1;
+        log('Sauron moves to ' + game.sauron);
+        // TBD - check who is still alive
+        // Draw another tile
+        advance_state('turn_reveal_tiles');
+    },
+    resolve_path(t) {
+        console.log(t);
+        // Advance on desired track and claim rewards/items
+        
+        // Advance to next turn phase
     },
     use_ring() {
         log('Use ring');
+        advance_state('turn_reveal_tiles');
     },
 };
-
-states.lothlorien_gladriel = {};
-
-states.lothlorien_recovery = {};
-
-states.lothlorien_test_of_gladriel = {};
 
 states.helms_deep = {
     prompt() {

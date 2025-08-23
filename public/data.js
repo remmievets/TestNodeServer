@@ -1074,29 +1074,29 @@ const data = {
         Fatty: '=y',
     },
     tiles: [
-        { type: 'travel' },     // 0
-        { type: 'travel' },     // 1
-        { type: 'travel' },     // 2
-        { type: 'fight' },      // 3
-        { type: 'fight' },      // 4
-        { type: 'fight' },      // 5
-        { type: 'hide' },       // 6
-        { type: 'hide' },       // 7
-        { type: 'hide' },       // 8
+        { type: 'travel' }, // 0
+        { type: 'travel' }, // 1
+        { type: 'travel' }, // 2
+        { type: 'fight' }, // 3
+        { type: 'fight' }, // 4
+        { type: 'fight' }, // 5
+        { type: 'hide' }, // 6
+        { type: 'hide' }, // 7
+        { type: 'hide' }, // 8
         { type: 'friendship' }, // 9
         { type: 'friendship' }, // 10
         { type: 'friendship' }, // 11
-        { type: 'event' },      // 12
-        { type: 'event' },      // 13
-        { type: 'event' },      // 14
-        { type: 'event' },      // 15
-        { type: 'event' },      // 16
-        { type: 'event' },      // 17
-        { type: 'ring' },       // 18
-        { type: 'ring' },       // 19
-        { type: 'event_cards' },// 20
+        { type: 'event' }, // 12
+        { type: 'event' }, // 13
+        { type: 'event' }, // 14
+        { type: 'event' }, // 15
+        { type: 'event' }, // 16
+        { type: 'event' }, // 17
+        { type: 'ring' }, // 18
+        { type: 'ring' }, // 19
+        { type: 'event_cards' }, // 20
         { type: 'event_life' }, // 21
-        { type: 'sauron' }      // 22
+        { type: 'sauron' }, // 22
     ],
 };
 if (typeof module === 'object') module.exports = data;
