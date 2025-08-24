@@ -8,7 +8,6 @@
 
 function toggle_counters() {
     // Cycle between showing everything, only markers, and nothing.
-    console.log('toggle_counters');
     /*
     if (ui.map.classList.contains("hide_markers")) {
         ui.map.classList.remove("hide_markers")
@@ -148,7 +147,6 @@ function enable_card_selection(cards) {
 }
 
 function on_click_action(evt) {
-    console.log(evt);
     const cardEl = event.currentTarget;
     if (cardEl.classList.contains('action')) {
         cardEl.classList.remove('action');

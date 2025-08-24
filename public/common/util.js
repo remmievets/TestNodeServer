@@ -295,6 +295,7 @@ if (typeof module === 'object') {
         array_remove_pair,
         array_insert_pair,
         set_clear,
+        set_has,
         set_add,
         set_delete,
         set_toggle,

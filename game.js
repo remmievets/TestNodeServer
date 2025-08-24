@@ -105,19 +105,19 @@ function count_card_type_by_player(p, cardType) {
     for (const c of game.players[p].hand) {
         if (cardType === 'card') {
             cardValue += 1;
-            cardArray.push(c);
+            util.set_add(cardArray, c);
         } else if (data.cards[c].quest) {
             if (data.cards[c].quest == cardType) {
                 cardValue += data.cards[c].count;
-                cardArray.push(c);
+                util.set_add(cardArray, c);
             } else if (data.cards[c].quest === 'wild') {
                 // Include all wild cards into the count
                 cardValue += data.cards[c].count;
-                cardArray.push(c);
+                util.set_add(cardArray, c);
             } else if (p === 'Frodo' && data.cards[c].type === 'white') {
                 // Frodo special ability
                 cardValue += data.cards[c].count;
-                cardArray.push(c);
+                util.set_add(cardArray, c);
             }
         }
     }
@@ -126,17 +126,17 @@ function count_card_type_by_player(p, cardType) {
 }
 
 function distribute_card_from_select(p, cardInt) {
-    const index = game.selectHand.indexOf(cardInt);
-    if (index === -1) {
+    // Ensure the card actually exists in selectHand
+    if (!util.set_has(game.selectHand, cardInt)) {
         console.error('Card not found in selectHand');
         return false;
     }
 
     // Remove the card from selectHand
-    const [removeCard] = game.selectHand.splice(index, 1);
+    util.set_delete(game.selectHand, cardInt);
 
     // Add the card to the target player's hand
-    game.players[p].hand.push(removeCard);
+    util.set_add(game.players[p].hand, cardInt);
 
     return true;
 }
@@ -144,14 +144,14 @@ function distribute_card_from_select(p, cardInt) {
 /// @brief Lookup card by int number and discard from player hand
 /// @return the count value of the card, or -1 if card not found.
 function discard_card_from_player(p, cardInt) {
-    const index = game.players[p].hand.indexOf(cardInt);
-    if (index === -1) {
+    // Ensure the card actually exists in selectHand
+    if (!util.set_has(game.players[p].hand, cardInt)) {
         console.error('Card not found in ${p}');
         return -1;
     }
 
     // Remove the card from hand
-    const [removeCard] = game.players[p].hand.splice(index, 1);
+    util.set_delete(game.players[p].hand, cardInt);
 
     let rc = 0;
     if (data.cards[cardInt].count) {
@@ -495,7 +495,7 @@ states.bagend_nazgul_appears = {
         const buttons = {
             sauron: 'Move Sauron',
         };
-        
+
         // Determine which players are active and have cards to play this action
         const plist = get_active_players_in_order(game.currentPlayer);
         for (const p of plist) {
@@ -566,7 +566,6 @@ states.rivendell_council = {
     },
     prompt() {
         if (game.action.count > 0) {
-            const np = get_next_player(game.currentPlayer);
             const list = game.players[game.currentPlayer].hand.slice();
             return {
                 player: game.currentPlayer,
@@ -597,12 +596,12 @@ states.rivendell_council = {
         // Initiate all trades
         for (const c of game.action.pass) {
             // Convert to int
-            const card = parseInt(c, 10);
+            const cardInt = parseInt(c, 10);
             // Discard card from current player
-            discard_card_from_player(game.currentPlayer, card);
+            discard_card_from_player(game.currentPlayer, cardInt);
             // Advance to next player and give them the card
             game.currentPlayer = get_next_player(game.currentPlayer);
-            game.players[game.currentPlayer].hand.push(card);
+            util.set_add(game.players[game.currentPlayer].hand, cardInt);
         }
 
         // Advance to next state
@@ -613,13 +612,13 @@ states.rivendell_council = {
 
 states.rivendell_fellowship = {
     init(a) {
-        console.log(a);
         if (a === 'first') {
             log('=! Fellowship');
             log('EACH PLAYER: Discard 1 friendship or roll die');
             game.currentPlayer = game.ringBearer;
             game.action.count = get_active_player_list().length;
         } else {
+            // Come back into this state from roll action
             game.action.count = a.cnt;
             game.currentPlayer = a.p;
         }
@@ -628,13 +627,14 @@ states.rivendell_fellowship = {
         if (game.action.count > 0) {
             // Build buttons dynamically
             const buttons = {
-                roll: 'Roll die',
+                roll: 'Roll',
+                skip: 'Go to Lothlorien',
             };
 
             const cardInfo = count_card_type_by_player(game.currentPlayer, 'friendship');
             return {
                 player: game.currentPlayer,
-                message: 'Discard friendship or roll die',
+                message: 'Discard friendship or roll',
                 buttons,
                 cards: cardInfo.cardList.slice(),
             };
@@ -645,58 +645,180 @@ states.rivendell_fellowship = {
     card(a) {
         const card = parseInt(a[0], 10); // Convert to int if needed
         if (discard_card_from_player(game.currentPlayer, card) >= 0) {
-            game.action.count = game.action.count - 1;
-
-            // Advance to next player
-            const np = get_next_player(game.currentPlayer);
-            game.currentPlayer = np;
-
             // Create log record of transaction
-            log(`${game.currentPlayer} discard C${card}`);
+            log(`${game.currentPlayer} discards C${card}`);
+            // Decrease count and advance to next player
+            game.action.count = game.action.count - 1;
+            game.currentPlayer = get_next_player(game.currentPlayer);
         }
     },
     roll() {
         // Setup to come back to this state
-        const np = get_next_player(game.currentPlayer);
         game.action.count = game.action.count - 1;
+        const np = get_next_player(game.currentPlayer);
         set_next_state('rivendell_fellowship', { p: np, cnt: game.action.count });
         advance_state('action_roll_die');
     },
+    skip() {
+        advance_state('lothlorien_gladriel');
+    },
     fini() {
-        advance_state('moria');
+        advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
     },
 };
 
-states.lothlorien_gladriel = {};
+states.lothlorien_gladriel = {
+    fini() {
+        console.log('GLADRIEL');
+        // Do initial phase of the game
+        log('=t lothlorien');
+        log('=! Gladriel');
+        log('Deal feature cards');
+        let featureDeck = [];
+        create_deck(featureDeck, 85, 96);
+        util.shuffle(featureDeck);
 
-states.lothlorien_recovery = {};
-
-states.lothlorien_test_of_gladriel = {};
-
-states.moria = {
-    init() {
-        log('=t Moria');
-
-        // Setup board
-        game.loc = 'moria';
-
-        // Create deck of story tiles
-        create_deck(game.story, 0, 22);
-        util.shuffle(game.story);
-
-        // Update conflict board spaces
-        game.eventValue = 0;
-        game.fight = 0;
-        game.friendship = 0;
-        game.hide = 0;
-        game.travel = 0;
-        game.ringUsed = false;
-
-        // Start player is ring bearer
+        // Players in order
         game.currentPlayer = game.ringBearer;
+        const porder = get_active_players_in_order(game.ringBearer);
+
+        // Deal cards round-robin until deck is empty
+        let i = 0;
+        while (featureDeck.length > 0) {
+            const player = porder[i % porder.length];
+            let card = featureDeck.pop();
+            log(`C${card} given to ${player}`);
+            util.set_add(game.players[player].hand, card);
+            i++;
+        }
+
+        // Update Location
+        game.loc = 'lothlorien';
+
+        advance_state('lothlorien_recovery');
+    },
+};
+
+states.lothlorien_recovery = {
+    init() {
+        log('=! Recovery');
+        log('EACH PLAYER: May discard 2 shields to either draw 2 hobbit cards or heal');
+        game.currentPlayer = game.ringBearer;
+        game.action.count = get_active_player_list().length;
+    },
+    prompt() {
+        if (game.action.count > 0) {
+            // Build buttons dynamically
+            const buttons = {
+                pass: 'Next',
+                add: 'Add shield - TEMP',
+            };
+            // First check if player has 2 shields
+            if (game.players[game.currentPlayer].shields >= 2) {
+                buttons['card'] = 'Discard shields to gain 2 cards';
+                if (game.players[game.currentPlayer].corruption > 0) {
+                    buttons['heal'] = 'Discard shields to heal 1 space';
+                }
+            }
+            // Determine if buttons should be given
+            return {
+                player: game.currentPlayer,
+                message: 'Optionally, discard 2 shields to draw 2 hobbit cards or heal',
+                buttons,
+            };
+        } else {
+            return null;
+        }
+    },
+    add() {
+        // TBD - TEMP
+        game.players[game.currentPlayer].shields += 1;
+    },
+    pass() {
+        // Players turn has completed - skipped option
+        log(`${game.currentPlayer} passes`);
+        // Decrease count and advance to next player
+        game.action.count = game.action.count - 1;
+        game.currentPlayer = get_next_player(game.currentPlayer);
+    },
+    card() {
+        log(`${game.currentPlayer} discards 2 shields to draw 2 cards`);
+        game.players[game.currentPlayer].shields = game.players[game.currentPlayer].shields - 2;
+        // Deal 2 cards
+        let card = deal_card();
+        log(`C${card} given to ${game.currentPlayer}`);
+        util.set_add(game.players[game.currentPlayer].hand, card);
+        card = deal_card();
+        log(`C${card} given to ${game.currentPlayer}`);
+        util.set_add(game.players[game.currentPlayer].hand, card);
+        // Decrease count and advance to next player
+        game.action.count = game.action.count - 1;
+        game.currentPlayer = get_next_player(game.currentPlayer);
+    },
+    heal() {
+        log(`${game.currentPlayer} discards 2 shields to heal 1 space`);
+        game.players[game.currentPlayer].shields = game.players[game.currentPlayer].shields - 2;
+        game.players[game.currentPlayer].corruption = game.players[game.currentPlayer].corruption - 1;
+        // Decrease count and advance to next player
+        game.action.count = game.action.count - 1;
+        game.currentPlayer = get_next_player(game.currentPlayer);
     },
     fini() {
-        advance_state('turn_reveal_tiles', 'first');
+        // Advance to next state
+        advance_state('lothlorien_test_of_gladriel', 'first');
+    },
+};
+
+states.lothlorien_test_of_gladriel = {
+    init(a) {
+        if (a === 'first') {
+            log('=! Test of Galadriel');
+            log('EACH PLAYER: Discard WILD otherwise roll die');
+            game.currentPlayer = game.ringBearer;
+            game.action.count = get_active_player_list().length;
+        } else {
+            // Come back into this state from roll action
+            game.action.count = a.cnt;
+            game.currentPlayer = a.p;
+        }
+    },
+    prompt() {
+        if (game.action.count > 0) {
+            // Build buttons dynamically
+            const buttons = {
+                roll: 'Roll',
+            };
+            const cardInfo = count_card_type_by_player(game.currentPlayer, 'wild');
+            return {
+                player: game.currentPlayer,
+                message: 'Discard wild quest card or roll',
+                buttons,
+                cards: cardInfo.cardList.slice(),
+            };
+        } else {
+            return null;
+        }
+    },
+    roll() {
+        // Setup to come back to this state
+        game.action.count = game.action.count - 1;
+        const np = get_next_player(game.currentPlayer);
+        set_next_state('lothlorien_test_of_gladriel', { p: np, cnt: game.action.count });
+        advance_state('action_roll_die');
+    },
+    card(a) {
+        const card = parseInt(a[0], 10); // Convert to int if needed
+        if (discard_card_from_player(game.currentPlayer, card) >= 0) {
+            // Create log record of transaction
+            log(`${game.currentPlayer} discards C${card}`);
+            // Decrease count and advance to next player
+            game.action.count = game.action.count - 1;
+            game.currentPlayer = get_next_player(game.currentPlayer);
+        }
+    },
+    fini() {
+        // Advance to next state
+        advance_state('conflict_board_start', { name: 'Helms Deep', loc: 'helmsdeep' });
     },
 };
 
@@ -716,12 +838,16 @@ states.turn_reveal_tiles = {
         // Can ring be used
         if (game.conflict.ringUsed === false) {
             buttons['use_ring'] = 'Use Power of the Ring';
+            buttons['reshuffle'] = 'Reshuffle - test';
         }
         return {
             player: game.currentPlayer,
             message: 'Select option',
             buttons,
         };
+    },
+    reshuffle() {
+        reshuffle_deck();
     },
     reveal_tile() {
         // Pull a tile and advance to resolving the tile
@@ -745,8 +871,7 @@ states.turn_resolve_tile = {
     },
     prompt() {
         // Build buttons dynamically
-        const buttons = {
-        };
+        const buttons = {};
         // Do we have yellow card or gandalf card that are playable
         /// TBD
         // Can ring be used
@@ -829,7 +954,7 @@ states.turn_resolve_tile = {
     resolve_path(t) {
         console.log(t);
         // Advance on desired track and claim rewards/items
-        
+
         // Advance to next turn phase
     },
     use_ring() {
@@ -838,75 +963,43 @@ states.turn_resolve_tile = {
     },
 };
 
-states.helms_deep = {
-    prompt() {
-        log('=! Helms Deep');
+states.conflict_board_start = {
+    init(a) {
+        log(`=t ${a.name}`);
 
-        // Update Location
-        game.loc = 'helmsdeep';
-        return {
-            message: 'Advance to',
-            buttons: {
-                next: 'Next',
-            },
-        };
+        // Setup board
+        game.loc = a.loc;
+
+        // Create deck of story tiles
+        create_deck(game.story, 0, 22);
+        util.shuffle(game.story);
+
+        // Update conflict board spaces
+        game.conflict.eventValue = 0;
+        game.conflict.fight = 0;
+        game.conflict.friendship = 0;
+        game.conflict.hide = 0;
+        game.conflict.travel = 0;
+        game.conflict.ringUsed = false;
+
+        // Start player is ring bearer
+        game.currentPlayer = game.ringBearer;
     },
     fini() {
-        log('=! Helms Deep');
-
-        // Update Location
-        game.loc = 'helmsdeep';
-    },
-    next() {
-        advance_state('shelobs_lair');
+        // Start player turns
+        advance_state('turn_reveal_tiles', 'first');
     },
 };
 
 states.shelobs_lair = {
-    prompt() {
-        log('=! Shelobs Lair');
-
-        // Update Location
-        game.loc = 'shelobslair';
-        return {
-            message: 'Advance to',
-            buttons: {
-                next: 'Next',
-            },
-        };
-    },
     fini() {
-        log('=! Shelobs Lair');
-
-        // Update Location
-        game.loc = 'shelobslair';
-    },
-    next() {
-        advance_state('mordor');
+        advance_state('conflict_board_start', { name: 'Shelobs Lair', loc: 'shelobslair' });
     },
 };
 
 states.mordor = {
-    prompt() {
-        log('=! Mordor');
-
-        // Update Location
-        game.loc = 'mordor';
-        return {
-            message: 'Advance to',
-            buttons: {
-                next: 'Next',
-            },
-        };
-    },
     fini() {
-        log('=! Mordor');
-
-        // Update Location
-        game.loc = 'mordor';
-    },
-    next() {
-        log('No were to go');
+        advance_state('conflict_board_start', { name: 'Mordor', loc: 'mordor' });
     },
 };
 
@@ -943,16 +1036,40 @@ function log(s) {
 function create_deck(list, startIndex, endIndex) {
     list.length = 0;
     for (let i = startIndex; i <= endIndex; i++) {
-        list.push(i);
+        util.set_add(list, i);
     }
 }
 
 function deal_card() {
-    if (game.deck.length === 0) reshuffle_deck();
+    if (game.deck.length === 0) {
+        reshuffle_deck();
+    }
     return game.deck.pop();
 }
 
-function reshuffle_deck() {}
+// Gather a full 'set' of all player cards
+function set_of_player_cards() {
+    let pArray = get_active_player_list();
+    let cardsInHands = new Set();
+    for (let p of pArray) {
+        for (let card of game.players[p].hand) {
+            cardsInHands.add(card);
+        }
+    }
+    return cardsInHands;
+}
+
+// Reshuffle quest cards 0-59.  Make sure to remove cards that are already in players hands.
+function reshuffle_deck() {
+    // Rebuild entire deck of initial quest cards
+    create_deck(game.deck, 0, 59);
+    // Collect all cards from all players’ hands
+    let cardsInHands = set_of_player_cards();
+    // Filter out any cards that are in players’ hands
+    game.deck = game.deck.filter((card) => !cardsInHands.has(card));
+    // Shuffle the deck
+    util.shuffle(game.deck);
+}
 
 function roll_d6() {
     return util.random(6) + 1;
