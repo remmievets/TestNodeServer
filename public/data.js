@@ -6,6 +6,7 @@ const data = {
             type: 'grey',
             quest: 'hide',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 1
@@ -13,6 +14,7 @@ const data = {
             type: 'grey',
             quest: 'hide',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 2
@@ -20,6 +22,7 @@ const data = {
             type: 'grey',
             quest: 'hide',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 3
@@ -27,6 +30,7 @@ const data = {
             type: 'grey',
             quest: 'hide',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 4
@@ -34,6 +38,7 @@ const data = {
             type: 'grey',
             quest: 'hide',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 5
@@ -41,6 +46,7 @@ const data = {
             type: 'grey',
             quest: 'travel',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 6
@@ -48,6 +54,7 @@ const data = {
             type: 'grey',
             quest: 'travel',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 7
@@ -55,6 +62,7 @@ const data = {
             type: 'grey',
             quest: 'travel',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 8
@@ -62,6 +70,7 @@ const data = {
             type: 'grey',
             quest: 'travel',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 9
@@ -69,6 +78,7 @@ const data = {
             type: 'grey',
             quest: 'travel',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 10
@@ -76,6 +86,7 @@ const data = {
             type: 'grey',
             quest: 'fight',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 11
@@ -83,6 +94,7 @@ const data = {
             type: 'grey',
             quest: 'fight',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 12
@@ -90,6 +102,7 @@ const data = {
             type: 'grey',
             quest: 'fight',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 13
@@ -97,6 +110,7 @@ const data = {
             type: 'grey',
             quest: 'fight',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 14
@@ -104,6 +118,7 @@ const data = {
             type: 'grey',
             quest: 'fight',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 15
@@ -111,6 +126,7 @@ const data = {
             type: 'grey',
             quest: 'friendship',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 16
@@ -118,6 +134,7 @@ const data = {
             type: 'grey',
             quest: 'friendship',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 17
@@ -125,6 +142,7 @@ const data = {
             type: 'grey',
             quest: 'friendship',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 18
@@ -132,6 +150,7 @@ const data = {
             type: 'grey',
             quest: 'friendship',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 19
@@ -139,6 +158,7 @@ const data = {
             type: 'grey',
             quest: 'friendship',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 20
@@ -146,6 +166,7 @@ const data = {
             type: 'white',
             quest: 'hide',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 21
@@ -153,6 +174,7 @@ const data = {
             type: 'white',
             quest: 'hide',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 22
@@ -160,6 +182,7 @@ const data = {
             type: 'white',
             quest: 'hide',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 23
@@ -167,6 +190,7 @@ const data = {
             type: 'white',
             quest: 'hide',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 24
@@ -174,6 +198,7 @@ const data = {
             type: 'white',
             quest: 'hide',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 25
@@ -181,6 +206,7 @@ const data = {
             type: 'white',
             quest: 'hide',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 26
@@ -188,6 +214,7 @@ const data = {
             type: 'white',
             quest: 'hide',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 27
@@ -195,6 +222,7 @@ const data = {
             type: 'white',
             quest: 'fight',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 28
@@ -202,6 +230,7 @@ const data = {
             type: 'white',
             quest: 'fight',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 29
@@ -209,6 +238,7 @@ const data = {
             type: 'white',
             quest: 'fight',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 30
@@ -216,6 +246,7 @@ const data = {
             type: 'white',
             quest: 'fight',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 31
@@ -223,6 +254,7 @@ const data = {
             type: 'white',
             quest: 'fight',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 32
@@ -230,6 +262,7 @@ const data = {
             type: 'white',
             quest: 'fight',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 33
@@ -237,6 +270,7 @@ const data = {
             type: 'white',
             quest: 'fight',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 34
@@ -244,6 +278,7 @@ const data = {
             type: 'white',
             quest: 'friendship',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 35
@@ -251,6 +286,7 @@ const data = {
             type: 'white',
             quest: 'friendship',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 36
@@ -258,6 +294,7 @@ const data = {
             type: 'white',
             quest: 'friendship',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 37
@@ -265,6 +302,7 @@ const data = {
             type: 'white',
             quest: 'friendship',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 38
@@ -272,6 +310,7 @@ const data = {
             type: 'white',
             quest: 'friendship',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 39
@@ -279,6 +318,7 @@ const data = {
             type: 'white',
             quest: 'friendship',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 40
@@ -286,6 +326,7 @@ const data = {
             type: 'white',
             quest: 'friendship',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 41
@@ -293,6 +334,7 @@ const data = {
             type: 'white',
             quest: 'travel',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 42
@@ -300,6 +342,7 @@ const data = {
             type: 'white',
             quest: 'travel',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 43
@@ -307,6 +350,7 @@ const data = {
             type: 'white',
             quest: 'travel',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 44
@@ -314,6 +358,7 @@ const data = {
             type: 'white',
             quest: 'travel',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 45
@@ -321,6 +366,7 @@ const data = {
             type: 'white',
             quest: 'travel',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 46
@@ -328,6 +374,7 @@ const data = {
             type: 'white',
             quest: 'travel',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 47
@@ -335,6 +382,7 @@ const data = {
             type: 'white',
             quest: 'travel',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 48
@@ -342,6 +390,7 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 49
@@ -349,6 +398,7 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 50
@@ -356,6 +406,7 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 51
@@ -363,6 +414,7 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 52
@@ -370,6 +422,7 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 53
@@ -377,6 +430,7 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 54
@@ -384,6 +438,7 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 55
@@ -391,6 +446,7 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 56
@@ -398,6 +454,7 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 57
@@ -405,6 +462,7 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 58
@@ -412,6 +470,7 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 1,
+            deck: 'quest',
         },
         {
             /// 59
@@ -419,75 +478,84 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 1,
+            deck: 'quest',
         },
         {
             /// gandalf 00 (60)
             name: 'Gandalf: Foresight',
             type: 'yellow',
             action: 'One player: Rearrange top 3 tiles',
+            deck: 'gandalf',
         },
         {
             /// gandalf 01 (61)
             name: 'Gandalf: Magic',
             type: 'yellow',
             action: 'After moving the event marker ignore the event',
+            deck: 'gandalf',
         },
         {
             /// gandalf 02 (62)
             name: 'Gandalf: Healing',
             type: 'yellow',
             action: 'One player: Heal 2',
+            deck: 'gandalf',
         },
         {
             /// gandalf 03 (63)
             name: 'Gandalf: Guidance',
             type: 'yellow',
             action: 'Active player: Wild 2',
+            deck: 'gandalf',
         },
         {
             /// gandalf 04 (64)
             name: 'Gandalf: Persistence',
             type: 'yellow',
             action: 'One player: Draw 4 Hobbit cards',
+            deck: 'gandalf',
         },
         {
             /// gandalf 05 (65)
             name: 'Gandalf: Defiance',
             type: 'yellow',
             action: 'Sauron does not move',
+            deck: 'gandalf',
         },
         {
             /// gandalf 06 (66)
             name: 'Gandalf: Integrity',
             type: 'yellow',
             action: 'Instead of rolling the die, place it with the white side up',
+            deck: 'gandalf',
         },
         {
             /// gandalf 07 (67)
             name: 'Gandalf: Firestorm',
             type: 'yellow',
             action: 'Defeat any 2 foes',
+            deck: 'gandalf',
         },
         {
             /// legendary 00 (68)
             name: 'Bill the Pony',
             type: 'yellow',
             action: 'One player: Use this card as 1 shield or 1 life token',
-            feature: 'Bree',
+            deck: 'Bree',
         },
         {
             /// 01  (69)
             name: 'Fire Brand',
             type: 'yellow',
             action: 'Defeat any 1 Foe',
-            feature: 'Bree',
+            deck: 'Bree',
         },
         {
             /// 02 (70)
             name: "Gandalf's Letter",
             type: 'yellow',
             action: 'Call one Gandalf card without discarding 5 shields',
-            feature: 'Bree',
+            deck: 'Bree',
         },
         {
             /// 03 (71)
@@ -495,7 +563,7 @@ const data = {
             type: 'white',
             quest: 'friendship',
             count: 2,
-            feature: 'Bree',
+            deck: 'Bree',
         },
         {
             /// 04 (72)
@@ -503,7 +571,7 @@ const data = {
             type: 'white',
             quest: 'travel',
             count: 2,
-            feature: 'Bree',
+            deck: 'Bree',
         },
         {
             /// 05 (73)
@@ -511,7 +579,7 @@ const data = {
             type: 'white',
             quest: 'hide',
             count: 3,
-            feature: 'Bree',
+            deck: 'Bree',
         },
         {
             /// 06 (74)
@@ -519,7 +587,7 @@ const data = {
             type: 'grey',
             quest: 'travel',
             count: 2,
-            feature: 'Bree',
+            deck: 'Bree',
         },
         {
             /// 07 (75)
@@ -527,7 +595,7 @@ const data = {
             type: 'grey',
             quest: 'travel',
             count: 2,
-            feature: 'Bree',
+            deck: 'Bree',
         },
         {
             /// 08 (76)
@@ -535,7 +603,7 @@ const data = {
             type: 'grey',
             quest: 'travel',
             count: 2,
-            feature: "Helm's Deep",
+            deck: "Helm's Deep",
         },
         {
             /// 09 (77)
@@ -543,7 +611,7 @@ const data = {
             type: 'grey',
             quest: 'fight',
             count: 2,
-            feature: "Helm's Deep",
+            deck: "Helm's Deep",
         },
         {
             /// 10 (78)
@@ -551,7 +619,7 @@ const data = {
             type: 'white',
             quest: 'travel',
             count: 2,
-            feature: "Helm's Deep",
+            deck: "Helm's Deep",
         },
         {
             /// 11 (79)
@@ -559,7 +627,7 @@ const data = {
             type: 'white',
             quest: 'friendship',
             count: 2,
-            feature: "Helm's Deep",
+            deck: "Helm's Deep",
         },
         {
             /// 12 (80)
@@ -567,21 +635,21 @@ const data = {
             type: 'grey',
             quest: 'fight',
             count: 2,
-            feature: 'Isengard',
+            deck: 'Isengard',
         },
         {
             /// 13 (81)
             name: 'Ent Draught',
             type: 'yellow',
             action: 'One player: May pass shields to one other player',
-            feature: 'Isengard',
+            deck: 'Isengard',
         },
         {
             /// 14 (82)
             name: 'Pipe-Weed',
             type: 'yellow',
             action: 'You may allocate 3 heals among the players',
-            feature: 'Isengard',
+            deck: 'Isengard',
         },
         {
             /// 15 (83)
@@ -589,7 +657,7 @@ const data = {
             type: 'white',
             quest: 'travel',
             count: 2,
-            feature: 'Isengard',
+            deck: 'Isengard',
         },
         {
             /// 16 (84)
@@ -597,21 +665,21 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 3,
-            feature: 'Isengard',
+            deck: 'Isengard',
         },
         {
             /// 17 (85)
             name: 'Elessar',
             type: 'yellow',
             action: 'One player: heal',
-            feature: 'Lothlorien',
+            deck: 'Lothlorien',
         },
         {
             /// 18 (86)
             name: 'Phial',
             type: 'yellow',
             action: 'Active player: Do not reveal the next tile',
-            feature: 'Lothlorien',
+            deck: 'Lothlorien',
         },
         {
             /// 19 (87)
@@ -619,7 +687,7 @@ const data = {
             type: 'grey',
             quest: 'wild',
             count: 2,
-            feature: 'Lothlorien',
+            deck: 'Lothlorien',
         },
         {
             /// 20 (88)
@@ -627,7 +695,7 @@ const data = {
             type: 'grey',
             quest: 'fight',
             count: 1,
-            feature: 'Lothlorien',
+            deck: 'Lothlorien',
         },
         {
             /// 21 (89)
@@ -635,7 +703,7 @@ const data = {
             type: 'grey',
             quest: 'travel',
             count: 2,
-            feature: 'Lothlorien',
+            deck: 'Lothlorien',
         },
         {
             /// 22 (90)
@@ -643,7 +711,7 @@ const data = {
             type: 'grey',
             quest: 'hide',
             count: 2,
-            feature: 'Lothlorien',
+            deck: 'Lothlorien',
         },
         {
             /// 23 (91)
@@ -651,7 +719,7 @@ const data = {
             type: 'grey',
             quest: 'travel',
             count: 1,
-            feature: 'Lothlorien',
+            deck: 'Lothlorien',
         },
         {
             /// 24 (92)
@@ -659,14 +727,14 @@ const data = {
             type: 'grey',
             quest: 'friendship',
             count: 1,
-            feature: 'Lothlorien',
+            deck: 'Lothlorien',
         },
         {
             /// 25 (93)
             name: 'Lembas',
             type: 'yellow',
             action: 'One player: Draw Hobbit cards to increase hand to 6 cards',
-            feature: 'Lothlorien',
+            deck: 'Lothlorien',
         },
         {
             /// 26 (94)
@@ -674,7 +742,7 @@ const data = {
             type: 'grey',
             quest: 'wild',
             count: 2,
-            feature: 'Lothlorien',
+            deck: 'Lothlorien',
         },
         {
             /// 27 (95)
@@ -682,14 +750,14 @@ const data = {
             type: 'grey',
             quest: 'wild',
             count: 1,
-            feature: 'Lothlorien',
+            deck: 'Lothlorien',
         },
         {
             /// 28 (96)
             name: 'Bow',
             type: 'yellow',
             action: 'One player: Do not roll one die',
-            feature: 'Lothlorien',
+            deck: 'Lothlorien',
         },
         {
             /// 29 (97)
@@ -697,7 +765,7 @@ const data = {
             type: 'white',
             quest: 'travel',
             count: 2,
-            feature: 'Mordor',
+            deck: 'Mordor',
         },
         {
             /// 30 (98)
@@ -705,7 +773,7 @@ const data = {
             type: 'grey',
             quest: 'fight',
             count: 2,
-            feature: 'Mordor',
+            deck: 'Mordor',
         },
         {
             /// 31 (99)
@@ -713,7 +781,7 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 2,
-            feature: 'Mordor',
+            deck: 'Mordor',
         },
         {
             /// 32 (100)
@@ -721,7 +789,7 @@ const data = {
             type: 'grey',
             quest: 'hide',
             count: 1,
-            feature: 'Moria',
+            deck: 'Moria',
         },
         {
             /// 33 (101)
@@ -729,14 +797,14 @@ const data = {
             type: 'grey',
             quest: 'friendship',
             count: 2,
-            feature: 'Moria',
+            deck: 'Moria',
         },
         {
             /// 34 (102)
             name: 'Bow',
             type: 'yellow',
             action: 'One player: Ignore effects after one die roll',
-            feature: 'Rivendell',
+            deck: 'Rivendell',
         },
         {
             /// 35 (103)
@@ -744,7 +812,7 @@ const data = {
             type: 'grey',
             quest: 'wild',
             count: 1,
-            feature: 'Rivendell',
+            deck: 'Rivendell',
         },
         {
             /// 36 (104)
@@ -752,7 +820,7 @@ const data = {
             type: 'white',
             quest: 'fight',
             count: 2,
-            feature: 'Rivendell',
+            deck: 'Rivendell',
         },
         {
             /// 37 (105)
@@ -760,14 +828,14 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 2,
-            feature: 'Rivendell',
+            deck: 'Rivendell',
         },
         {
             /// 38 (106)
             name: 'Athelas',
             type: 'yellow',
             action: 'One player: Ignore any effects of missing life tokens once only',
-            feature: 'Rivendell',
+            deck: 'Rivendell',
         },
         {
             /// 39 (107)
@@ -775,21 +843,21 @@ const data = {
             type: 'white',
             quest: 'hide',
             count: 2,
-            feature: 'Rivendell',
+            deck: 'Rivendell',
         },
         {
             /// 40 (108)
             name: 'Staff',
             type: 'yellow',
             action: 'Ignore one tile showing a sundial and three items',
-            feature: 'Rivendell',
+            deck: 'Rivendell',
         },
         {
             /// 41 (109)
             name: 'Miruvor',
             type: 'yellow',
             action: 'One player: May pass 1 card to another player',
-            feature: 'Rivendell',
+            deck: 'Rivendell',
         },
         {
             /// 42 (110)
@@ -797,7 +865,7 @@ const data = {
             type: 'grey',
             quest: 'wild',
             count: 2,
-            feature: 'Rivendell',
+            deck: 'Rivendell',
         },
         {
             /// 43 (111)
@@ -805,7 +873,7 @@ const data = {
             type: 'white',
             quest: 'travel',
             count: 2,
-            feature: 'Rivendell',
+            deck: 'Rivendell',
         },
         {
             /// 44 (112)
@@ -813,7 +881,7 @@ const data = {
             type: 'white',
             quest: 'fight',
             count: 2,
-            feature: 'Rivendell',
+            deck: 'Rivendell',
         },
         {
             /// 45 (113)
@@ -821,7 +889,7 @@ const data = {
             type: 'grey',
             quest: 'fight',
             count: 2,
-            feature: 'Rivendell',
+            deck: 'Rivendell',
         },
         {
             /// 46 (114) - Roll a die as well
@@ -829,7 +897,7 @@ const data = {
             type: 'white',
             quest: 'wild',
             count: 3,
-            feature: "Shelob's Lair",
+            deck: "Shelob's Lair",
         },
         {
             /// 47 (115)
@@ -837,7 +905,7 @@ const data = {
             type: 'white',
             quest: 'travel',
             count: 2,
-            feature: "Shelob's Lair",
+            deck: "Shelob's Lair",
         },
     ],
     board: {
