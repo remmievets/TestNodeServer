@@ -21,6 +21,8 @@ const initialPlayer = {
 
 const initialGame = {
     seed: 0,
+    /// @brief True until the game ends
+    active: true,
     /// @brief Full deck of cards (hidden)
     deck: [],
     /// @brief All available gandalf cards
@@ -39,6 +41,7 @@ const initialGame = {
     },
     loc: 'bagend',
     log: [],
+    undo: [],
     selectHand: [],
     state: null,
     nextState: { state: null, args: null },
@@ -76,6 +79,44 @@ function log(s) {
 
 function roll_d6() {
     return util.random(6) + 1;
+}
+
+//////////////////////
+/* Undo functions */
+
+/// @brief Save a snapshot of the current game state.
+function save_undo() {
+    if (!game.undo) game.undo = [];
+
+    // Deep copy of game without the undo stack itself
+    let snapshot = structuredClone({ ...game, undo: undefined });
+
+    game.undo.push(snapshot);
+}
+
+/// @brief Clear all undo history.
+function clear_undo() {
+    game.undo = [];
+}
+
+/// @brief Undo the last action (restore previous game state)
+function pop_undo() {
+    if (!game.undo || game.undo.length === 0) {
+        console.warn('No undo states available');
+        return;
+    }
+
+    let prevTurn = game.undo.pop();
+
+    // Replace game contents with the snapshot
+    for (let key of Object.keys(game)) {
+        if (key !== 'undo') {
+            delete game[key];
+        }
+    }
+    for (let key of Object.keys(prevTurn)) {
+        game[key] = prevTurn[key];
+    }
 }
 
 //////////////////////
@@ -231,7 +272,7 @@ function update_player_active() {
 //////////////////////
 /* Game State Utility Functions */
 function check_end_of_game() {
-    if (get_active_player_list.length == 0) {
+    if (get_active_player_list().length == 0) {
         log('YOU HAVE LOST');
     }
 }
@@ -1013,8 +1054,15 @@ states.turn_resolve_tile = {
     resolve_event() {
         log('resolve event ' + data.tiles[game.action.lasttile].type);
         game.conflict.eventValue += 1;
-        // Draw another tile
-        advance_state('turn_reveal_tiles');
+        // TBD - resolve event
+        // Next state
+        if (game.conflict.eventValue < 6) {
+            // Draw another tile
+            advance_state('turn_reveal_tiles');
+        } else {
+            // End of board
+            advance_state('conflict_board_end');
+        }
     },
     resolve_corruption(p) {
         log(p + ' increases corruption by 2');
@@ -1070,15 +1118,33 @@ states.conflict_board_start = {
     },
 };
 
-states.shelobs_lair = {
-    fini() {
-        advance_state('conflict_board_start', { name: 'Shelobs Lair', loc: 'shelobslair' });
+states.conflict_board_end = {
+    init() {
+        // Descent into darkness
+        // Loop through each player and apply 1 corruption for each missing life token
+        // Allow player to play yellow cards before resolving
     },
-};
-
-states.mordor = {
     fini() {
-        advance_state('conflict_board_start', { name: 'Mordor', loc: 'mordor' });
+        // Determine the next ring-bearer
+        // TBD
+        // Fatty if active gets 2 new cards
+        // TBD
+        // Determine next state, based on current location
+        switch (game.loc)
+        {
+            case 'moria':
+                advance_state('lothlorien_gladriel');
+                break;
+            case 'helmsdeep':
+                advance_state('conflict_board_start', { name: 'Shelobs Lair', loc: 'shelobslair' });
+                break;
+            case 'shelobslair':
+                advance_state('conflict_board_start', { name: 'Mordor', loc: 'mordor' });
+                break;
+            case 'mordor':
+                // TBD - if we get here you have lost
+                break;
+        }
     },
 };
 
@@ -1132,7 +1198,22 @@ function updateGame(gameId, gameData) {
 }
 
 function getGameView(gameId) {
-    return game;
+    // Copy fields which client needs only
+    let view = structuredClone({
+        ...game,
+        undo: undefined,
+        active: undefined,
+        seed: undefined,
+        deck: undefined,
+        shields: undefined,
+        story: undefined,
+        nextState: undefined,
+        action: undefined,
+        state: undefined,
+    });
+    // TBD - debug only
+    view['debug'] = structuredClone({ ...game, undo: undefined });
+    return view;
 }
 
 function parseAction(gameId, move) {

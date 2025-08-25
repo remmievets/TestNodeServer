@@ -117,10 +117,6 @@ start
 
 Action List
 
-- Create end of game check routine
-- Create routine to check for death of characters (as sauron or corruption move)
-- Conflict board start state can be made common
-- Conflict board end board can be made common
 - Create function for advancement on path (use for story tile / card play)
     - move marker
     - give rewards

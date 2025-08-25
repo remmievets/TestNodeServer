@@ -61,8 +61,24 @@ function load_game(gameId) {
 }
 
 function save_game(gameId, game) {
-    const gameJson = JSON.stringify(game);
-    const result = db.prepare(`UPDATE games SET game = ? WHERE id = ?`).run(gameJson, gameId);
+    // Do not save inactive game
+    if (is_game_active(gameId)) {
+        const gameJson = JSON.stringify(game);
+        const result = db.prepare(`UPDATE games SET game = ? WHERE id = ?`).run(gameJson, gameId);
+    }
+}
+
+function is_game_active(gameId) {
+    const existing = db.prepare(`SELECT active FROM games WHERE id = ?`).get(gameId);
+    if (!existing) {
+        console.error(`Game with id ${gameId} not found`);
+        return false;
+    }
+    return existing.active;
+}
+
+function deactivate_game(gameId) {
+    const result = db.prepare(`UPDATE games SET active = FALSE WHERE id = ?`).run(gameId);
     return result;
 }
 
@@ -138,11 +154,22 @@ app.post('/move', (req, res) => {
     try {
         const { gameId, move } = req.body;
 
+        const activeGame = is_game_active(gameId);
+
         // Output infomation about move action
         const game = tba.parseAction(gameId, move);
 
-        // Save in the database
-        save_game(gameId, game);
+        if (activeGame) {
+            // Save in the database
+            save_game(gameId, game);
+            // Check if the game status has changed
+            if (game.active === false) {
+                // Change game to inactive
+                deactivate_game(gameId);
+            }
+        } else {
+            game.log.push('GAME OVER');
+        }
 
         // Respond with the updated board
         const view = tba.getGameView(gameId);
