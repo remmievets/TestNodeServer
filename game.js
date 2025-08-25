@@ -69,33 +69,54 @@ var states = {};
 var game;
 
 //////////////////////
-/* Game helpers */
-
-function get_active_player_list() {
-    const porder = ['Frodo', 'Sam', 'Pipin', 'Merry', 'Fatty'];
-    return porder.filter((p) => game.players[p] && game.players[p].active);
+/* COMMON LIBRARY */
+function log(s) {
+    game.log.push(s);
 }
 
-function get_next_player(p) {
-    const porder = get_active_player_list();
-    const start = porder.indexOf(p);
-    const idx = (start + 1) % porder.length;
-    return porder[idx];
+function roll_d6() {
+    return util.random(6) + 1;
 }
 
-function get_active_players_in_order(p) {
-    const porder = get_active_player_list();
-    const start = porder.indexOf(p);
+//////////////////////
+/* Card functions */
 
-    const orderedPlayers = [];
-
-    // Add players to ordered list if player is active
-    for (let i = 0; i < porder.length; i++) {
-        const idx = (start + i) % porder.length;
-        orderedPlayers.push(porder[idx]);
+function create_deck(list, startIndex, endIndex) {
+    list.length = 0;
+    for (let i = startIndex; i <= endIndex; i++) {
+        util.set_add(list, i);
     }
+}
 
-    return orderedPlayers;
+function deal_card() {
+    if (game.deck.length === 0) {
+        reshuffle_deck();
+    }
+    return game.deck.pop();
+}
+
+// Gather a full 'set' of all player cards
+function set_of_player_cards() {
+    let pArray = get_active_player_list();
+    let cardsInHands = new Set();
+    for (let p of pArray) {
+        for (let card of game.players[p].hand) {
+            cardsInHands.add(card);
+        }
+    }
+    return cardsInHands;
+}
+
+// Reshuffle quest cards 0-59.  Make sure to remove cards that are already in players hands.
+function reshuffle_deck() {
+    // Rebuild entire deck of initial quest cards
+    create_deck(game.deck, 0, 59);
+    // Collect all cards from all players’ hands
+    let cardsInHands = set_of_player_cards();
+    // Filter out any cards that are in players’ hands
+    game.deck = game.deck.filter((card) => !cardsInHands.has(card));
+    // Shuffle the deck
+    util.shuffle(game.deck);
 }
 
 function count_card_type_by_player(p, cardType) {
@@ -162,7 +183,59 @@ function discard_card_from_player(p, cardInt) {
 }
 
 //////////////////////
+/* Player functions */
+
+function get_active_player_list() {
+    const porder = ['Frodo', 'Sam', 'Pipin', 'Merry', 'Fatty'];
+    return porder.filter((p) => game.players[p] && game.players[p].active);
+}
+
+function get_next_player(p) {
+    const porder = get_active_player_list();
+    const start = porder.indexOf(p);
+    const idx = (start + 1) % porder.length;
+    return porder[idx];
+}
+
+function get_active_players_in_order(p) {
+    const porder = get_active_player_list();
+    const start = porder.indexOf(p);
+
+    const orderedPlayers = [];
+
+    // Add players to ordered list if player is active
+    for (let i = 0; i < porder.length; i++) {
+        const idx = (start + i) % porder.length;
+        orderedPlayers.push(porder[idx]);
+    }
+
+    return orderedPlayers;
+}
+
+function update_player_active() {
+    let pArray = get_active_player_list();
+    for (let p of pArray) {
+        if (game.players[p].corruption < game.sauron) {
+            game.players[p].active = true;
+        } else {
+            // Send a message to the player indicating the change in state
+            log(`${p} has become corrupted by the ring`);
+            // Make player inactive
+            game.players[p].active = false;
+            // Discard all cards
+            util.set_clear(game.players[p].hand);
+        }
+    }
+}
+
+//////////////////////
 /* Game State Utility Functions */
+function check_end_of_game() {
+    if (get_active_player_list.length == 0) {
+        log('YOU HAVE LOST');
+    }
+}
+
 function goto_next_state() {
     // Go back to prior state
     game.state = game.nextState.state;
@@ -220,10 +293,14 @@ function execute_state() {
         if (!game.prompt && curstate.fini) {
             curstate.fini();
         }
+
+        // Determine if a players state has changed to inactive
+        update_player_active();
+
+        // Determine if the game has ended
+        if (check_end_of_game() == true) {
+        }
     } while (!game.prompt);
-    //} while (!game.prompt && states[game.state] !== curstate);
-    // ^ repeat until we actually have a prompt
-    //    (the !== check prevents infinite loops if fini doesn't change state)
 }
 
 function execute_button(g, buttonName, args) {
@@ -628,7 +705,6 @@ states.rivendell_fellowship = {
             // Build buttons dynamically
             const buttons = {
                 roll: 'Roll',
-                skip: 'Go to Lothlorien',
             };
 
             const cardInfo = count_card_type_by_player(game.currentPlayer, 'friendship');
@@ -658,9 +734,6 @@ states.rivendell_fellowship = {
         const np = get_next_player(game.currentPlayer);
         set_next_state('rivendell_fellowship', { p: np, cnt: game.action.count });
         advance_state('action_roll_die');
-    },
-    skip() {
-        advance_state('lothlorien_gladriel');
     },
     fini() {
         advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
@@ -838,6 +911,7 @@ states.turn_reveal_tiles = {
         // Can ring be used
         if (game.conflict.ringUsed === false) {
             buttons['use_ring'] = 'Use Power of the Ring';
+            buttons['skip'] = 'Go to Lothlorien - test';
             buttons['reshuffle'] = 'Reshuffle - test';
         }
         return {
@@ -846,7 +920,12 @@ states.turn_reveal_tiles = {
             buttons,
         };
     },
+    skip() {
+        // TEST
+        advance_state('lothlorien_gladriel');
+    },
     reshuffle() {
+        // TEST
         reshuffle_deck();
     },
     reveal_tile() {
@@ -1003,6 +1082,9 @@ states.mordor = {
     },
 };
 
+//////////////////////
+/* Game setup */
+
 function setup_game() {
     console.log('setup_game');
 
@@ -1028,60 +1110,13 @@ function setup_game() {
     advance_state('bagend_gandalf');
 }
 
-/* COMMON LIBRARY */
-function log(s) {
-    game.log.push(s);
-}
-
-function create_deck(list, startIndex, endIndex) {
-    list.length = 0;
-    for (let i = startIndex; i <= endIndex; i++) {
-        util.set_add(list, i);
-    }
-}
-
-function deal_card() {
-    if (game.deck.length === 0) {
-        reshuffle_deck();
-    }
-    return game.deck.pop();
-}
-
-// Gather a full 'set' of all player cards
-function set_of_player_cards() {
-    let pArray = get_active_player_list();
-    let cardsInHands = new Set();
-    for (let p of pArray) {
-        for (let card of game.players[p].hand) {
-            cardsInHands.add(card);
-        }
-    }
-    return cardsInHands;
-}
-
-// Reshuffle quest cards 0-59.  Make sure to remove cards that are already in players hands.
-function reshuffle_deck() {
-    // Rebuild entire deck of initial quest cards
-    create_deck(game.deck, 0, 59);
-    // Collect all cards from all players’ hands
-    let cardsInHands = set_of_player_cards();
-    // Filter out any cards that are in players’ hands
-    game.deck = game.deck.filter((card) => !cardsInHands.has(card));
-    // Shuffle the deck
-    util.shuffle(game.deck);
-}
-
-function roll_d6() {
-    return util.random(6) + 1;
-}
-
+/////////////////////////////////////////
+// Functions exposed to server
 const moveHandlers = {
     RESET: (game, button, args) => setup_game(),
     BUTTON: (game, button, args) => execute_button(game, button, args),
 };
 
-/////////////////////////////////////////
-// Functions exposed to server
 function startGame(gameId) {
     console.log(`START GAME ${gameId}`);
     setup_game();
