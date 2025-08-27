@@ -1141,6 +1141,7 @@ const data = {
         Merry: '=m',
         Fatty: '=y',
     },
+    tracks: ['travel', 'fight', 'hide', 'friendship'],
     tiles: [
         { type: 'travel' }, // 0
         { type: 'travel' }, // 1

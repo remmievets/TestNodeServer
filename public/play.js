@@ -84,7 +84,7 @@ let ui = {
             ring: document.getElementById('ring_1_text'),
             heart: document.getElementById('heart_1_text'),
             sun: document.getElementById('sun_1_text'),
-            shields: document.getElementById('shields_1_text'),
+            shield: document.getElementById('shields_1_text'),
             marker: null,
         },
         sam: {
@@ -92,7 +92,7 @@ let ui = {
             ring: document.getElementById('ring_2_text'),
             heart: document.getElementById('heart_2_text'),
             sun: document.getElementById('sun_2_text'),
-            shields: document.getElementById('shields_2_text'),
+            shield: document.getElementById('shields_2_text'),
             marker: null,
         },
         pipin: {
@@ -100,7 +100,7 @@ let ui = {
             ring: document.getElementById('ring_3_text'),
             heart: document.getElementById('heart_3_text'),
             sun: document.getElementById('sun_3_text'),
-            shields: document.getElementById('shields_3_text'),
+            shield: document.getElementById('shields_3_text'),
             marker: null,
         },
         merry: {
@@ -108,7 +108,7 @@ let ui = {
             ring: document.getElementById('ring_4_text'),
             heart: document.getElementById('heart_4_text'),
             sun: document.getElementById('sun_4_text'),
-            shields: document.getElementById('shields_4_text'),
+            shield: document.getElementById('shields_4_text'),
             marker: null,
         },
         fatty: {
@@ -116,7 +116,7 @@ let ui = {
             ring: document.getElementById('ring_5_text'),
             heart: document.getElementById('heart_5_text'),
             sun: document.getElementById('sun_5_text'),
-            shields: document.getElementById('shields_5_text'),
+            shield: document.getElementById('shields_5_text'),
             marker: null,
         },
     },
@@ -220,10 +220,10 @@ function on_init(view) {
         }
 
         // Update player stats
-        ui.players[p].ring.textContent = view.players[player].rings;
-        ui.players[p].heart.textContent = view.players[player].hearts;
-        ui.players[p].sun.textContent = view.players[player].suns;
-        ui.players[p].shields.textContent = view.players[player].shields;
+        ui.players[p].ring.textContent = view.players[player].ring;
+        ui.players[p].heart.textContent = view.players[player].heart;
+        ui.players[p].sun.textContent = view.players[player].sun;
+        ui.players[p].shield.textContent = view.players[player].shield;
 
         // Update player markers
         if (!ui.players[p].marker) {

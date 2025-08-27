@@ -12,10 +12,10 @@ const data = require('./public/data.js');
 const initialPlayer = {
     active: true,
     hand: [],
-    rings: 0,
-    hearts: 0,
-    suns: 0,
-    shields: 0,
+    ring: 0,
+    heart: 0,
+    sun: 0,
+    shield: 0,
     corruption: 0,
 };
 
@@ -28,7 +28,7 @@ const initialGame = {
     /// @brief All available gandalf cards
     gandalf: [],
     /// @brief End of conflict board shields (hidden)
-    shields: [],
+    shield: [],
     /// @brief Story tiles for a conflict (hidden)
     story: [],
     /// @brief Player information
@@ -221,6 +221,55 @@ function discard_card_from_player(p, cardInt) {
     }
 
     return rc;
+}
+
+//////////////////////
+/* Board function */
+
+function is_path_complete(path) {
+    const arr = data[game.loc][path]; // might be undefined
+    const progress = game.conflict[path];
+    let result;
+
+    if (!arr) {
+        // if path does not exist at all → consider it complete
+        result = true;
+    } else if (progress < arr.length - 1) {
+        result = false;
+    } else {
+        result = true;
+    }
+    return result;
+}
+
+function resolve_reward(path) {
+    let result = true;
+    const pathData = data[game.loc][path];
+    const curIndex = game.conflict[path];
+
+    switch (pathData[curIndex].action) {
+        case 'shield':
+        case 'ring':
+        case 'sun':
+        case 'heart':
+            game.players[game.currentPlayer][pathData[curIndex].action] += 1;
+            break;
+        case 'bigshield':
+            game.players[game.currentPlayer].shield += game.shield.pop();
+            break;
+        case 'heal':
+            if (game.players[game.currentPlayer].corruption > 0) {
+                game.players[game.currentPlayer].corruption -= 1;
+            }
+            break;
+        case 'roll':
+            // Handle roll separately
+            result = false;
+            break;
+        default:
+            break;
+    }
+    return result;
 }
 
 //////////////////////
@@ -828,7 +877,7 @@ states.lothlorien_recovery = {
                 add: 'Add shield - TEMP',
             };
             // First check if player has 2 shields
-            if (game.players[game.currentPlayer].shields >= 2) {
+            if (game.players[game.currentPlayer].shield >= 2) {
                 buttons['card'] = 'Discard shields to gain 2 cards';
                 if (game.players[game.currentPlayer].corruption > 0) {
                     buttons['heal'] = 'Discard shields to heal 1 space';
@@ -846,7 +895,7 @@ states.lothlorien_recovery = {
     },
     add() {
         // TBD - TEMP
-        game.players[game.currentPlayer].shields += 1;
+        game.players[game.currentPlayer].shield += 1;
     },
     pass() {
         // Players turn has completed - skipped option
@@ -857,7 +906,7 @@ states.lothlorien_recovery = {
     },
     card() {
         log(`${game.currentPlayer} discards 2 shields to draw 2 cards`);
-        game.players[game.currentPlayer].shields = game.players[game.currentPlayer].shields - 2;
+        game.players[game.currentPlayer].shield = game.players[game.currentPlayer].shield - 2;
         // Deal 2 cards
         let card = deal_card();
         log(`C${card} given to ${game.currentPlayer}`);
@@ -871,7 +920,7 @@ states.lothlorien_recovery = {
     },
     heal() {
         log(`${game.currentPlayer} discards 2 shields to heal 1 space`);
-        game.players[game.currentPlayer].shields = game.players[game.currentPlayer].shields - 2;
+        game.players[game.currentPlayer].shield = game.players[game.currentPlayer].shield - 2;
         game.players[game.currentPlayer].corruption = game.players[game.currentPlayer].corruption - 1;
         // Decrease count and advance to next player
         game.action.count = game.action.count - 1;
@@ -994,10 +1043,6 @@ states.turn_resolve_tile = {
         const buttons = {};
         // Do we have yellow card or gandalf card that are playable
         /// TBD
-        // Can ring be used
-        if (game.conflict.ringUsed === false) {
-            buttons['use_ring'] = 'Use Power of the Ring';
-        }
         // Does the tile contain options?
         const t = data.tiles[game.action.lasttile].type;
         switch (t) {
@@ -1030,12 +1075,22 @@ states.turn_resolve_tile = {
                 //      Allow only one option for advance on single path
                 // else
                 //      Allow advancement on any not completed path on the board
-                if (data[game.loc][t] && game.conflict[t] < data[game.loc][t].length) {
+                if (is_path_complete(t) === false) {
                     buttons[`resolve_path ${t}`] = 'Resolve Tile';
                 } else {
                     // Player can advance any track that is not complete
+                    for (const path of data.tracks) {
+                        // Is this path an option to be selected
+                        if (is_path_complete(path) === false) {
+                            buttons[`resolve_path ${path}`] = `Resolve as ${path}`;
+                        }
+                    }
                 }
                 break;
+        }
+        // Can ring be used
+        if (game.conflict.ringUsed === false) {
+            buttons['use_ring'] = 'Use Power of the Ring';
         }
         // Return prompt information
         return {
@@ -1045,9 +1100,9 @@ states.turn_resolve_tile = {
         };
     },
     resolve_ring() {
+        // Corrupt ring bearer
         log(game.ringBearer + ' increases corruption by 1');
         game.players[game.ringBearer].corruption += 1;
-        // TBD - check who is still alive
         // Draw another tile
         advance_state('turn_reveal_tiles');
     },
@@ -1067,22 +1122,30 @@ states.turn_resolve_tile = {
     resolve_corruption(p) {
         log(p + ' increases corruption by 2');
         game.players[p].corruption += 2;
-        // TBD - check who is still alive
         // Draw another tile
         advance_state('turn_reveal_tiles');
     },
     resolve_sauron() {
         game.sauron -= 1;
         log('Sauron moves to ' + game.sauron);
-        // TBD - check who is still alive
         // Draw another tile
         advance_state('turn_reveal_tiles');
     },
     resolve_path(t) {
-        console.log(t);
+        const path = t[0];
         // Advance on desired track and claim rewards/items
-
-        // Advance to next turn phase
+        if (data[game.loc][path]) {
+            // Advance path
+            game.conflict[path] += 1;
+            // Get reward
+            if (resolve_reward(path) === false) {
+                // Need to roll dice and advance to next turn phase
+                //TBD
+            } else {
+                // Advance to next turn phase
+                //TBD
+            }
+        }
     },
     use_ring() {
         log('Use ring');
@@ -1127,11 +1190,19 @@ states.conflict_board_end = {
     fini() {
         // Determine the next ring-bearer
         // TBD
+
         // Fatty if active gets 2 new cards
-        // TBD
+        if (game.players.Fatty.active) {
+            let card = deal_card();
+            log(`C${card} given to ${'Fatty'}`);
+            util.set_add(game.players['Fatty'].hand, card);
+            card = deal_card();
+            log(`C${card} given to ${'Fatty'}`);
+            util.set_add(game.players['Fatty'].hand, card);
+        }
+
         // Determine next state, based on current location
-        switch (game.loc)
-        {
+        switch (game.loc) {
             case 'moria':
                 advance_state('lothlorien_gladriel');
                 break;
@@ -1169,8 +1240,8 @@ function setup_game() {
     create_deck(game.gandalf, 0, 7);
 
     // Create a special shield list with 2 of each shield type for end of board bonus
-    game.shields = [1, 1, 2, 2, 3, 3];
-    util.shuffle(game.shields);
+    game.shield = [1, 1, 2, 2, 3, 3];
+    util.shuffle(game.shield);
 
     // Advance to first state and start executing
     advance_state('bagend_gandalf');
@@ -1205,7 +1276,7 @@ function getGameView(gameId) {
         active: undefined,
         seed: undefined,
         deck: undefined,
-        shields: undefined,
+        shield: undefined,
         story: undefined,
         nextState: undefined,
         action: undefined,
