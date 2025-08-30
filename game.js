@@ -321,8 +321,15 @@ function update_player_active() {
 //////////////////////
 /* Game State Utility Functions */
 function check_end_of_game() {
+    // No active players left
     if (get_active_player_list().length == 0) {
-        log('YOU HAVE LOST');
+        log('All players have become corrupted');
+        advance_state('game_end_loss');
+    }
+    // No active players left
+    if (game.players[game.ringBearer].active === false) {
+        log('The ring-bearer has become corrupted');
+        advance_state('game_end_loss');
     }
 }
 
@@ -1041,8 +1048,6 @@ states.turn_resolve_tile = {
     prompt() {
         // Build buttons dynamically
         const buttons = {};
-        // Do we have yellow card or gandalf card that are playable
-        /// TBD
         // Does the tile contain options?
         const t = data.tiles[game.action.lasttile].type;
         switch (t) {
@@ -1088,6 +1093,9 @@ states.turn_resolve_tile = {
                 }
                 break;
         }
+        // Do we have yellow card or gandalf card that are playable
+        /// TBD
+        buttons['end_board'] = 'End board';
         // Can ring be used
         if (game.conflict.ringUsed === false) {
             buttons['use_ring'] = 'Use Power of the Ring';
@@ -1151,6 +1159,9 @@ states.turn_resolve_tile = {
         log('Use ring');
         advance_state('turn_reveal_tiles');
     },
+    end_board() {
+        advance_state('conflict_board_end');
+    },
 };
 
 states.conflict_board_start = {
@@ -1188,17 +1199,48 @@ states.conflict_board_end = {
         // Allow player to play yellow cards before resolving
     },
     fini() {
-        // Determine the next ring-bearer
-        // TBD
+        // Determine the next ring-bearer (current ring-bearer always loses ties)
+        let plist = get_active_players_in_order(game.ringBearer);
+        let winner = plist[0]; // start with first
+        let maxRings = game.players[winner].ring;
+
+        for (let i = plist.length - 1; i > 0; i--) {
+            const p = plist[i];
+            if (game.players[p].ring >= maxRings) {
+                winner = p;
+                maxRings = game.players[p].ring;
+            }
+        }
+
+        // Make current player the new ring-bearer
+        log(`${winner} becomes the next ring-bearer`);
+        game.ringBearer = winner;
+        game.currentPlayer = game.ringBearer;
+
+        // Ring-bearer gets 2 new cards
+        let card = deal_card();
+        log(`C${card} given to ${game.ringBearer}`);
+        util.set_add(game.players[game.ringBearer].hand, card);
+        card = deal_card();
+        log(`C${card} given to ${game.ringBearer}`);
+        util.set_add(game.players[game.ringBearer].hand, card);
 
         // Fatty if active gets 2 new cards
         if (game.players.Fatty.active) {
-            let card = deal_card();
-            log(`C${card} given to ${'Fatty'}`);
+            card = deal_card();
+            log(`C${card} given to Fatty`);
             util.set_add(game.players['Fatty'].hand, card);
             card = deal_card();
-            log(`C${card} given to ${'Fatty'}`);
+            log(`C${card} given to Fatty`);
             util.set_add(game.players['Fatty'].hand, card);
+        }
+
+        // Return all Heart, Sun, and Ring tokens to zero for each player
+        plist = get_active_players_in_order(game.currentPlayer);
+        for (const p of plist) {
+            game.players[p].heart = 0;
+            game.players[p].sun = 0;
+            game.players[p].ring = 0;
         }
 
         // Determine next state, based on current location
@@ -1213,9 +1255,31 @@ states.conflict_board_end = {
                 advance_state('conflict_board_start', { name: 'Mordor', loc: 'mordor' });
                 break;
             case 'mordor':
-                // TBD - if we get here you have lost
+                advance_state('game_end_loss');
                 break;
         }
+    },
+};
+
+states.game_end_loss = {
+    init() {
+        log('SAURON HAS WON');
+    },
+    prompt() {
+        return {
+            message: 'GAME OVER - LOST',
+        };
+    },
+};
+
+states.game_end_win = {
+    init() {
+        log('The Free People have destroyed the RING');
+    },
+    prompt() {
+        return {
+            message: 'GAME OVER - WON',
+        };
     },
 };
 
