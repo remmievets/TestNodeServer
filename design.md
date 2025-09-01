@@ -134,4 +134,5 @@ Action List
 - Other items
     - Buy gandalf cards option
     - Display available Gandalf cards
+    - Add to buttons, gandalf, yellow, use ring options outside of state
     - Play other yellow cards

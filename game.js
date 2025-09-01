@@ -136,6 +136,14 @@ function deal_card() {
     return game.deck.pop();
 }
 
+function draw_x_cards(p, cnt) {
+    for (let i = 0; i < cnt; i++) {
+        let card = deal_card();
+        log(`C${card} given to ${p}`);
+        util.set_add(game.players[p].hand, card);
+    }
+}
+
 // Gather a full 'set' of all player cards
 function set_of_player_cards() {
     let pArray = get_active_player_list();
@@ -160,26 +168,44 @@ function reshuffle_deck() {
     util.shuffle(game.deck);
 }
 
-function count_card_type_by_player(p, cardType) {
+/// @brief Get a list of cards and count values based on card type
+/// cardType can be
+///     'card' - any card
+///     'yellow'/'white'/'grey' - by type or color of card
+///     'hide','friendship','travel','fight','wild' - by symbol
+/// cardType can be a single string or an array of strings
+function count_card_type_by_player(p, cardType, allowedColors = ['white', 'grey', 'yellow']) {
     let cardValue = 0;
     let cardArray = [];
 
+    // Normalize: always work with an array of card types (strings)
+    const cardTypes = Array.isArray(cardType) ? cardType : [cardType];
+    const questTypes = ['hide', 'travel', 'friendship', 'fight', 'wild'];
+
     for (const c of game.players[p].hand) {
-        if (cardType === 'card') {
-            cardValue += 1;
-            util.set_add(cardArray, c);
-        } else if (data.cards[c].quest) {
-            if (data.cards[c].quest == cardType) {
-                cardValue += data.cards[c].count;
+        const cardData = data.cards[c];
+
+        // If card then include regardless of quest type
+        if (cardType.includes('card')) {
+            // Filter by color
+            if (allowedColor.includes(card.type)) {
+                // Include all cards
+                cardValue += 1;
                 util.set_add(cardArray, c);
-            } else if (data.cards[c].quest === 'wild') {
-                // Include all wild cards into the count
-                cardValue += data.cards[c].count;
-                util.set_add(cardArray, c);
-            } else if (p === 'Frodo' && data.cards[c].type === 'white') {
-                // Frodo special ability
-                cardValue += data.cards[c].count;
-                util.set_add(cardArray, c);
+            }
+        } else if (cardData.quest && questTypes.some((q) => cardTypes.includes(q))) {
+            // Frodo: treat white as wild
+            const isFrodoWild = p === 'Frodo' && cardData.type === 'white';
+
+            // Determine if we are looking for a quest type
+            // Include if card matches a quest we are looking for or the card is wild
+            // Frodo special ability - treat white cards as wild
+            if (cardType.includes(cardData.quest) || cardData.quest === 'wild' || isFrodoWild) {
+                // Filter by color
+                if (allowedColor.includes(card.type)) {
+                    cardValue += cardData.count;
+                    util.set_add(cardArray, c);
+                }
             }
         }
     }
@@ -226,15 +252,33 @@ function discard_card_from_player(p, cardInt) {
 //////////////////////
 /* Board function */
 
+function get_board_active_quests() {
+    const board = data[game.loc];
+    const questTypes = ['fight', 'travel', 'hide', 'friendship'];
+    const quests = [];
+
+    for (const q of questTypes) {
+        // Does the quest exist for this board?
+        if (board[q]) {
+            // If the quest path still active - or has it completed
+            if (!is_path_complete(q)) {
+                quests.push(q);
+            }
+        }
+    }
+
+    return quests;
+}
+
 function is_path_complete(path) {
-    const arr = data[game.loc][path]; // might be undefined
+    const quest = data[game.loc][path]; // might be undefined
     const progress = game.conflict[path];
     let result;
 
-    if (!arr) {
+    if (!quest) {
         // if path does not exist at all → consider it complete
         result = true;
-    } else if (progress < arr.length - 1) {
+    } else if (progress < quest.length - 1) {
         result = false;
     } else {
         result = true;
@@ -439,7 +483,7 @@ states.action_discard = {
         /// a.value - The number of items to Discard
         /// a.type - 'card', or specific card type to discard 'wild'/'hide',etc
         console.log(a);
-        game.action.count = a.value;
+        game.action.count = a.count;
         game.action.type = a.type;
     },
     prompt() {
@@ -484,7 +528,6 @@ states.action_roll_die = {
         game.action.count = -1;
     },
     prompt() {
-        /// TBD eventually update the options if certain yellow or gandalf cards are available
         if (game.action.count === -1) {
             return {
                 player: game.currentPlayer,
@@ -542,7 +585,7 @@ states.action_roll_die = {
                 if (p === 'Sam') {
                     discardCount = 1;
                 }
-                advance_state('action_discard', { value: discardCount, type: 'card' });
+                advance_state('action_discard', { count: discardCount, type: 'card' });
                 break;
             case 5:
                 game.sauron -= 1;
@@ -689,7 +732,7 @@ states.bagend_nazgul_appears = {
         log(`${p} discards 2 hiding`);
         game.currentPlayer = p;
         set_next_state('rivendell_elrond');
-        advance_state('action_discard', { value: 2, type: 'hide' });
+        advance_state('action_discard', { count: 2, type: 'hide' });
     },
     sauron() {
         log('Sauron moves 1 space');
@@ -1003,8 +1046,6 @@ states.turn_reveal_tiles = {
         const buttons = {
             reveal_tile: 'Pull tile',
         };
-        // Do we have yellow card or gandalf card that are playable
-        /// TBD
         // Can ring be used
         if (game.conflict.ringUsed === false) {
             buttons['use_ring'] = 'Use Power of the Ring';
@@ -1030,7 +1071,7 @@ states.turn_reveal_tiles = {
         const t = game.story.pop();
         log(game.currentPlayer + ' draws a tile');
         log('T' + t);
-        advance_state('turn_resolve_tile', t);
+        advance_state('turn_resolve_tile', { lasttile: t, number: 0 });
     },
     use_ring() {
         log('Use ring - restart board');
@@ -1041,9 +1082,9 @@ states.turn_reveal_tiles = {
 states.turn_resolve_tile = {
     init(a) {
         // Save the tile we are attempting to resolve
-        game.action.lasttile = a;
+        game.action.lasttile = a.lasttile;
         // Keep track of count for discard (so far no discards)
-        game.action.number = 0;
+        game.action.number = a.number;
     },
     prompt() {
         // Build buttons dynamically
@@ -1093,9 +1134,9 @@ states.turn_resolve_tile = {
                 }
                 break;
         }
-        // Do we have yellow card or gandalf card that are playable
-        /// TBD
+        /// TBD - Test
         buttons['end_board'] = 'End board';
+        /// TBD - Test
         // Can ring be used
         if (game.conflict.ringUsed === false) {
             buttons['use_ring'] = 'Use Power of the Ring';
@@ -1153,6 +1194,7 @@ states.turn_resolve_tile = {
                 // Advance to next turn phase
                 //TBD
             }
+            advance_state('turn_play', 'first');
         }
     },
     use_ring() {
@@ -1161,6 +1203,80 @@ states.turn_resolve_tile = {
     },
     end_board() {
         advance_state('conflict_board_end');
+    },
+};
+
+states.turn_play = {
+    init(a) {
+        if (a === 'first') {
+            game.action.phase = 'pick';
+        }
+    },
+    prompt() {
+        // Build buttons dynamically
+        const buttons = {};
+        if (game.action.phase === 'pick') {
+            buttons['play'] = 'Play cards';
+            buttons['draw'] = 'Draw 2 cards';
+            buttons['heal'] = 'Heal';
+            // Have player select an option - play/draw/heal
+            return {
+                player: game.currentPlayer,
+                message: 'Select option',
+                buttons,
+            };
+        } else if (game.action.phase === 'play') {
+            buttons['pass'] = 'Pass';
+            // Only allow player to play a valid card based on active quests/paths
+            const cardInfo = count_card_type_by_player(game.currentPlayer, get_board_active_quests(), game.action.filter);
+            return {
+                player: game.currentPlayer,
+                message: `Play ${game.action.count} cards`,
+                buttons,
+                cards: cardInfo.cardList.slice(),
+            };
+        } else if (game.action.phase === 'path') {
+            buttons['pass'] = 'Pass';
+            return {
+                player: game.currentPlayer,
+                message: `Play ${game.action.count} cards`,
+                buttons,
+            };
+        } else {
+            // Completed playing cards - return null to end phase
+            return null;
+        }
+    },
+    pass() {
+        // Action is complete
+        game.action.phase = 'complete';
+    },
+    play() {
+        // Select two cards
+        game.action.phase = 'play';
+        game.action.filter = ['white', 'grey'];
+        game.action.count = 2;
+    },
+    playcards(c) {
+        const card = parseInt(c[0], 10); // Convert to int if needed
+    },
+    draw() {
+        // Draw 2 cards
+        draw_x_cards(game.currentPlayer, 2);
+        // Action is complete
+        game.action.phase = 'complete';
+    },
+    heal() {
+        if (game.players[game.currentPlayer].corruption > 0) {
+            game.players[game.currentPlayer].corruption -= 1;
+        }
+        // Action is complete
+        game.action.phase = 'complete';
+    },
+    fini() {
+        // Advance to next Player
+        game.currentPlayer = get_next_player(game.currentPlayer);
+        advance_state('turn_reveal_tiles', 'first');
     },
 };
 
@@ -1196,7 +1312,6 @@ states.conflict_board_end = {
     init() {
         // Descent into darkness
         // Loop through each player and apply 1 corruption for each missing life token
-        // Allow player to play yellow cards before resolving
     },
     fini() {
         // Determine the next ring-bearer (current ring-bearer always loses ties)
@@ -1218,21 +1333,11 @@ states.conflict_board_end = {
         game.currentPlayer = game.ringBearer;
 
         // Ring-bearer gets 2 new cards
-        let card = deal_card();
-        log(`C${card} given to ${game.ringBearer}`);
-        util.set_add(game.players[game.ringBearer].hand, card);
-        card = deal_card();
-        log(`C${card} given to ${game.ringBearer}`);
-        util.set_add(game.players[game.ringBearer].hand, card);
+        draw_x_cards(game.ringBearer, 2);
 
         // Fatty if active gets 2 new cards
         if (game.players.Fatty.active) {
-            card = deal_card();
-            log(`C${card} given to Fatty`);
-            util.set_add(game.players['Fatty'].hand, card);
-            card = deal_card();
-            log(`C${card} given to Fatty`);
-            util.set_add(game.players['Fatty'].hand, card);
+            draw_x_cards('Fatty', 2);
         }
 
         // Return all Heart, Sun, and Ring tokens to zero for each player
