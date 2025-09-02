@@ -35,7 +35,7 @@ const initialGame = {
     players: {
         Frodo: structuredClone(initialPlayer),
         Sam: structuredClone(initialPlayer),
-        Pipin: structuredClone(initialPlayer),
+        Pippin: structuredClone(initialPlayer),
         Merry: structuredClone(initialPlayer),
         Fatty: structuredClone(initialPlayer),
     },
@@ -320,7 +320,7 @@ function resolve_reward(path) {
 /* Player functions */
 
 function get_active_player_list() {
-    const porder = ['Frodo', 'Sam', 'Pipin', 'Merry', 'Fatty'];
+    const porder = ['Frodo', 'Sam', 'Pippin', 'Merry', 'Fatty'];
     return porder.filter((p) => game.players[p] && game.players[p].active);
 }
 
@@ -506,15 +506,15 @@ states.action_discard = {
             };
         }
     },
-    card(args) {
-        for (let i = 0; i < args.length; i++) {
-            const card = parseInt(args[i], 10); // Convert to int if needed
-            if (discard_card_from_player(game.currentPlayer, card) >= 0) {
+    card(cardArray) {
+        for (let i = 0; i < cardArray.length; i++) {
+            const cardInt = parseInt(cardArray[i], 10); // Convert to int if needed
+            if (discard_card_from_player(game.currentPlayer, cardInt) >= 0) {
                 game.action.count = game.action.count - 1;
             }
 
             // Create log record of transaction
-            log(`${game.currentPlayer} discard C${card}`);
+            log(`${game.currentPlayer} discard C${cardInt}`);
         }
     },
     fini() {
@@ -673,7 +673,7 @@ states.bagend_preparations_distribute = {
                 buttons: {
                     'pick Frodo': 'To Frodo',
                     'pick Sam': 'To Sam',
-                    'pick Pipin': 'To Pipin',
+                    'pick Pippin': 'To Pippin',
                     'pick Merry': 'To Merry',
                     'pick Fatty': 'To Fatty',
                 },
@@ -681,15 +681,15 @@ states.bagend_preparations_distribute = {
             };
         }
     },
-    card(args) {
-        const card = parseInt(args[0], 10); // Convert to int if needed
-        if (distribute_card_from_select(game.currentPlayer, card)) {
+    card(cardArray) {
+        const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
+        if (distribute_card_from_select(game.currentPlayer, cardInt)) {
             // Decrease action count if distribute was successful
             game.action.count = game.action.count - 1;
         }
 
         // Create log record of transaction
-        log(`C${card} given to ${game.currentPlayer}`);
+        log(`C${cardInt} given to ${game.currentPlayer}`);
     },
     pick(args) {
         const player = args[0];
@@ -858,11 +858,11 @@ states.rivendell_fellowship = {
             return null;
         }
     },
-    card(a) {
-        const card = parseInt(a[0], 10); // Convert to int if needed
-        if (discard_card_from_player(game.currentPlayer, card) >= 0) {
+    card(cardArray) {
+        const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
+        if (discard_card_from_player(game.currentPlayer, cardInt) >= 0) {
             // Create log record of transaction
-            log(`${game.currentPlayer} discards C${card}`);
+            log(`${game.currentPlayer} discards C${cardInt}`);
             // Decrease count and advance to next player
             game.action.count = game.action.count - 1;
             game.currentPlayer = get_next_player(game.currentPlayer);
@@ -1019,11 +1019,11 @@ states.lothlorien_test_of_gladriel = {
         set_next_state('lothlorien_test_of_gladriel', { p: np, cnt: game.action.count });
         advance_state('action_roll_die');
     },
-    card(a) {
-        const card = parseInt(a[0], 10); // Convert to int if needed
-        if (discard_card_from_player(game.currentPlayer, card) >= 0) {
+    card(cardArray) {
+        const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
+        if (discard_card_from_player(game.currentPlayer, cardInt) >= 0) {
             // Create log record of transaction
-            log(`${game.currentPlayer} discards C${card}`);
+            log(`${game.currentPlayer} discards C${cardInt}`);
             // Decrease count and advance to next player
             game.action.count = game.action.count - 1;
             game.currentPlayer = get_next_player(game.currentPlayer);
@@ -1256,6 +1256,35 @@ states.turn_play = {
         game.action.phase = 'play';
         game.action.filter = ['white', 'grey'];
         game.action.count = 2;
+    },
+    card(cardArray) {
+        const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
+        const cardValue = discard_card_from_player(game.currentPlayer, cardInt);
+        if (cardValue >= 0) {
+            // Create log record of transaction
+            log(`${game.currentPlayer} plays C${cardInt}`);
+            // Keep track of which card was played unless pippin is the current player
+            const cardData = data.cards[cardInt];
+            if (game.currentPlayer !== 'Pippin') {
+                game.action.filter = game.action.filter.filter((t) => t !== cardData.type);
+            }
+
+            // Frodo: treat white as wild
+            const isFrodoWild = p === 'Frodo' && cardData.type === 'white';
+            if (cardData.quest === 'wild' || isFrodoWild) {
+                // Have user pick track
+                log('WILD');
+            } else {
+                // Auto advance track
+                log('NO-WILD');
+            }
+            // Decrease count and check if both cards were played
+            game.action.count = game.action.count - 1;
+            if (game.action.count === 0) {
+                // Action is complete
+                game.action.phase = 'complete';
+            }
+        }
     },
     playcards(c) {
         const card = parseInt(c[0], 10); // Convert to int if needed

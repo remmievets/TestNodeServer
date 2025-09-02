@@ -95,8 +95,8 @@ let ui = {
             shield: document.getElementById('shields_2_text'),
             marker: null,
         },
-        pipin: {
-            hand: document.getElementById('cards_pipin'),
+        pippin: {
+            hand: document.getElementById('cards_pippin'),
             ring: document.getElementById('ring_3_text'),
             heart: document.getElementById('heart_3_text'),
             sun: document.getElementById('sun_3_text'),
@@ -406,7 +406,7 @@ function on_log(text) {
         p.className = 'h sam';
         text = text.substring(3);
     } else if (text.startsWith('=p')) {
-        p.className = 'h pipin';
+        p.className = 'h pippin';
         text = text.substring(3);
     } else if (text.startsWith('=m')) {
         p.className = 'h merry';

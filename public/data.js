@@ -934,7 +934,7 @@ const data = {
         track_15: [1528, 410],
         frodo: [0, 0],
         sam: [0, 50],
-        pipin: [0, 100],
+        pippin: [0, 100],
         merry: [50, 0],
         fatty: [50, 50],
     },
@@ -1137,7 +1137,7 @@ const data = {
     players: {
         Frodo: '=f',
         Sam: '=s',
-        Pipin: '=p',
+        Pippin: '=p',
         Merry: '=m',
         Fatty: '=y',
     },
