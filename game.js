@@ -188,7 +188,7 @@ function count_card_type_by_player(p, cardType, allowedColors = ['white', 'grey'
         // If card then include regardless of quest type
         if (cardType.includes('card')) {
             // Filter by color
-            if (allowedColor.includes(card.type)) {
+            if (allowedColors.includes(cardData.type)) {
                 // Include all cards
                 cardValue += 1;
                 util.set_add(cardArray, c);
@@ -202,7 +202,7 @@ function count_card_type_by_player(p, cardType, allowedColors = ['white', 'grey'
             // Frodo special ability - treat white cards as wild
             if (cardType.includes(cardData.quest) || cardData.quest === 'wild' || isFrodoWild) {
                 // Filter by color
-                if (allowedColor.includes(card.type)) {
+                if (allowedColors.includes(cardData.type)) {
                     cardValue += cardData.count;
                     util.set_add(cardArray, c);
                 }
@@ -1075,7 +1075,7 @@ states.turn_reveal_tiles = {
     },
     use_ring() {
         log('Use ring - restart board');
-        advance_state('moria');
+        advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
     },
 };
 
@@ -1270,7 +1270,7 @@ states.turn_play = {
             }
 
             // Frodo: treat white as wild
-            const isFrodoWild = p === 'Frodo' && cardData.type === 'white';
+            const isFrodoWild = game.currentPlayer === 'Frodo' && cardData.type === 'white';
             if (cardData.quest === 'wild' || isFrodoWild) {
                 // Have user pick track
                 log('WILD');
