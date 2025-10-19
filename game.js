@@ -1,5 +1,8 @@
 'use strict';
 
+// Debug constant - set to 0 to disable
+const DEBUG = 1;
+
 // Modules
 const crypto = require('crypto');
 
@@ -924,8 +927,10 @@ states.lothlorien_recovery = {
             // Build buttons dynamically
             const buttons = {
                 pass: 'Next',
-                add: 'Add shield - TEMP',
             };
+            if (DEBUG) {
+                buttons['add'] = 'Add shield - DEBUG';
+            }
             // First check if player has 2 shields
             if (game.players[game.currentPlayer].shield >= 2) {
                 buttons['card'] = 'Discard shields to gain 2 cards';
@@ -944,7 +949,7 @@ states.lothlorien_recovery = {
         }
     },
     add() {
-        // TBD - TEMP
+        // DEBUG action
         game.players[game.currentPlayer].shield += 1;
     },
     pass() {
@@ -1049,8 +1054,10 @@ states.turn_reveal_tiles = {
         // Can ring be used
         if (game.conflict.ringUsed === false) {
             buttons['use_ring'] = 'Use Power of the Ring';
-            buttons['skip'] = 'Go to Lothlorien - test';
-            buttons['reshuffle'] = 'Reshuffle - test';
+            if (DEBUG) {
+                buttons['restart'] = 'Restart - DBG';
+                buttons['reshuffle'] = 'Reshuffle - DBG';
+            }
         }
         return {
             player: game.currentPlayer,
@@ -1058,12 +1065,13 @@ states.turn_reveal_tiles = {
             buttons,
         };
     },
-    skip() {
-        // TEST
-        advance_state('lothlorien_gladriel');
+    restart() {
+        // DEBUG
+        log('Use ring - restart board');
+        advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
     },
     reshuffle() {
-        // TEST
+        // DEBUG
         reshuffle_deck();
     },
     reveal_tile() {
@@ -1074,8 +1082,7 @@ states.turn_reveal_tiles = {
         advance_state('turn_resolve_tile', { lasttile: t, number: 0 });
     },
     use_ring() {
-        log('Use ring - restart board');
-        advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
+        log('Use ring - TBD');
     },
 };
 
@@ -1135,7 +1142,9 @@ states.turn_resolve_tile = {
                 break;
         }
         /// TBD - Test
-        buttons['end_board'] = 'End board';
+        if (DEBUG) {
+            buttons['end_board'] = 'End board';
+        }
         /// TBD - Test
         // Can ring be used
         if (game.conflict.ringUsed === false) {
