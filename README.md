@@ -52,7 +52,7 @@ npx prettier --write "**/*.js"
 
 Access from Chrome on Windows using 
 ```
-http://localhost:3000
+http://localhost:8080
 ```
 
 # Using sqlite3

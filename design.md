@@ -1,6 +1,28 @@
 ```plantuml
 @startuml
+title Structure Diagram
+class Server
+class Game
+class Data
+class Utils
+
+Server --> Game
+Game --> Data
+Game --> Utils
+Server ..> Client
+Client --> Play
+Client --> Helper
+Client --> Util
+
+@enduml
+```
+
+Hello world
+
+```plantuml
+@startuml
 title Current State Machine
+
 setup_game -> Game : advance_state()
 hnote over Game : set state, nextState
 Game -> Game : execute_state()
@@ -14,6 +36,8 @@ Game -> State : _buttonfp_()
 hnote over Game : no automatic state trigger
 @enduml
 ```
+
+Steve
 
 ```plantuml
 @startuml
@@ -115,7 +139,26 @@ start
 @enduml
 ```
 
+Actions which can be pushed and interrupt a state
+
+- action_roll_die
+- action_discard (count, type)
+-
+
 Action List
+
+- turn_reveal_tiles
+    - use_ring - Need to implement
+- turn_resolve_tile
+    - event_cards - discard 3 cards as a group
+    - event_life - discard 1 card, 1 life token, 1 shield as a group
+    - use_ring - Need to implement
+    - resolve_path - claim rewards
+    - resolve_event - implement resolution to events
+- turn_play
+    - ??
+- conflict_board_end
+    - Loop through each player and apply 1 corruption for each missing life token
 
 - Create function for advancement on path (use for story tile / card play)
     - move marker

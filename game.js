@@ -85,44 +85,6 @@ function roll_d6() {
 }
 
 //////////////////////
-/* Undo functions */
-
-/// @brief Save a snapshot of the current game state.
-function save_undo() {
-    if (!game.undo) game.undo = [];
-
-    // Deep copy of game without the undo stack itself
-    let snapshot = structuredClone({ ...game, undo: undefined });
-
-    game.undo.push(snapshot);
-}
-
-/// @brief Clear all undo history.
-function clear_undo() {
-    game.undo = [];
-}
-
-/// @brief Undo the last action (restore previous game state)
-function pop_undo() {
-    if (!game.undo || game.undo.length === 0) {
-        console.warn('No undo states available');
-        return;
-    }
-
-    let prevTurn = game.undo.pop();
-
-    // Replace game contents with the snapshot
-    for (let key of Object.keys(game)) {
-        if (key !== 'undo') {
-            delete game[key];
-        }
-    }
-    for (let key of Object.keys(prevTurn)) {
-        game[key] = prevTurn[key];
-    }
-}
-
-//////////////////////
 /* Card functions */
 
 function create_deck(list, startIndex, endIndex) {
@@ -362,99 +324,6 @@ function update_player_active() {
             // Discard all cards
             util.set_clear(game.players[p].hand);
         }
-    }
-}
-
-//////////////////////
-/* Game State Utility Functions */
-function check_end_of_game() {
-    // No active players left
-    if (get_active_player_list().length == 0) {
-        log('All players have become corrupted');
-        advance_state('game_end_loss');
-    }
-    // No active players left
-    if (game.players[game.ringBearer].active === false) {
-        log('The ring-bearer has become corrupted');
-        advance_state('game_end_loss');
-    }
-}
-
-function goto_next_state() {
-    // Go back to prior state
-    game.state = game.nextState.state;
-
-    // If possible execute the initialization function for the state
-    const curstate = states[game.state];
-    if (curstate.init) {
-        if (game.nextState.args) {
-            curstate.init(game.nextState.args);
-        } else {
-            curstate.init();
-        }
-    }
-
-    game.nextState.state = null;
-    game.nextState.args = null;
-}
-
-function set_next_state(state, args = null) {
-    // When switching to an action you need to setup the state to enter after the action is complete
-    game.nextState.state = state;
-    game.nextState.args = args;
-}
-
-function advance_state(newState, args = null) {
-    // Update to new state
-    game.state = newState;
-
-    // If possible execute the initialization function for the state
-    const curstate = states[game.state];
-    if (curstate.init) {
-        if (args) {
-            curstate.init(args);
-        } else {
-            curstate.init();
-        }
-    }
-}
-
-function execute_state() {
-    let curstate;
-
-    do {
-        // Lookup state information from array of states
-        curstate = states[game.state];
-
-        // Execute state
-        if (curstate.prompt) {
-            game.prompt = curstate.prompt();
-        } else {
-            game.prompt = null;
-        }
-
-        // If prompt is null and fini exists, call it (advance to another state, etc.)
-        if (!game.prompt && curstate.fini) {
-            curstate.fini();
-        }
-
-        // Determine if a players state has changed to inactive
-        update_player_active();
-
-        // Determine if the game has ended
-        if (check_end_of_game() == true) {
-        }
-    } while (!game.prompt);
-}
-
-function execute_button(g, buttonName, args) {
-    const state = states[g.state];
-
-    if (state && typeof state[buttonName] === 'function') {
-        // Call the function with view and any other needed arguments
-        state[buttonName](args);
-    } else {
-        throw new Error(`State "${g.state}" does not support move "${buttonName}"`);
     }
 }
 
@@ -963,12 +832,7 @@ states.lothlorien_recovery = {
         log(`${game.currentPlayer} discards 2 shields to draw 2 cards`);
         game.players[game.currentPlayer].shield = game.players[game.currentPlayer].shield - 2;
         // Deal 2 cards
-        let card = deal_card();
-        log(`C${card} given to ${game.currentPlayer}`);
-        util.set_add(game.players[game.currentPlayer].hand, card);
-        card = deal_card();
-        log(`C${card} given to ${game.currentPlayer}`);
-        util.set_add(game.players[game.currentPlayer].hand, card);
+        draw_x_cards(game.currentPlayer, 2);
         // Decrease count and advance to next player
         game.action.count = game.action.count - 1;
         game.currentPlayer = get_next_player(game.currentPlayer);
@@ -1054,25 +918,18 @@ states.turn_reveal_tiles = {
         // Can ring be used
         if (game.conflict.ringUsed === false) {
             buttons['use_ring'] = 'Use Power of the Ring';
+            // DEBUG
             if (DEBUG) {
-                buttons['restart'] = 'Restart - DBG';
-                buttons['reshuffle'] = 'Reshuffle - DBG';
+                buttons['debug_restart'] = 'Restart - DBG';
+                buttons['debug_reshuffle'] = 'Reshuffle - DBG';
             }
+            // DEBUG
         }
         return {
             player: game.currentPlayer,
             message: 'Select option',
             buttons,
         };
-    },
-    restart() {
-        // DEBUG
-        log('Use ring - restart board');
-        advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
-    },
-    reshuffle() {
-        // DEBUG
-        reshuffle_deck();
     },
     reveal_tile() {
         // Pull a tile and advance to resolving the tile
@@ -1083,6 +940,17 @@ states.turn_reveal_tiles = {
     },
     use_ring() {
         log('Use ring - TBD');
+    },
+    debug_restart() {
+        // DEBUG
+        log('Use ring - restart board');
+        advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
+        // DEBUG
+    },
+    debug_reshuffle() {
+        // DEBUG
+        reshuffle_deck();
+        // DEBUG
     },
 };
 
@@ -1141,11 +1009,11 @@ states.turn_resolve_tile = {
                 }
                 break;
         }
-        /// TBD - Test
+        // DEBUG
         if (DEBUG) {
-            buttons['end_board'] = 'End board';
+            buttons['debug_end_board'] = 'End board';
         }
-        /// TBD - Test
+        // DEBUG
         // Can ring be used
         if (game.conflict.ringUsed === false) {
             buttons['use_ring'] = 'Use Power of the Ring';
@@ -1207,11 +1075,14 @@ states.turn_resolve_tile = {
         }
     },
     use_ring() {
+        // TBD
         log('Use ring');
         advance_state('turn_reveal_tiles');
     },
-    end_board() {
+    debug_end_board() {
+        // DEBUG
         advance_state('conflict_board_end');
+        // DEBUG
     },
 };
 
@@ -1454,6 +1325,137 @@ function setup_game() {
     advance_state('bagend_gandalf');
 }
 
+//////////////////////
+/* Undo functions */
+
+/// @brief Save a snapshot of the current game state.
+function save_undo() {
+    if (!game.undo) game.undo = [];
+
+    // Deep copy of game without the undo stack itself
+    let snapshot = structuredClone({ ...game, undo: undefined });
+
+    game.undo.push(snapshot);
+}
+
+/// @brief Clear all undo history.
+function clear_undo() {
+    game.undo = [];
+}
+
+/// @brief Undo the last action (restore previous game state)
+function pop_undo() {
+    if (!game.undo || game.undo.length === 0) {
+        console.warn('No undo states available');
+        return;
+    }
+
+    let prevTurn = game.undo.pop();
+
+    // Replace game contents with the snapshot
+    for (let key of Object.keys(game)) {
+        if (key !== 'undo') {
+            delete game[key];
+        }
+    }
+    for (let key of Object.keys(prevTurn)) {
+        game[key] = prevTurn[key];
+    }
+}
+
+//////////////////////
+/* Game Engine Functions */
+function check_end_of_game() {
+    // No active players left
+    if (get_active_player_list().length == 0) {
+        log('All players have become corrupted');
+        advance_state('game_end_loss');
+    }
+    // No active players left
+    if (game.players[game.ringBearer].active === false) {
+        log('The ring-bearer has become corrupted');
+        advance_state('game_end_loss');
+    }
+}
+
+function goto_next_state() {
+    // Go back to prior state
+    game.state = game.nextState.state;
+
+    // If possible execute the initialization function for the state
+    const curstate = states[game.state];
+    if (curstate.init) {
+        if (game.nextState.args) {
+            curstate.init(game.nextState.args);
+        } else {
+            curstate.init();
+        }
+    }
+
+    game.nextState.state = null;
+    game.nextState.args = null;
+}
+
+function set_next_state(state, args = null) {
+    // When switching to an action you need to setup the state to enter after the action is complete
+    game.nextState.state = state;
+    game.nextState.args = args;
+}
+
+function advance_state(newState, args = null) {
+    // Update to new state
+    game.state = newState;
+
+    // If possible execute the initialization function for the state
+    const curstate = states[game.state];
+    if (curstate.init) {
+        if (args) {
+            curstate.init(args);
+        } else {
+            curstate.init();
+        }
+    }
+}
+
+function execute_state() {
+    let curstate;
+
+    do {
+        // Lookup state information from array of states
+        curstate = states[game.state];
+
+        // Execute state
+        if (curstate.prompt) {
+            game.prompt = curstate.prompt();
+        } else {
+            game.prompt = null;
+        }
+
+        // If prompt is null and fini exists, call it (advance to another state, etc.)
+        if (!game.prompt && curstate.fini) {
+            curstate.fini();
+        }
+
+        // Determine if a players state has changed to inactive
+        update_player_active();
+
+        // Determine if the game has ended
+        if (check_end_of_game() == true) {
+        }
+    } while (!game.prompt);
+}
+
+function execute_button(g, buttonName, args) {
+    const state = states[g.state];
+
+    if (state && typeof state[buttonName] === 'function') {
+        // Call the function with view and any other needed arguments
+        state[buttonName](args);
+    } else {
+        throw new Error(`State "${g.state}" does not support move "${buttonName}"`);
+    }
+}
+
 /////////////////////////////////////////
 // Functions exposed to server
 const moveHandlers = {
@@ -1489,8 +1491,10 @@ function getGameView(gameId) {
         action: undefined,
         state: undefined,
     });
-    // TBD - debug only
-    view['debug'] = structuredClone({ ...game, undo: undefined });
+    if (DEBUG) {
+        // TBD - debug only
+        view['debug'] = structuredClone({ ...game, undo: undefined });
+    }
     return view;
 }
 
