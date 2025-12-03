@@ -46,8 +46,6 @@ const initialGame = {
     log: [],
     undo: [],
     selectHand: [],
-    state: null,
-    nextState: { state: null, args: null },
     sauron: 15,
     currentPlayer: 'Frodo',
     ringBearer: 'Frodo',
@@ -60,10 +58,12 @@ const initialGame = {
         eventValue: 0,
         ringUsed: false,
     },
-    /// @brief Keep track of information for a state
-    action: {
-        count: 0,
-    },
+    /// @brief Text name of current state
+    state: null,
+    /// @brief Information about current state
+    action: {},
+    /// @brief Saved state information if state is pushed to a queue
+    stateQueue: [],
     /// @brief Prompt to display for the client
     prompt: null,
 };
@@ -390,12 +390,12 @@ states.action_discard = {
         }
     },
     fini() {
-        goto_next_state();
+        resume_previous_state();
     },
 };
 
 states.action_roll_die = {
-    init() {
+    init(a) {
         // Die has not been rolled yet
         game.action.count = -1;
     },
@@ -429,7 +429,7 @@ states.action_roll_die = {
             case 1:
                 game.players[p].corruption += 1;
                 log(p + ' increases corruption by 1 to ' + game.players[p].corruption);
-                goto_next_state();
+                resume_previous_state();
                 break;
             case 2:
                 if (p === 'Sam') {
@@ -439,7 +439,7 @@ states.action_roll_die = {
                     game.players[p].corruption += 2;
                     log(p + ' increases corruption by 2 to ' + game.players[p].corruption);
                 }
-                goto_next_state();
+                resume_previous_state();
                 break;
             case 3:
                 if (p === 'Sam') {
@@ -449,7 +449,7 @@ states.action_roll_die = {
                     game.players[p].corruption += 3;
                     log(p + ' increases corruption by 3 to ' + game.players[p].corruption);
                 }
-                goto_next_state();
+                resume_previous_state();
                 break;
             case 4:
                 // Setup to discard 2 cards or 1 if same is rolling
@@ -462,11 +462,11 @@ states.action_roll_die = {
             case 5:
                 game.sauron -= 1;
                 log('Sauron advances to space ' + game.sauron);
-                goto_next_state();
+                resume_previous_state();
                 break;
             default:
                 // No damage
-                goto_next_state();
+                resume_previous_state();
                 break;
         }
     },
@@ -495,7 +495,7 @@ states.bagend_gandalf = {
 };
 
 states.bagend_preparations = {
-    init() {
+    init(a) {
         console.log('PREPARATIONS');
         log('=! Preparations');
         log('Ring-bearer may roll and reveal 4 hobbit cards face up to distribute');
@@ -511,8 +511,10 @@ states.bagend_preparations = {
         };
     },
     roll() {
-        set_next_state('bagend_preparations_cards');
-        advance_state('action_roll_die');
+        // Once we roll we are done with this current state, so setup next state
+        advance_state('bagend_preparations_cards');
+        // Now push state to queue and interrupt with dice roll
+        push_advance_state('action_roll_die');
     },
     pass() {
         log('Ring-bearer passes');
@@ -573,7 +575,7 @@ states.bagend_preparations_distribute = {
 };
 
 states.bagend_nazgul_appears = {
-    init() {
+    init(a) {
         console.log('NAZGUL');
         log('=! Nazgul Appears');
         log('One player must discard 2 hiding or move sauron');
@@ -603,8 +605,8 @@ states.bagend_nazgul_appears = {
         const p = args[0];
         log(`${p} discards 2 hiding`);
         game.currentPlayer = p;
-        set_next_state('rivendell_elrond');
-        advance_state('action_discard', { count: 2, type: 'hide' });
+        advance_state('rivendell_elrond');
+        push_advance_state('action_discard', { count: 2, type: 'hide' });
     },
     sauron() {
         log('Sauron moves 1 space');
@@ -646,7 +648,7 @@ states.rivendell_elrond = {
 };
 
 states.rivendell_council = {
-    init() {
+    init(a) {
         log('=! Council');
         log('EACH PLAYER: Pass 1 card face down to left');
         game.currentPlayer = game.ringBearer;
@@ -744,8 +746,8 @@ states.rivendell_fellowship = {
         // Setup to come back to this state
         game.action.count = game.action.count - 1;
         const np = get_next_player(game.currentPlayer);
-        set_next_state('rivendell_fellowship', { p: np, cnt: game.action.count });
-        advance_state('action_roll_die');
+        advance_state('rivendell_fellowship', { p: np, cnt: game.action.count });
+        push_advance_state('action_roll_die');
     },
     fini() {
         advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
@@ -785,7 +787,7 @@ states.lothlorien_gladriel = {
 };
 
 states.lothlorien_recovery = {
-    init() {
+    init(a) {
         log('=! Recovery');
         log('EACH PLAYER: May discard 2 shields to either draw 2 hobbit cards or heal');
         game.currentPlayer = game.ringBearer;
@@ -885,8 +887,8 @@ states.lothlorien_test_of_gladriel = {
         // Setup to come back to this state
         game.action.count = game.action.count - 1;
         const np = get_next_player(game.currentPlayer);
-        set_next_state('lothlorien_test_of_gladriel', { p: np, cnt: game.action.count });
-        advance_state('action_roll_die');
+        advance_state('lothlorien_test_of_gladriel', { p: np, cnt: game.action.count });
+        push_advance_state('action_roll_die');
     },
     card(cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
@@ -1218,7 +1220,7 @@ states.conflict_board_start = {
 };
 
 states.conflict_board_end = {
-    init() {
+    init(a) {
         // Descent into darkness
         // Loop through each player and apply 1 corruption for each missing life token
     },
@@ -1276,7 +1278,7 @@ states.conflict_board_end = {
 };
 
 states.game_end_loss = {
-    init() {
+    init(a) {
         log('SAURON HAS WON');
     },
     prompt() {
@@ -1287,7 +1289,7 @@ states.game_end_loss = {
 };
 
 states.game_end_win = {
-    init() {
+    init(a) {
         log('The Free People have destroyed the RING');
     },
     prompt() {
@@ -1378,33 +1380,12 @@ function check_end_of_game() {
     }
 }
 
-function goto_next_state() {
-    // Go back to prior state
-    game.state = game.nextState.state;
-
-    // If possible execute the initialization function for the state
-    const curstate = states[game.state];
-    if (curstate.init) {
-        if (game.nextState.args) {
-            curstate.init(game.nextState.args);
-        } else {
-            curstate.init();
-        }
-    }
-
-    game.nextState.state = null;
-    game.nextState.args = null;
-}
-
-function set_next_state(state, args = null) {
-    // When switching to an action you need to setup the state to enter after the action is complete
-    game.nextState.state = state;
-    game.nextState.args = args;
-}
-
 function advance_state(newState, args = null) {
     // Update to new state
     game.state = newState;
+
+    // Clear action information from old State
+    game.action = {};
 
     // If possible execute the initialization function for the state
     const curstate = states[game.state];
@@ -1415,6 +1396,23 @@ function advance_state(newState, args = null) {
             curstate.init();
         }
     }
+}
+
+function resume_previous_state() {
+    if (game.stateQueue.length === 0) {
+        console.error('Nothing to resume!');
+        return;
+    }
+    const prev = game.stateQueue.pop();
+    game.state = prev.state;
+    game.action = prev.action;
+}
+
+function push_advance_state(newState, args = null) {
+    // Push current State
+    game.stateQueue.push({ state: game.state, action: game.action });
+    // Switch to new State
+    advance_state(newState, args);
 }
 
 function execute_state() {
@@ -1487,9 +1485,9 @@ function getGameView(gameId) {
         deck: undefined,
         shield: undefined,
         story: undefined,
-        nextState: undefined,
-        action: undefined,
         state: undefined,
+        action: undefined,
+        stateQueue: undefined,
     });
     if (DEBUG) {
         // TBD - debug only
