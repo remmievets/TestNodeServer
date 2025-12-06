@@ -150,15 +150,12 @@ Action List
 - turn_reveal_tiles
     - use_ring - Need to implement
 - turn_resolve_tile
-    - event_cards - discard 3 cards as a group
     - event_life - discard 1 card, 1 life token, 1 shield as a group
     - use_ring - Need to implement
     - resolve_path - claim rewards
     - resolve_event - implement resolution to events
 - turn_play
     - ??
-- conflict_board_end
-    - Loop through each player and apply 1 corruption for each missing life token
 
 - Create function for advancement on path (use for story tile / card play)
     - move marker
@@ -179,3 +176,19 @@ Action List
     - Display available Gandalf cards
     - Add to buttons, gandalf, yellow, use ring options outside of state
     - Play other yellow cards
+
+
+- Global buttons
+    - DEBUG
+        - If DBG was set
+        - END_BOARD
+        - RESTART
+        - RESHUFFLE
+    - Undo
+        - When undo queue is not empty
+    - use_ring
+        - When on a conflict board and ring is not yet used
+    - play Gandalf Card
+        - Anytime a player has > 5 shields
+    - Play Yellow Card
+        - Anytime

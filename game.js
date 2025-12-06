@@ -51,6 +51,7 @@ const initialGame = {
     ringBearer: 'Frodo',
     /// @brief Conflict board information
     conflict: {
+        active: false, // TBD - make use of this value
         fight: 0,
         travel: 0,
         hide: 0,
@@ -199,7 +200,6 @@ function distribute_card_from_select(p, cardInt) {
 function discard_card_from_player(p, cardInt) {
     // Ensure the card actually exists in selectHand
     if (!util.set_has(game.players[p].hand, cardInt)) {
-        console.error('Card not found in ${p}');
         return -1;
     }
 
@@ -352,7 +352,7 @@ function update_player_active() {
 
 states.action_discard = {
     init(a) {
-        /// a.value - The number of items to Discard
+        /// a.count - The number of items to Discard
         /// a.type - 'card', or specific card type to discard 'wild'/'hide',etc
         console.log(a);
         game.action.count = a.count;
@@ -387,6 +387,57 @@ states.action_discard = {
 
             // Create log record of transaction
             log(`${game.currentPlayer} discard C${cardInt}`);
+        }
+    },
+    fini() {
+        resume_previous_state();
+    },
+};
+
+states.action_discard_group = {
+    init(a) {
+        /// a.count - The number of items to Discard
+        /// a.type - 'card', or specific card type to discard 'wild'/'hide',etc
+        /// a.cardArray - The available cards which can be discarded
+        game.action.count = a.count;
+        game.action.type = a.type;
+    },
+    prompt() {
+        // Exit path for this state
+        if (game.action.count <= 0) {
+            return null;
+        }
+
+        // Get list of cards for the entire group of active players
+        const players = get_active_player_list();
+        let allCards = [];
+
+        for (const p of players) {
+            const cardInfo = count_card_type_by_player(p, game.action.type);
+            allCards.push(...cardInfo.cardList);
+        }
+
+        return {
+            message: `Select ${game.action.count} cards to discard`,
+            cards: allCards.slice(),
+        };
+    },
+    card(cardArray) {
+        for (let i = 0; i < cardArray.length; i++) {
+            const cardInt = parseInt(cardArray[i], 10); // Convert to int if needed
+
+            let pArray = get_active_player_list();
+            for (let p of pArray) {
+                // Attempt to discard from player
+                if (discard_card_from_player(p, cardInt) >= 0) {
+                    // Decrease card count
+                    game.action.count = game.action.count - 1;
+
+                    // Create log record of transaction
+                    log(`${p} discard C${cardInt}`);
+                    break;
+                }
+            }
         }
     },
     fini() {
@@ -799,9 +850,6 @@ states.lothlorien_recovery = {
             const buttons = {
                 pass: 'Next',
             };
-            if (DEBUG) {
-                buttons['add'] = 'Add shield - DEBUG';
-            }
             // First check if player has 2 shields
             if (game.players[game.currentPlayer].shield >= 2) {
                 buttons['card'] = 'Discard shields to gain 2 cards';
@@ -818,10 +866,6 @@ states.lothlorien_recovery = {
         } else {
             return null;
         }
-    },
-    add() {
-        // DEBUG action
-        game.players[game.currentPlayer].shield += 1;
     },
     pass() {
         // Players turn has completed - skipped option
@@ -906,27 +950,25 @@ states.lothlorien_test_of_gladriel = {
     },
 };
 
+states.new_player_turn = {
+    init(a) {
+        log(data.players[game.currentPlayer] + ' ' + game.currentPlayer);
+    },
+    fini() {
+        // Advance to next state
+        advance_state('turn_reveal_tiles');
+    },
+};
+
 states.turn_reveal_tiles = {
     init(a) {
-        if (a === 'first') {
-            log(data.players[game.currentPlayer] + ' ' + game.currentPlayer);
-        }
+        // No action needed currently
     },
     prompt() {
         // Build buttons dynamically
         const buttons = {
             reveal_tile: 'Pull tile',
         };
-        // Can ring be used
-        if (game.conflict.ringUsed === false) {
-            buttons['use_ring'] = 'Use Power of the Ring';
-            // DEBUG
-            if (DEBUG) {
-                buttons['debug_restart'] = 'Restart - DBG';
-                buttons['debug_reshuffle'] = 'Reshuffle - DBG';
-            }
-            // DEBUG
-        }
         return {
             player: game.currentPlayer,
             message: 'Select option',
@@ -939,20 +981,6 @@ states.turn_reveal_tiles = {
         log(game.currentPlayer + ' draws a tile');
         log('T' + t);
         advance_state('turn_resolve_tile', { lasttile: t, number: 0 });
-    },
-    use_ring() {
-        log('Use ring - TBD');
-    },
-    debug_restart() {
-        // DEBUG
-        log('Use ring - restart board');
-        advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
-        // DEBUG
-    },
-    debug_reshuffle() {
-        // DEBUG
-        reshuffle_deck();
-        // DEBUG
     },
 };
 
@@ -970,17 +998,30 @@ states.turn_resolve_tile = {
         const t = data.tiles[game.action.lasttile].type;
         switch (t) {
             case 'ring':
+                // Default action
                 buttons['resolve_ring'] = 'Resolve Tile';
                 break;
             case 'event':
+                // Default action
                 buttons['resolve_event'] = 'Resolve Tile';
                 break;
             case 'event_cards':
-                // TBD - discard 3 cards as a group
+                // Discard 3 cards as a group
+                // Make sure the group has 3 cards to discard
+                if (set_of_player_cards().size >= 3) {
+                    buttons['avoid_event_cards'] = 'Discard Cards';
+                }
+                // Default action
                 buttons['resolve_event'] = 'Resolve Tile';
                 break;
             case 'event_life':
-                // TBD - discard 1 card, 1 life token, 1 shield as a group
+                // Discard 1 card, 1 life token, 1 shield as a group
+                // Make sure the group has the required items to discard
+                if (set_of_player_cards().size >= 1) {
+                    // TBD
+                    buttons['avoid_event_items'] = 'Discard Items';
+                }
+                // Default action
                 buttons['resolve_event'] = 'Resolve Tile';
                 break;
             case 'sauron':
@@ -1011,15 +1052,6 @@ states.turn_resolve_tile = {
                 }
                 break;
         }
-        // DEBUG
-        if (DEBUG) {
-            buttons['debug_end_board'] = 'End board';
-        }
-        // DEBUG
-        // Can ring be used
-        if (game.conflict.ringUsed === false) {
-            buttons['use_ring'] = 'Use Power of the Ring';
-        }
         // Return prompt information
         return {
             player: game.currentPlayer,
@@ -1033,6 +1065,26 @@ states.turn_resolve_tile = {
         game.players[game.ringBearer].corruption += 1;
         // Draw another tile
         advance_state('turn_reveal_tiles');
+    },
+    avoid_event_cards() {
+        // Draw another tile after interrupting the action
+        advance_state('turn_reveal_tiles');
+
+        // Interrupt action with discarding the 3 cards
+        push_advance_state('action_discard_group', { count: 3, type: 'card' });
+    },
+    avoid_event_items() {
+        // Draw another tile after interrupting the action
+        advance_state('turn_reveal_tiles');
+
+        // Interrupt action with discarding the 1 shield
+        //push_advance_state('action_discard_item_group', { count: 1, type: 'shield' });    TBD
+
+        // Interrupt action with discarding the 1 life token
+        //push_advance_state('action_discard_item_group', { count: 1, type: 'life_token' });    TBD
+
+        // Interrupt action with discarding the 1 card
+        push_advance_state('action_discard_group', { count: 1, type: 'card' });
     },
     resolve_event() {
         log('resolve event ' + data.tiles[game.action.lasttile].type);
@@ -1075,16 +1127,6 @@ states.turn_resolve_tile = {
             }
             advance_state('turn_play', 'first');
         }
-    },
-    use_ring() {
-        // TBD
-        log('Use ring');
-        advance_state('turn_reveal_tiles');
-    },
-    debug_end_board() {
-        // DEBUG
-        advance_state('conflict_board_end');
-        // DEBUG
     },
 };
 
@@ -1187,7 +1229,7 @@ states.turn_play = {
     fini() {
         // Advance to next Player
         game.currentPlayer = get_next_player(game.currentPlayer);
-        advance_state('turn_reveal_tiles', 'first');
+        advance_state('new_player_turn');
     },
 };
 
@@ -1215,7 +1257,7 @@ states.conflict_board_start = {
     },
     fini() {
         // Start player turns
-        advance_state('turn_reveal_tiles', 'first');
+        advance_state('new_player_turn');
     },
 };
 
@@ -1223,6 +1265,26 @@ states.conflict_board_end = {
     init(a) {
         // Descent into darkness
         // Loop through each player and apply 1 corruption for each missing life token
+        const plist = get_active_players_in_order(game.ringBearer);
+        console.log(plist);
+        for (const p of plist) {
+            let lifeTokenCount = 0;
+            if (game.players[p].ring > 0) {
+                lifeTokenCount++;
+            }
+            if (game.players[p].heart > 0) {
+                lifeTokenCount++;
+            }
+            if (game.players[p].sun > 0) {
+                lifeTokenCount++;
+            }
+            let corruptionDamage = 3 - lifeTokenCount;
+            if (p === 'Merry' && corruptionDamage > 0) {
+                corruptionDamage = corruptionDamage - 1;
+            }
+            game.players[p].corruption += corruptionDamage;
+            log(`${p} increases corruption by ${corruptionDamage} to ${game.players[p].corruption}`);
+        }
     },
     fini() {
         // Determine the next ring-bearer (current ring-bearer always loses ties)
@@ -1299,6 +1361,44 @@ states.game_end_win = {
     },
 };
 
+states.global_debug_menu = {
+    prompt() {
+        // Build buttons dynamically
+        const buttons = {};
+        buttons['debug_return'] = 'exit menu';
+        buttons['debug_shield'] = 'ADD SHIELD';
+        buttons['debug_reshuffle'] = 'RESHUFFLE';
+        if (game.conflict.active === true) {
+            buttons['debug_restart'] = 'GOTO MORIA';
+            buttons['debug_end_board'] = 'END BOARD';
+        }
+
+        // Return prompt information
+        return {
+            player: game.currentPlayer,
+            message: 'Select option',
+            buttons,
+        };
+    },
+    debug_return() {
+        resume_previous_state();
+    },
+    debug_shield() {
+        game.players[game.currentPlayer].shield += 1;
+    },
+    debug_reshuffle() {
+        reshuffle_deck();
+    },
+    debug_restart() {
+        /// TBD - eliminate any state queue
+        advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
+    },
+    debug_end_board() {
+        /// TBD - eliminate any state queue
+        advance_state('conflict_board_end');
+    },
+};
+
 //////////////////////
 /* Game setup */
 
@@ -1366,6 +1466,66 @@ function pop_undo() {
 }
 
 //////////////////////
+/* Game Button including global buttons */
+
+function use_ring_handler() {
+    console.log('ring');
+}
+
+function undo_handler() {}
+
+function debug_handler() {
+    console.log('debug');
+    push_advance_state('global_debug_menu');
+}
+
+const globalButtons = {
+    use_ring: use_ring_handler,
+    undo: undo_handler,
+    debug: debug_handler,
+};
+
+function add_global_buttons(prompt) {
+    // If null -> nothing to do
+    if (!prompt) return prompt;
+
+    // Skip adding global buttons while inside a global action state
+    if (game.state && game.state.startsWith('global_')) {
+        return prompt;
+    }
+
+    // Ensure buttons object exists
+    if (!prompt.buttons) prompt.buttons = {};
+
+    // Add buttons which are global
+    // Use Ring
+    if (game.conflict.active === true && game.conflict.ringUsed === false) {
+        prompt.buttons['use_ring'] = 'Use Ring';
+    }
+    // Play Gandalf
+    // Play Yellow
+    // Undo
+    // Debug
+    if (DEBUG) {
+        prompt.buttons['debug'] = 'DEBUG';
+    }
+    return prompt;
+}
+
+function execute_button(g, buttonName, args) {
+    const state = states[g.state];
+
+    if (state && typeof state[buttonName] === 'function') {
+        // Call the function with view and any other needed arguments
+        state[buttonName](args);
+    } else if (typeof globalButtons[buttonName] === 'function') {
+        globalButtons[buttonName](args);
+    } else {
+        throw new Error(`State "${g.state}" does not support move "${buttonName}"`);
+    }
+}
+
+//////////////////////
 /* Game Engine Functions */
 function check_end_of_game() {
     // No active players left
@@ -1429,8 +1589,12 @@ function execute_state() {
             game.prompt = null;
         }
 
-        // If prompt is null and fini exists, call it (advance to another state, etc.)
-        if (!game.prompt && curstate.fini) {
+        // Determine if prompt exists
+        if (game.prompt) {
+            // Add global buttons
+            add_global_buttons(game.prompt);
+        } else if (curstate.fini) {
+            // Prompt is null and fini exists - call it to switch states
             curstate.fini();
         }
 
@@ -1439,19 +1603,9 @@ function execute_state() {
 
         // Determine if the game has ended
         if (check_end_of_game() == true) {
+            // TBD
         }
     } while (!game.prompt);
-}
-
-function execute_button(g, buttonName, args) {
-    const state = states[g.state];
-
-    if (state && typeof state[buttonName] === 'function') {
-        // Call the function with view and any other needed arguments
-        state[buttonName](args);
-    } else {
-        throw new Error(`State "${g.state}" does not support move "${buttonName}"`);
-    }
 }
 
 /////////////////////////////////////////
