@@ -107,13 +107,38 @@ try {
 
 /* ACTIONS */
 
+function getColor(label) {
+    const colorCodes = {
+        '/r': 'red',
+        '/g': 'green',
+        '/b': 'blue',
+        '/y': 'yellow',
+    };
+    for (const code in colorCodes) {
+        if (label.startsWith(code)) {
+            return {
+                color: colorCodes[code],
+                label: label.slice(code.length),
+            };
+        }
+    }
+    return {
+        color: null,
+        label: label,
+    };
+}
+
 function action_button_imp(action, label, callback) {
+    const { color: color, label: cleanLabel } = getColor(label);
     let id = action + '_button';
     let button = document.getElementById(id);
     if (!button) {
         button = document.createElement('button');
         button.id = id;
-        button.innerHTML = label;
+        button.innerHTML = cleanLabel;
+        if (color) {
+            button.classList.add('action-' + color);
+        }
         button.addEventListener('click', callback);
         document.getElementById('actions').prepend(button);
     }

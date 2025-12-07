@@ -242,6 +242,31 @@ main {
 	background-color: moccasin;
 }
 
+/* BUTTONS */
+.action-red {
+    background-color: #d9534f;
+    border-color: #b52b27;
+    color: white;
+}
+
+.action-green {
+    background-color: #5cb85c;
+    border-color: #3d8b3d;
+    color: white;
+}
+
+.action-blue {
+    background-color: #0275d8;
+    border-color: #025aa5;
+    color: white;
+}
+
+.action-yellow {
+    background-color: #f0ad4e;
+    border-color: #df8a13;
+    color: black;
+}
+
 /* MARKERS */
 
 .marker {

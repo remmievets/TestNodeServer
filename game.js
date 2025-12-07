@@ -1245,6 +1245,7 @@ states.conflict_board_start = {
         util.shuffle(game.story);
 
         // Update conflict board spaces
+        game.conflict.active = true;
         game.conflict.eventValue = 0;
         game.conflict.fight = 0;
         game.conflict.friendship = 0;
@@ -1263,6 +1264,8 @@ states.conflict_board_start = {
 
 states.conflict_board_end = {
     init(a) {
+        // Conflict board is no longer active
+        game.conflict.active = false;
         // Descent into darkness
         // Loop through each player and apply 1 corruption for each missing life token
         const plist = get_active_players_in_order(game.ringBearer);
@@ -1361,16 +1364,40 @@ states.game_end_win = {
     },
 };
 
+states.action_use_ring = {
+    init(a) {
+        // Die has not been rolled yet
+        game.action.count = -1;
+    },
+    prompt() {
+        // Build buttons dynamically
+        const buttons = {};
+        if (game.action.count === -1) {
+            buttons['roll'] = 'Roll';
+        } else {
+            buttons['resolve'] = 'Resolve';
+        }
+        // Return prompt information
+        return {
+            player: game.ringBearer,
+            message: 'Select option',
+            buttons,
+        };
+    },
+    roll() {},
+    fini() {},
+};
+
 states.global_debug_menu = {
     prompt() {
         // Build buttons dynamically
         const buttons = {};
         buttons['debug_return'] = 'exit menu';
-        buttons['debug_shield'] = 'ADD SHIELD';
-        buttons['debug_reshuffle'] = 'RESHUFFLE';
+        buttons['debug_shield'] = '/bADD SHIELD';
+        buttons['debug_reshuffle'] = '/bRESHUFFLE';
         if (game.conflict.active === true) {
-            buttons['debug_restart'] = 'GOTO MORIA';
-            buttons['debug_end_board'] = 'END BOARD';
+            buttons['debug_restart'] = '/rGOTO MORIA';
+            buttons['debug_end_board'] = '/rEND BOARD';
         }
 
         // Return prompt information
@@ -1390,11 +1417,13 @@ states.global_debug_menu = {
         reshuffle_deck();
     },
     debug_restart() {
-        /// TBD - eliminate any state queue
+        // Eliminate any state queue information
+        game.stateQueue = [];
         advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
     },
     debug_end_board() {
-        /// TBD - eliminate any state queue
+        // Eliminate any state queue information
+        game.stateQueue = [];
         advance_state('conflict_board_end');
     },
 };
@@ -1469,18 +1498,23 @@ function pop_undo() {
 /* Game Button including global buttons */
 
 function use_ring_handler() {
-    console.log('ring');
+    push_advance_state('action_use_ring');
 }
+
+function gandalf_handler() {}
+
+function yellow_handler() {}
 
 function undo_handler() {}
 
 function debug_handler() {
-    console.log('debug');
     push_advance_state('global_debug_menu');
 }
 
 const globalButtons = {
     use_ring: use_ring_handler,
+    gandalf: gandalf_handler,
+    yellow: yellow_handler,
     undo: undo_handler,
     debug: debug_handler,
 };
@@ -1500,14 +1534,19 @@ function add_global_buttons(prompt) {
     // Add buttons which are global
     // Use Ring
     if (game.conflict.active === true && game.conflict.ringUsed === false) {
-        prompt.buttons['use_ring'] = 'Use Ring';
+        prompt.buttons['use_ring'] = '/gUse Ring';
     }
     // Play Gandalf
+    prompt.buttons['gandalf'] = '/yGandalf';
     // Play Yellow
+    prompt.buttons['yellow'] = '/yPlay Yellow';
     // Undo
+    if (game.undo.length > 0) {
+        prompt.buttons['undo'] = '/rUNDO';
+    }
     // Debug
     if (DEBUG) {
-        prompt.buttons['debug'] = 'DEBUG';
+        prompt.buttons['debug'] = '/bDEBUG';
     }
     return prompt;
 }
