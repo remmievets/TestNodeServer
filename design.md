@@ -179,11 +179,6 @@ Action List
 
 
 - Global buttons
-    - DEBUG
-        - If DBG was set
-        - END_BOARD
-        - RESTART
-        - RESHUFFLE
     - Undo
         - When undo queue is not empty
     - use_ring
@@ -192,3 +187,8 @@ Action List
         - Anytime a player has > 5 shields
     - Play Yellow Card
         - Anytime
+        
+- action_roll_die (action=ring arg)
+-   Do rewards if ring is used
+- action_resolve_die
+- Maybe (action_discard)

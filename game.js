@@ -352,15 +352,17 @@ function update_player_active() {
 
 states.action_discard = {
     init(a) {
+        /// a.player - Identify the player who needs to discard (optional).  Current player is not used
         /// a.count - The number of items to Discard
         /// a.type - 'card', or specific card type to discard 'wild'/'hide',etc
         console.log(a);
+        game.action.player = a.player ?? game.currentPlayer;
         game.action.count = a.count;
         game.action.type = a.type;
     },
     prompt() {
         // Find card list
-        const cardInfo = count_card_type_by_player(game.currentPlayer, game.action.type);
+        const cardInfo = count_card_type_by_player(game.action.player, game.action.type);
 
         // Check that count is not higher than hand size, otherwise adjust count.
         if (game.action.count > cardInfo.value) {
@@ -373,7 +375,7 @@ states.action_discard = {
         } else {
             return {
                 message: `Select ${game.action.count} cards to discard`,
-                player: game.currentPlayer,
+                player: game.action.player,
                 cards: cardInfo.cardList.slice(),
             };
         }
@@ -381,12 +383,12 @@ states.action_discard = {
     card(cardArray) {
         for (let i = 0; i < cardArray.length; i++) {
             const cardInt = parseInt(cardArray[i], 10); // Convert to int if needed
-            if (discard_card_from_player(game.currentPlayer, cardInt) >= 0) {
+            if (discard_card_from_player(game.action.player, cardInt) >= 0) {
                 game.action.count = game.action.count - 1;
             }
 
             // Create log record of transaction
-            log(`${game.currentPlayer} discard C${cardInt}`);
+            log(`${game.action.player} discard C${cardInt}`);
         }
     },
     fini() {
@@ -447,40 +449,49 @@ states.action_discard_group = {
 
 states.action_roll_die = {
     init(a) {
+        // Save parameters
+        game.action.player = a.player ?? game.currentPlayer;
+        game.action.ring = a.ring ?? false;
+        // If ring then
+        if (game.action.ring) {
+            // Mark it used
+            game.conflict.ringUsed = true;
+        }
         // Die has not been rolled yet
         game.action.count = -1;
+        // Resolution of die has not been completed
+        game.action.resolved = false;
     },
     prompt() {
+        const buttons = {};
         if (game.action.count === -1) {
-            return {
-                player: game.currentPlayer,
-                message: 'Press button to roll die',
-                buttons: {
-                    roll: 'Roll',
-                },
-            };
+            buttons['roll'] = 'Roll';
+        } else if (game.action.resolved === false) {
+            buttons['resolve'] = 'Resolve';
+        } else if (game.action.ring === true) {
+            buttons['ringit'] = 'RING ME';
         } else {
-            return {
-                player: game.currentPlayer,
-                message: 'Press button to resolve effects',
-                buttons: {
-                    resolve: 'Resolve',
-                },
-            };
+            return null;
         }
+        // Return prompt information
+        return {
+            player: game.action.player,
+            message: 'Select option',
+            buttons,
+        };
     },
     roll() {
         game.action.count = roll_d6();
         console.log('Roll ' + game.action.count);
-        log(game.currentPlayer + ' rolls a D' + game.action.count);
+        log(game.action.player + ' rolls a D' + game.action.count);
     },
     resolve() {
-        const p = game.currentPlayer;
+        game.action.resolved = true;
+        const p = game.action.player;
         switch (game.action.count) {
             case 1:
                 game.players[p].corruption += 1;
                 log(p + ' increases corruption by 1 to ' + game.players[p].corruption);
-                resume_previous_state();
                 break;
             case 2:
                 if (p === 'Sam') {
@@ -490,7 +501,6 @@ states.action_roll_die = {
                     game.players[p].corruption += 2;
                     log(p + ' increases corruption by 2 to ' + game.players[p].corruption);
                 }
-                resume_previous_state();
                 break;
             case 3:
                 if (p === 'Sam') {
@@ -500,7 +510,6 @@ states.action_roll_die = {
                     game.players[p].corruption += 3;
                     log(p + ' increases corruption by 3 to ' + game.players[p].corruption);
                 }
-                resume_previous_state();
                 break;
             case 4:
                 // Setup to discard 2 cards or 1 if same is rolling
@@ -508,18 +517,23 @@ states.action_roll_die = {
                 if (p === 'Sam') {
                     discardCount = 1;
                 }
-                advance_state('action_discard', { count: discardCount, type: 'card' });
+                push_advance_state('action_discard', { count: discardCount, type: 'card' });
                 break;
             case 5:
                 game.sauron -= 1;
                 log('Sauron advances to space ' + game.sauron);
-                resume_previous_state();
                 break;
             default:
                 // No damage
-                resume_previous_state();
                 break;
         }
+    },
+    ringit() {
+        // TBD
+        resume_previous_state();
+    },
+    fini() {
+        resume_previous_state();
     },
 };
 
@@ -1364,30 +1378,6 @@ states.game_end_win = {
     },
 };
 
-states.action_use_ring = {
-    init(a) {
-        // Die has not been rolled yet
-        game.action.count = -1;
-    },
-    prompt() {
-        // Build buttons dynamically
-        const buttons = {};
-        if (game.action.count === -1) {
-            buttons['roll'] = 'Roll';
-        } else {
-            buttons['resolve'] = 'Resolve';
-        }
-        // Return prompt information
-        return {
-            player: game.ringBearer,
-            message: 'Select option',
-            buttons,
-        };
-    },
-    roll() {},
-    fini() {},
-};
-
 states.global_debug_menu = {
     prompt() {
         // Build buttons dynamically
@@ -1476,36 +1466,40 @@ function clear_undo() {
 
 /// @brief Undo the last action (restore previous game state)
 function pop_undo() {
-    if (!game.undo || game.undo.length === 0) {
-        console.warn('No undo states available');
-        return;
-    }
+    if (!game.undo?.length) return;
 
-    let prevTurn = game.undo.pop();
+    const prevTurn = game.undo.pop();
+    const oldUndo = game.undo;
 
-    // Replace game contents with the snapshot
+    // Replace all kets in game with snapshot
     for (let key of Object.keys(game)) {
-        if (key !== 'undo') {
-            delete game[key];
-        }
+        delete game[key];
     }
-    for (let key of Object.keys(prevTurn)) {
-        game[key] = prevTurn[key];
-    }
+    Object.assign(game, prevTurn);
+
+    // Restore undo (DO NOT use snapshot's undo)
+    game.undo = oldUndo;
 }
 
 //////////////////////
 /* Game Button including global buttons */
 
 function use_ring_handler() {
-    push_advance_state('action_use_ring');
+    save_undo();
+    push_advance_state('action_roll_die', { player: game.ringBearer, ring: true });
 }
 
-function gandalf_handler() {}
+function gandalf_handler() {
+    // Create global state for gandalf
+}
 
-function yellow_handler() {}
+function yellow_handler() {
+    // Create global state for yellow cards
+}
 
-function undo_handler() {}
+function undo_handler() {
+    pop_undo();
+}
 
 function debug_handler() {
     push_advance_state('global_debug_menu');
@@ -1548,6 +1542,7 @@ function add_global_buttons(prompt) {
     if (DEBUG) {
         prompt.buttons['debug'] = '/bDEBUG';
     }
+
     return prompt;
 }
 
@@ -1684,7 +1679,8 @@ function getGameView(gameId) {
     });
     if (DEBUG) {
         // TBD - debug only
-        view['debug'] = structuredClone({ ...game, undo: undefined });
+        //view['debug'] = structuredClone({ ...game, undo: undefined });
+        view['debug'] = structuredClone({ ...game });
     }
     return view;
 }
