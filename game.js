@@ -51,7 +51,7 @@ const initialGame = {
     ringBearer: 'Frodo',
     /// @brief Conflict board information
     conflict: {
-        active: false, // TBD - make use of this value
+        active: false,
         fight: 0,
         travel: 0,
         hide: 0,
@@ -355,7 +355,6 @@ states.action_discard = {
         /// a.player - Identify the player who needs to discard (optional).  Current player is not used
         /// a.count - The number of items to Discard
         /// a.type - 'card', or specific card type to discard 'wild'/'hide',etc
-        console.log(a);
         game.action.player = a.player ?? game.currentPlayer;
         game.action.count = a.count;
         game.action.type = a.type;
@@ -452,13 +451,20 @@ states.action_roll_die = {
         // Save parameters
         game.action.player = a.player ?? game.currentPlayer;
         game.action.ring = a.ring ?? false;
+        game.action.roll_skip = a.roll_skip ?? false;
         // If ring then
         if (game.action.ring) {
             // Mark it used
             game.conflict.ringUsed = true;
         }
-        // Die has not been rolled yet
-        game.action.count = -1;
+        if (game.action.roll_skip) {
+            // Skip dialog to roll dice
+            game.action.count = roll_d6();
+            log(game.action.player + ' rolls a D' + game.action.count);
+        } else {
+            // Die has not been rolled yet
+            game.action.count = -1;
+        }
         // Resolution of die has not been completed
         game.action.resolved = false;
     },
@@ -529,7 +535,7 @@ states.action_roll_die = {
         }
     },
     ringit() {
-        // TBD
+        // TBD - Figure out which track to advance on
         resume_previous_state();
     },
     fini() {
@@ -570,7 +576,7 @@ states.bagend_preparations = {
             player: game.ringBearer,
             message: 'Roll dice to receive 4 cards or pass',
             buttons: {
-                roll: 'Roll die',
+                roll: 'Roll',
                 pass: 'Pass',
             },
         };
@@ -579,7 +585,7 @@ states.bagend_preparations = {
         // Once we roll we are done with this current state, so setup next state
         advance_state('bagend_preparations_cards');
         // Now push state to queue and interrupt with dice roll
-        push_advance_state('action_roll_die');
+        push_advance_state('action_roll_die', { roll_skip: true });
     },
     pass() {
         log('Ring-bearer passes');
@@ -812,7 +818,7 @@ states.rivendell_fellowship = {
         game.action.count = game.action.count - 1;
         const np = get_next_player(game.currentPlayer);
         advance_state('rivendell_fellowship', { p: np, cnt: game.action.count });
-        push_advance_state('action_roll_die');
+        push_advance_state('action_roll_die', { roll_skip: true });
     },
     fini() {
         advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
@@ -946,7 +952,7 @@ states.lothlorien_test_of_gladriel = {
         game.action.count = game.action.count - 1;
         const np = get_next_player(game.currentPlayer);
         advance_state('lothlorien_test_of_gladriel', { p: np, cnt: game.action.count });
-        push_advance_state('action_roll_die');
+        push_advance_state('action_roll_die', { roll_skip: true });
     },
     card(cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
@@ -1032,7 +1038,7 @@ states.turn_resolve_tile = {
                 // Discard 1 card, 1 life token, 1 shield as a group
                 // Make sure the group has the required items to discard
                 if (set_of_player_cards().size >= 1) {
-                    // TBD
+                    // TBD - Make sure 1 life token and 1 shield
                     buttons['avoid_event_items'] = 'Discard Items';
                 }
                 // Default action
@@ -1092,10 +1098,10 @@ states.turn_resolve_tile = {
         advance_state('turn_reveal_tiles');
 
         // Interrupt action with discarding the 1 shield
-        //push_advance_state('action_discard_item_group', { count: 1, type: 'shield' });    TBD
+        //push_advance_state('action_discard_item_group', { count: 1, type: 'shield' });    TBD - Discard shield
 
         // Interrupt action with discarding the 1 life token
-        //push_advance_state('action_discard_item_group', { count: 1, type: 'life_token' });    TBD
+        //push_advance_state('action_discard_item_group', { count: 1, type: 'life_token' });    TBD - Discard life token
 
         // Interrupt action with discarding the 1 card
         push_advance_state('action_discard_group', { count: 1, type: 'card' });
@@ -1134,10 +1140,10 @@ states.turn_resolve_tile = {
             // Get reward
             if (resolve_reward(path) === false) {
                 // Need to roll dice and advance to next turn phase
-                //TBD
+                //TBD - resolve roll dice
             } else {
                 // Advance to next turn phase
-                //TBD
+                //TBD - tile
             }
             advance_state('turn_play', 'first');
         }
@@ -1385,6 +1391,8 @@ states.global_debug_menu = {
         buttons['debug_return'] = 'exit menu';
         buttons['debug_shield'] = '/bADD SHIELD';
         buttons['debug_reshuffle'] = '/bRESHUFFLE';
+        buttons['debug_undo_queue'] = '/bUNDO PRINT';
+        buttons['debug_game_print'] = '/bDUMP GAME';
         if (game.conflict.active === true) {
             buttons['debug_restart'] = '/rGOTO MORIA';
             buttons['debug_end_board'] = '/rEND BOARD';
@@ -1405,6 +1413,24 @@ states.global_debug_menu = {
     },
     debug_reshuffle() {
         reshuffle_deck();
+    },
+    debug_undo_queue() {
+        console.log('--------------------');
+        console.log('--------------------');
+        console.log('--------------------');
+        console.log(game.undo);
+        console.log('--------------------');
+        console.log('--------------------');
+        console.log('--------------------');
+    },
+    debug_game_print() {
+        console.log('--------------------');
+        console.log('--------------------');
+        console.log('--------------------');
+        console.log(game);
+        console.log('--------------------');
+        console.log('--------------------');
+        console.log('--------------------');
     },
     debug_restart() {
         // Eliminate any state queue information
@@ -1485,12 +1511,7 @@ function pop_undo() {
 /* Game Button including global buttons */
 
 function use_ring_handler() {
-    save_undo();
     push_advance_state('action_roll_die', { player: game.ringBearer, ring: true });
-}
-
-function gandalf_handler() {
-    // Create global state for gandalf
 }
 
 function yellow_handler() {
@@ -1507,7 +1528,6 @@ function debug_handler() {
 
 const globalButtons = {
     use_ring: use_ring_handler,
-    gandalf: gandalf_handler,
     yellow: yellow_handler,
     undo: undo_handler,
     debug: debug_handler,
@@ -1530,10 +1550,8 @@ function add_global_buttons(prompt) {
     if (game.conflict.active === true && game.conflict.ringUsed === false) {
         prompt.buttons['use_ring'] = '/gUse Ring';
     }
-    // Play Gandalf
-    prompt.buttons['gandalf'] = '/yGandalf';
     // Play Yellow
-    prompt.buttons['yellow'] = '/yPlay Yellow';
+    prompt.buttons['yellow'] = '/yYellow Card';
     // Undo
     if (game.undo.length > 0) {
         prompt.buttons['undo'] = '/rUNDO';
@@ -1587,7 +1605,7 @@ function advance_state(newState, args = null) {
         if (args) {
             curstate.init(args);
         } else {
-            curstate.init();
+            curstate.init({});
         }
     }
 }
@@ -1637,7 +1655,7 @@ function execute_state() {
 
         // Determine if the game has ended
         if (check_end_of_game() == true) {
-            // TBD
+            // TBD - end of game
         }
     } while (!game.prompt);
 }
@@ -1678,9 +1696,7 @@ function getGameView(gameId) {
         stateQueue: undefined,
     });
     if (DEBUG) {
-        // TBD - debug only
-        //view['debug'] = structuredClone({ ...game, undo: undefined });
-        view['debug'] = structuredClone({ ...game });
+        view['debug'] = structuredClone({ ...game, undo: undefined });
     }
     return view;
 }
@@ -1694,6 +1710,12 @@ function parseAction(gameId, move) {
     const command = parts[0];
     const func = parts[1];
     const args = parts.slice(2);
+
+    // Save current state prior to performing the latest action
+    // Do not save when undo being performed
+    if (func !== 'undo') {
+        save_undo();
+    }
 
     // Dispatch to appropriate handler
     const handler = moveHandlers[command];

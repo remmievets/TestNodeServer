@@ -171,21 +171,12 @@ Action List
     - Play 2 cards (one grey/one white)
     - Heal 1 space
     - Draw 2 cards
-- Other items
-    - Buy gandalf cards option
-    - Display available Gandalf cards
-    - Add to buttons, gandalf, yellow, use ring options outside of state
-    - Play other yellow cards
-
 
 - Global buttons
-    - Undo
-        - When undo queue is not empty
     - use_ring
         - When on a conflict board and ring is not yet used
-    - play Gandalf Card
-        - Anytime a player has > 5 shields
     - Play Yellow Card
+        - Anytime a player has > 5 shields can play gandalf card
         - Anytime
         
 - action_roll_die (action=ring arg)
