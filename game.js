@@ -1282,6 +1282,29 @@ states.conflict_board_start = {
     },
 };
 
+states.conflict_decent_into_darkness = {
+    init(a) {
+        game.action.corruption = a.corruption;
+        game.action.player = a.player;
+    },
+    prompt() {
+        // Build buttons dynamically
+        const buttons = {
+            next: 'Next',
+        };
+        return {
+            player: game.action.player,
+            message: `${game.action.player} increase corruption by ${game.action.corruption}`,
+            buttons,
+        };
+    },
+    next() {
+        game.players[game.action.player].corruption += game.action.corruption;
+        log(`${game.action.player} increases corruption by ${game.action.corruption} to ${game.players[game.action.player].corruption}`);
+        resume_previous_state();
+    },
+};
+
 states.conflict_board_end = {
     init(a) {
         // Conflict board is no longer active
@@ -1289,7 +1312,7 @@ states.conflict_board_end = {
         // Descent into darkness
         // Loop through each player and apply 1 corruption for each missing life token
         const plist = get_active_players_in_order(game.ringBearer);
-        console.log(plist);
+        plist.reverse();
         for (const p of plist) {
             let lifeTokenCount = 0;
             if (game.players[p].ring > 0) {
@@ -1305,8 +1328,7 @@ states.conflict_board_end = {
             if (p === 'Merry' && corruptionDamage > 0) {
                 corruptionDamage = corruptionDamage - 1;
             }
-            game.players[p].corruption += corruptionDamage;
-            log(`${p} increases corruption by ${corruptionDamage} to ${game.players[p].corruption}`);
+            push_advance_state('conflict_decent_into_darkness', { corruption: corruptionDamage, player: p });
         }
     },
     fini() {
