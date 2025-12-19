@@ -1,6 +1,7 @@
 {
   "name": "my-js-server",
   "version": "1.0.0",
+  "type": "module",
   "description": "Login to Linux from powershell\r ```\r wsl.exe -d Ubuntu\r ```",
   "main": "index.js",
   "scripts": {

@@ -3,12 +3,12 @@
 // Debug constant - set to 0 to disable
 const DEBUG = 1;
 
-// Modules
-const crypto = require('crypto');
+// Node core module
+import crypto from 'crypto';
 
-// Game module
-const util = require('./public/common/util.js');
-const data = require('./public/data.js');
+// Game modules
+import * as util from './utils/util.js';
+import data from './utils/data.js';
 
 //////////////////////
 // Database const
@@ -1300,7 +1300,9 @@ states.conflict_decent_into_darkness = {
     },
     next() {
         game.players[game.action.player].corruption += game.action.corruption;
-        log(`${game.action.player} increases corruption by ${game.action.corruption} to ${game.players[game.action.player].corruption}`);
+        log(
+            `${game.action.player} increases corruption by ${game.action.corruption} to ${game.players[game.action.player].corruption}`,
+        );
         resume_previous_state();
     },
 };
@@ -1689,21 +1691,21 @@ const moveHandlers = {
     BUTTON: (game, button, args) => execute_button(game, button, args),
 };
 
-function startGame(gameId) {
+export function startGame(gameId) {
     console.log(`START GAME ${gameId}`);
     setup_game();
     execute_state();
     return game;
 }
 
-function updateGame(gameId, gameData) {
+export function updateGame(gameId, gameData) {
     console.log(`UPDATE GAME ${gameId}`);
     game = gameData;
     util.set_seed(game.seed);
     execute_state();
 }
 
-function getGameView(gameId) {
+export function getGameView(gameId) {
     // Copy fields which client needs only
     let view = structuredClone({
         ...game,
@@ -1723,7 +1725,7 @@ function getGameView(gameId) {
     return view;
 }
 
-function parseAction(gameId, move) {
+export function parseAction(gameId, move) {
     console.log(`PARSE ACTION ${gameId} ${move}`);
 
     // Split move into command and arguments
@@ -1747,12 +1749,3 @@ function parseAction(gameId, move) {
 
     return game;
 }
-
-/////////////////////////////////////////
-// Export the functions
-module.exports = {
-    startGame,
-    updateGame,
-    getGameView,
-    parseAction,
-};

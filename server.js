@@ -1,16 +1,21 @@
 'use strict';
 
-const express = require('express');
-const sqlite3 = require('better-sqlite3');
-const cors = require('cors');
-const path = require('path');
-const url = require('url');
+import express from 'express';
+import Database from 'better-sqlite3';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
 // Game module
-const tba = require('./game.js');
+import * as tba from './game.js';
 
-//This line did not work - not sure if it is needed for process.env
-require('dotenv').config();
+// Load environment variables
+dotenv.config();
+
+// Recreate __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const HTTP_HOST = process.env.HTTP_HOST || '0.0.0.0';
 const HTTP_PORT = process.env.HTTP_PORT || 8080;
@@ -32,7 +37,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Database setup
-const db = new sqlite3('games.db');
+const db = new Database('games.db');
 db.prepare(
     `
     CREATE TABLE IF NOT EXISTS games (
