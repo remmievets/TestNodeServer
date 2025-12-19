@@ -20,6 +20,10 @@ function random_bigint(range) {
     return (seed_value = Number((BigInt(seed_value) * 5667072534355537n) % 9007199254740881n)) % range;
 }
 
+function roll_d6() {
+    return random(6) + 1;
+}
+
 function shuffle(list) {
     // Fisher-Yates shuffle
     for (let i = list.length - 1; i > 0; --i) {
@@ -285,6 +289,7 @@ export {
     set_seed,
     random,
     random_bigint,
+    roll_d6,
     shuffle,
     shuffle_bigint,
     object_copy,
@@ -314,6 +319,7 @@ if (typeof module !== 'undefined') {
         set_seed,
         random,
         random_bigint,
+        roll_d6,
         shuffle,
         shuffle_bigint,
         object_copy,

@@ -77,42 +77,38 @@ var game;
 
 //////////////////////
 /* COMMON LIBRARY */
-function log(s) {
+function log(game, s) {
     game.log.push(s);
-}
-
-function roll_d6() {
-    return util.random(6) + 1;
 }
 
 //////////////////////
 /* Card functions */
 
-function create_deck(list, startIndex, endIndex) {
-    list.length = 0;
+function create_deck(deck, startIndex, endIndex) {
+    deck.length = 0;
     for (let i = startIndex; i <= endIndex; i++) {
-        util.set_add(list, i);
+        util.set_add(deck, i);
     }
 }
 
-function deal_card() {
+function deal_card(game) {
     if (game.deck.length === 0) {
-        reshuffle_deck();
+        reshuffle_deck(game);
     }
     return game.deck.pop();
 }
 
-function draw_x_cards(p, cnt) {
+function draw_x_cards(game, p, cnt) {
     for (let i = 0; i < cnt; i++) {
-        let card = deal_card();
-        log(`C${card} given to ${p}`);
+        let card = deal_card(game);
+        log(game, `C${card} given to ${p}`);
         util.set_add(game.players[p].hand, card);
     }
 }
 
 // Gather a full 'set' of all player cards
-function set_of_player_cards() {
-    let pArray = get_active_player_list();
+function set_of_player_cards(game) {
+    let pArray = get_active_player_list(game);
     let cardsInHands = new Set();
     for (let p of pArray) {
         for (let card of game.players[p].hand) {
@@ -123,11 +119,11 @@ function set_of_player_cards() {
 }
 
 // Reshuffle quest cards 0-59.  Make sure to remove cards that are already in players hands.
-function reshuffle_deck() {
+function reshuffle_deck(game) {
     // Rebuild entire deck of initial quest cards
     create_deck(game.deck, 0, 59);
     // Collect all cards from all players’ hands
-    let cardsInHands = set_of_player_cards();
+    let cardsInHands = set_of_player_cards(game);
     // Filter out any cards that are in players’ hands
     game.deck = game.deck.filter((card) => !cardsInHands.has(card));
     // Shuffle the deck
@@ -140,7 +136,7 @@ function reshuffle_deck() {
 ///     'yellow'/'white'/'grey' - by type or color of card
 ///     'hide','friendship','travel','fight','wild' - by symbol
 /// cardType can be a single string or an array of strings
-function count_card_type_by_player(p, cardType, allowedColors = ['white', 'grey', 'yellow']) {
+function count_card_type_by_player(game, p, cardType, allowedColors = ['white', 'grey', 'yellow']) {
     let cardValue = 0;
     let cardArray = [];
 
@@ -179,7 +175,7 @@ function count_card_type_by_player(p, cardType, allowedColors = ['white', 'grey'
     return { value: cardValue, cardList: cardArray };
 }
 
-function distribute_card_from_select(p, cardInt) {
+function distribute_card_from_select(game, p, cardInt) {
     // Ensure the card actually exists in selectHand
     if (!util.set_has(game.selectHand, cardInt)) {
         console.error('Card not found in selectHand');
@@ -197,7 +193,7 @@ function distribute_card_from_select(p, cardInt) {
 
 /// @brief Lookup card by int number and discard from player hand
 /// @return the count value of the card, or -1 if card not found.
-function discard_card_from_player(p, cardInt) {
+function discard_card_from_player(game, p, cardInt) {
     // Ensure the card actually exists in selectHand
     if (!util.set_has(game.players[p].hand, cardInt)) {
         return -1;
@@ -217,7 +213,7 @@ function discard_card_from_player(p, cardInt) {
 //////////////////////
 /* Board function */
 
-function get_board_active_quests() {
+function get_board_active_quests(game) {
     const board = data[game.loc];
     const questTypes = ['fight', 'travel', 'hide', 'friendship'];
     const quests = [];
@@ -226,7 +222,7 @@ function get_board_active_quests() {
         // Does the quest exist for this board?
         if (board[q]) {
             // If the quest path still active - or has it completed
-            if (!is_path_complete(q)) {
+            if (!is_path_complete(game, q)) {
                 quests.push(q);
             }
         }
@@ -235,7 +231,7 @@ function get_board_active_quests() {
     return quests;
 }
 
-function is_path_complete(path) {
+function is_path_complete(game, path) {
     const quest = data[game.loc][path]; // might be undefined
     const progress = game.conflict[path];
     let result;
@@ -251,7 +247,7 @@ function is_path_complete(path) {
     return result;
 }
 
-function resolve_reward(path) {
+function resolve_reward(game, path) {
     let result = true;
     const pathData = data[game.loc][path];
     const curIndex = game.conflict[path];
@@ -284,20 +280,20 @@ function resolve_reward(path) {
 //////////////////////
 /* Player functions */
 
-function get_active_player_list() {
+function get_active_player_list(game) {
     const porder = ['Frodo', 'Sam', 'Pippin', 'Merry', 'Fatty'];
     return porder.filter((p) => game.players[p] && game.players[p].active);
 }
 
-function get_next_player(p) {
-    const porder = get_active_player_list();
+function get_next_player(game, p) {
+    const porder = get_active_player_list(game);
     const start = porder.indexOf(p);
     const idx = (start + 1) % porder.length;
     return porder[idx];
 }
 
-function get_active_players_in_order(p) {
-    const porder = get_active_player_list();
+function get_active_players_in_order(game, p) {
+    const porder = get_active_player_list(game);
     const start = porder.indexOf(p);
 
     const orderedPlayers = [];
@@ -311,14 +307,14 @@ function get_active_players_in_order(p) {
     return orderedPlayers;
 }
 
-function update_player_active() {
-    let pArray = get_active_player_list();
+function update_player_active(game) {
+    let pArray = get_active_player_list(game);
     for (let p of pArray) {
         if (game.players[p].corruption < game.sauron) {
             game.players[p].active = true;
         } else {
             // Send a message to the player indicating the change in state
-            log(`${p} has become corrupted by the ring`);
+            log(game, `${p} has become corrupted by the ring`);
             // Make player inactive
             game.players[p].active = false;
             // Discard all cards
@@ -361,7 +357,7 @@ states.action_discard = {
     },
     prompt() {
         // Find card list
-        const cardInfo = count_card_type_by_player(game.action.player, game.action.type);
+        const cardInfo = count_card_type_by_player(game, game.action.player, game.action.type);
 
         // Check that count is not higher than hand size, otherwise adjust count.
         if (game.action.count > cardInfo.value) {
@@ -382,12 +378,12 @@ states.action_discard = {
     card(cardArray) {
         for (let i = 0; i < cardArray.length; i++) {
             const cardInt = parseInt(cardArray[i], 10); // Convert to int if needed
-            if (discard_card_from_player(game.action.player, cardInt) >= 0) {
+            if (discard_card_from_player(game, game.action.player, cardInt) >= 0) {
                 game.action.count = game.action.count - 1;
             }
 
             // Create log record of transaction
-            log(`${game.action.player} discard C${cardInt}`);
+            log(game, `${game.action.player} discard C${cardInt}`);
         }
     },
     fini() {
@@ -410,11 +406,11 @@ states.action_discard_group = {
         }
 
         // Get list of cards for the entire group of active players
-        const players = get_active_player_list();
+        const players = get_active_player_list(game);
         let allCards = [];
 
         for (const p of players) {
-            const cardInfo = count_card_type_by_player(p, game.action.type);
+            const cardInfo = count_card_type_by_player(game, p, game.action.type);
             allCards.push(...cardInfo.cardList);
         }
 
@@ -427,15 +423,15 @@ states.action_discard_group = {
         for (let i = 0; i < cardArray.length; i++) {
             const cardInt = parseInt(cardArray[i], 10); // Convert to int if needed
 
-            let pArray = get_active_player_list();
+            let pArray = get_active_player_list(game);
             for (let p of pArray) {
                 // Attempt to discard from player
-                if (discard_card_from_player(p, cardInt) >= 0) {
+                if (discard_card_from_player(game, p, cardInt) >= 0) {
                     // Decrease card count
                     game.action.count = game.action.count - 1;
 
                     // Create log record of transaction
-                    log(`${p} discard C${cardInt}`);
+                    log(game, `${p} discard C${cardInt}`);
                     break;
                 }
             }
@@ -459,8 +455,8 @@ states.action_roll_die = {
         }
         if (game.action.roll_skip) {
             // Skip dialog to roll dice
-            game.action.count = roll_d6();
-            log(game.action.player + ' rolls a D' + game.action.count);
+            game.action.count = util.roll_d6();
+            log(game, game.action.player + ' rolls a D' + game.action.count);
         } else {
             // Die has not been rolled yet
             game.action.count = -1;
@@ -487,9 +483,9 @@ states.action_roll_die = {
         };
     },
     roll() {
-        game.action.count = roll_d6();
+        game.action.count = util.roll_d6();
         console.log('Roll ' + game.action.count);
-        log(game.action.player + ' rolls a D' + game.action.count);
+        log(game, game.action.player + ' rolls a D' + game.action.count);
     },
     resolve() {
         game.action.resolved = true;
@@ -497,24 +493,24 @@ states.action_roll_die = {
         switch (game.action.count) {
             case 1:
                 game.players[p].corruption += 1;
-                log(p + ' increases corruption by 1 to ' + game.players[p].corruption);
+                log(game, p + ' increases corruption by 1 to ' + game.players[p].corruption);
                 break;
             case 2:
                 if (p === 'Sam') {
                     game.players[p].corruption += 1;
-                    log(p + ' increases corruption by 1 to ' + game.players[p].corruption);
+                    log(game, p + ' increases corruption by 1 to ' + game.players[p].corruption);
                 } else {
                     game.players[p].corruption += 2;
-                    log(p + ' increases corruption by 2 to ' + game.players[p].corruption);
+                    log(game, p + ' increases corruption by 2 to ' + game.players[p].corruption);
                 }
                 break;
             case 3:
                 if (p === 'Sam') {
                     game.players[p].corruption += 1;
-                    log(p + ' increases corruption by 1 to ' + game.players[p].corruption);
+                    log(game, p + ' increases corruption by 1 to ' + game.players[p].corruption);
                 } else {
                     game.players[p].corruption += 3;
-                    log(p + ' increases corruption by 3 to ' + game.players[p].corruption);
+                    log(game, p + ' increases corruption by 3 to ' + game.players[p].corruption);
                 }
                 break;
             case 4:
@@ -527,7 +523,7 @@ states.action_roll_die = {
                 break;
             case 5:
                 game.sauron -= 1;
-                log('Sauron advances to space ' + game.sauron);
+                log(game, 'Sauron advances to space ' + game.sauron);
                 break;
             default:
                 // No damage
@@ -547,17 +543,17 @@ states.bagend_gandalf = {
     fini() {
         console.log('GANDOLF');
         // Do initial phase of the game
-        log('=t Bag End');
-        log('=! Gandalf');
-        log('Deal 6 cards to every player');
+        log(game, '=t Bag End');
+        log(game, '=! Gandalf');
+        log(game, 'Deal 6 cards to every player');
 
         // Players in order
-        const porder = get_active_players_in_order(game.ringBearer);
+        const porder = get_active_players_in_order(game, game.ringBearer);
 
         // Deal cards round-robin until deck is empty
         for (let i = 0; i < 6 * porder.length; i++) {
             const player = porder[i % porder.length];
-            util.set_add(game.players[player].hand, deal_card());
+            util.set_add(game.players[player].hand, deal_card(game));
         }
 
         // Go to next state
@@ -568,8 +564,8 @@ states.bagend_gandalf = {
 states.bagend_preparations = {
     init(a) {
         console.log('PREPARATIONS');
-        log('=! Preparations');
-        log('Ring-bearer may roll and reveal 4 hobbit cards face up to distribute');
+        log(game, '=! Preparations');
+        log(game, 'Ring-bearer may roll and reveal 4 hobbit cards face up to distribute');
     },
     prompt() {
         return {
@@ -588,16 +584,16 @@ states.bagend_preparations = {
         push_advance_state('action_roll_die', { roll_skip: true });
     },
     pass() {
-        log('Ring-bearer passes');
+        log(game, 'Ring-bearer passes');
         advance_state('bagend_nazgul_appears');
     },
 };
 
 states.bagend_preparations_cards = {
     fini() {
-        log('4 Cards available to distribute');
+        log(game, '4 Cards available to distribute');
         for (let i = 0; i < 4; i++) {
-            util.set_add(game.selectHand, deal_card());
+            util.set_add(game.selectHand, deal_card(game));
         }
         advance_state('bagend_preparations_distribute', 4);
     },
@@ -628,13 +624,13 @@ states.bagend_preparations_distribute = {
     },
     card(cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
-        if (distribute_card_from_select(game.currentPlayer, cardInt)) {
+        if (distribute_card_from_select(game, game.currentPlayer, cardInt)) {
             // Decrease action count if distribute was successful
             game.action.count = game.action.count - 1;
         }
 
         // Create log record of transaction
-        log(`C${cardInt} given to ${game.currentPlayer}`);
+        log(game, `C${cardInt} given to ${game.currentPlayer}`);
     },
     pick(args) {
         const player = args[0];
@@ -648,8 +644,8 @@ states.bagend_preparations_distribute = {
 states.bagend_nazgul_appears = {
     init(a) {
         console.log('NAZGUL');
-        log('=! Nazgul Appears');
-        log('One player must discard 2 hiding or move sauron');
+        log(game, '=! Nazgul Appears');
+        log(game, 'One player must discard 2 hiding or move sauron');
         game.currentPlayer = game.ringBearer;
     },
     prompt() {
@@ -659,9 +655,9 @@ states.bagend_nazgul_appears = {
         };
 
         // Determine which players are active and have cards to play this action
-        const plist = get_active_players_in_order(game.currentPlayer);
+        const plist = get_active_players_in_order(game, game.currentPlayer);
         for (const p of plist) {
-            const val = count_card_type_by_player(p, 'hide');
+            const val = count_card_type_by_player(game, p, 'hide');
             if (val.value >= 2) {
                 buttons[`discard ${p}`] = p;
             }
@@ -674,13 +670,13 @@ states.bagend_nazgul_appears = {
     },
     discard(args) {
         const p = args[0];
-        log(`${p} discards 2 hiding`);
+        log(game, `${p} discards 2 hiding`);
         game.currentPlayer = p;
         advance_state('rivendell_elrond');
         push_advance_state('action_discard', { count: 2, type: 'hide' });
     },
     sauron() {
-        log('Sauron moves 1 space');
+        log(game, 'Sauron moves 1 space');
         game.sauron -= 1;
         advance_state('rivendell_elrond');
     },
@@ -690,23 +686,23 @@ states.rivendell_elrond = {
     fini() {
         console.log('ELROND');
         // Do initial phase of the game
-        log('=t Rivendell');
-        log('=! Elrond');
-        log('Deal feature cards');
+        log(game, '=t Rivendell');
+        log(game, '=! Elrond');
+        log(game, 'Deal feature cards');
         let featureDeck = [];
         create_deck(featureDeck, 102, 113);
         util.shuffle(featureDeck);
 
         // Players in order
         game.currentPlayer = game.ringBearer;
-        const porder = get_active_players_in_order(game.ringBearer);
+        const porder = get_active_players_in_order(game, game.ringBearer);
 
         // Deal cards round-robin until deck is empty
         let i = 0;
         while (featureDeck.length > 0) {
             const player = porder[i % porder.length];
             let card = featureDeck.pop();
-            log(`C${card} given to ${player}`);
+            log(game, `C${card} given to ${player}`);
             util.set_add(game.players[player].hand, card);
             i++;
         }
@@ -720,10 +716,10 @@ states.rivendell_elrond = {
 
 states.rivendell_council = {
     init(a) {
-        log('=! Council');
-        log('EACH PLAYER: Pass 1 card face down to left');
+        log(game, '=! Council');
+        log(game, 'EACH PLAYER: Pass 1 card face down to left');
         game.currentPlayer = game.ringBearer;
-        game.action.count = get_active_player_list().length;
+        game.action.count = get_active_player_list(game).length;
         game.action.pass = [];
     },
     prompt() {
@@ -745,11 +741,11 @@ states.rivendell_council = {
             game.action.pass.push(args[0]);
 
             // Generate log
-            log(`${game.currentPlayer} selects C${args[0]} to pass left`);
+            log(game, `${game.currentPlayer} selects C${args[0]} to pass left`);
 
             // Decrease count and advance to next player
             game.action.count = game.action.count - 1;
-            game.currentPlayer = get_next_player(game.currentPlayer);
+            game.currentPlayer = get_next_player(game, game.currentPlayer);
         } else {
             console.log('Invalid selection');
         }
@@ -760,9 +756,9 @@ states.rivendell_council = {
             // Convert to int
             const cardInt = parseInt(c, 10);
             // Discard card from current player
-            discard_card_from_player(game.currentPlayer, cardInt);
+            discard_card_from_player(game, game.currentPlayer, cardInt);
             // Advance to next player and give them the card
-            game.currentPlayer = get_next_player(game.currentPlayer);
+            game.currentPlayer = get_next_player(game, game.currentPlayer);
             util.set_add(game.players[game.currentPlayer].hand, cardInt);
         }
 
@@ -775,10 +771,10 @@ states.rivendell_council = {
 states.rivendell_fellowship = {
     init(a) {
         if (a === 'first') {
-            log('=! Fellowship');
-            log('EACH PLAYER: Discard 1 friendship or roll die');
+            log(game, '=! Fellowship');
+            log(game, 'EACH PLAYER: Discard 1 friendship or roll die');
             game.currentPlayer = game.ringBearer;
-            game.action.count = get_active_player_list().length;
+            game.action.count = get_active_player_list(game).length;
         } else {
             // Come back into this state from roll action
             game.action.count = a.cnt;
@@ -792,7 +788,7 @@ states.rivendell_fellowship = {
                 roll: 'Roll',
             };
 
-            const cardInfo = count_card_type_by_player(game.currentPlayer, 'friendship');
+            const cardInfo = count_card_type_by_player(game, game.currentPlayer, 'friendship');
             return {
                 player: game.currentPlayer,
                 message: 'Discard friendship or roll',
@@ -805,18 +801,18 @@ states.rivendell_fellowship = {
     },
     card(cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
-        if (discard_card_from_player(game.currentPlayer, cardInt) >= 0) {
+        if (discard_card_from_player(game, game.currentPlayer, cardInt) >= 0) {
             // Create log record of transaction
-            log(`${game.currentPlayer} discards C${cardInt}`);
+            log(game, `${game.currentPlayer} discards C${cardInt}`);
             // Decrease count and advance to next player
             game.action.count = game.action.count - 1;
-            game.currentPlayer = get_next_player(game.currentPlayer);
+            game.currentPlayer = get_next_player(game, game.currentPlayer);
         }
     },
     roll() {
         // Setup to come back to this state
         game.action.count = game.action.count - 1;
-        const np = get_next_player(game.currentPlayer);
+        const np = get_next_player(game, game.currentPlayer);
         advance_state('rivendell_fellowship', { p: np, cnt: game.action.count });
         push_advance_state('action_roll_die', { roll_skip: true });
     },
@@ -829,23 +825,23 @@ states.lothlorien_gladriel = {
     fini() {
         console.log('GLADRIEL');
         // Do initial phase of the game
-        log('=t lothlorien');
-        log('=! Gladriel');
-        log('Deal feature cards');
+        log(game, '=t lothlorien');
+        log(game, '=! Gladriel');
+        log(game, 'Deal feature cards');
         let featureDeck = [];
         create_deck(featureDeck, 85, 96);
         util.shuffle(featureDeck);
 
         // Players in order
         game.currentPlayer = game.ringBearer;
-        const porder = get_active_players_in_order(game.ringBearer);
+        const porder = get_active_players_in_order(game, game.ringBearer);
 
         // Deal cards round-robin until deck is empty
         let i = 0;
         while (featureDeck.length > 0) {
             const player = porder[i % porder.length];
             let card = featureDeck.pop();
-            log(`C${card} given to ${player}`);
+            log(game, `C${card} given to ${player}`);
             util.set_add(game.players[player].hand, card);
             i++;
         }
@@ -859,10 +855,10 @@ states.lothlorien_gladriel = {
 
 states.lothlorien_recovery = {
     init(a) {
-        log('=! Recovery');
-        log('EACH PLAYER: May discard 2 shields to either draw 2 hobbit cards or heal');
+        log(game, '=! Recovery');
+        log(game, 'EACH PLAYER: May discard 2 shields to either draw 2 hobbit cards or heal');
         game.currentPlayer = game.ringBearer;
-        game.action.count = get_active_player_list().length;
+        game.action.count = get_active_player_list(game).length;
     },
     prompt() {
         if (game.action.count > 0) {
@@ -889,27 +885,27 @@ states.lothlorien_recovery = {
     },
     pass() {
         // Players turn has completed - skipped option
-        log(`${game.currentPlayer} passes`);
+        log(game, `${game.currentPlayer} passes`);
         // Decrease count and advance to next player
         game.action.count = game.action.count - 1;
-        game.currentPlayer = get_next_player(game.currentPlayer);
+        game.currentPlayer = get_next_player(game, game.currentPlayer);
     },
     card() {
-        log(`${game.currentPlayer} discards 2 shields to draw 2 cards`);
+        log(game, `${game.currentPlayer} discards 2 shields to draw 2 cards`);
         game.players[game.currentPlayer].shield = game.players[game.currentPlayer].shield - 2;
         // Deal 2 cards
-        draw_x_cards(game.currentPlayer, 2);
+        draw_x_cards(game, game.currentPlayer, 2);
         // Decrease count and advance to next player
         game.action.count = game.action.count - 1;
-        game.currentPlayer = get_next_player(game.currentPlayer);
+        game.currentPlayer = get_next_player(game, game.currentPlayer);
     },
     heal() {
-        log(`${game.currentPlayer} discards 2 shields to heal 1 space`);
+        log(game, `${game.currentPlayer} discards 2 shields to heal 1 space`);
         game.players[game.currentPlayer].shield = game.players[game.currentPlayer].shield - 2;
         game.players[game.currentPlayer].corruption = game.players[game.currentPlayer].corruption - 1;
         // Decrease count and advance to next player
         game.action.count = game.action.count - 1;
-        game.currentPlayer = get_next_player(game.currentPlayer);
+        game.currentPlayer = get_next_player(game, game.currentPlayer);
     },
     fini() {
         // Advance to next state
@@ -920,10 +916,10 @@ states.lothlorien_recovery = {
 states.lothlorien_test_of_gladriel = {
     init(a) {
         if (a === 'first') {
-            log('=! Test of Galadriel');
-            log('EACH PLAYER: Discard WILD otherwise roll die');
+            log(game, '=! Test of Galadriel');
+            log(game, 'EACH PLAYER: Discard WILD otherwise roll die');
             game.currentPlayer = game.ringBearer;
-            game.action.count = get_active_player_list().length;
+            game.action.count = get_active_player_list(game).length;
         } else {
             // Come back into this state from roll action
             game.action.count = a.cnt;
@@ -936,7 +932,7 @@ states.lothlorien_test_of_gladriel = {
             const buttons = {
                 roll: 'Roll',
             };
-            const cardInfo = count_card_type_by_player(game.currentPlayer, 'wild');
+            const cardInfo = count_card_type_by_player(game, game.currentPlayer, 'wild');
             return {
                 player: game.currentPlayer,
                 message: 'Discard wild quest card or roll',
@@ -950,18 +946,18 @@ states.lothlorien_test_of_gladriel = {
     roll() {
         // Setup to come back to this state
         game.action.count = game.action.count - 1;
-        const np = get_next_player(game.currentPlayer);
+        const np = get_next_player(game, game.currentPlayer);
         advance_state('lothlorien_test_of_gladriel', { p: np, cnt: game.action.count });
         push_advance_state('action_roll_die', { roll_skip: true });
     },
     card(cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
-        if (discard_card_from_player(game.currentPlayer, cardInt) >= 0) {
+        if (discard_card_from_player(game, game.currentPlayer, cardInt) >= 0) {
             // Create log record of transaction
-            log(`${game.currentPlayer} discards C${cardInt}`);
+            log(game, `${game.currentPlayer} discards C${cardInt}`);
             // Decrease count and advance to next player
             game.action.count = game.action.count - 1;
-            game.currentPlayer = get_next_player(game.currentPlayer);
+            game.currentPlayer = get_next_player(game, game.currentPlayer);
         }
     },
     fini() {
@@ -972,7 +968,7 @@ states.lothlorien_test_of_gladriel = {
 
 states.new_player_turn = {
     init(a) {
-        log(data.players[game.currentPlayer] + ' ' + game.currentPlayer);
+        log(game, data.players[game.currentPlayer] + ' ' + game.currentPlayer);
     },
     fini() {
         // Advance to next state
@@ -998,8 +994,8 @@ states.turn_reveal_tiles = {
     reveal_tile() {
         // Pull a tile and advance to resolving the tile
         const t = game.story.pop();
-        log(game.currentPlayer + ' draws a tile');
-        log('T' + t);
+        log(game, game.currentPlayer + ' draws a tile');
+        log(game, 'T' + t);
         advance_state('turn_resolve_tile', { lasttile: t, number: 0 });
     },
 };
@@ -1028,7 +1024,7 @@ states.turn_resolve_tile = {
             case 'event_cards':
                 // Discard 3 cards as a group
                 // Make sure the group has 3 cards to discard
-                if (set_of_player_cards().size >= 3) {
+                if (set_of_player_cards(game).size >= 3) {
                     buttons['avoid_event_cards'] = 'Discard Cards';
                 }
                 // Default action
@@ -1037,7 +1033,7 @@ states.turn_resolve_tile = {
             case 'event_life':
                 // Discard 1 card, 1 life token, 1 shield as a group
                 // Make sure the group has the required items to discard
-                if (set_of_player_cards().size >= 1) {
+                if (set_of_player_cards(game).size >= 1) {
                     // TBD - Make sure 1 life token and 1 shield
                     buttons['avoid_event_items'] = 'Discard Items';
                 }
@@ -1047,7 +1043,7 @@ states.turn_resolve_tile = {
             case 'sauron':
                 // Move sauron or one player takes 2 corruption
                 // Determine which players are active and can take corruption
-                const plist = get_active_players_in_order(game.currentPlayer);
+                const plist = get_active_players_in_order(game, game.currentPlayer);
                 for (const p of plist) {
                     buttons[`resolve_corruption ${p}`] = p;
                 }
@@ -1059,13 +1055,13 @@ states.turn_resolve_tile = {
                 //      Allow only one option for advance on single path
                 // else
                 //      Allow advancement on any not completed path on the board
-                if (is_path_complete(t) === false) {
+                if (is_path_complete(game, t) === false) {
                     buttons[`resolve_path ${t}`] = 'Resolve Tile';
                 } else {
                     // Player can advance any track that is not complete
                     for (const path of data.tracks) {
                         // Is this path an option to be selected
-                        if (is_path_complete(path) === false) {
+                        if (is_path_complete(game, path) === false) {
                             buttons[`resolve_path ${path}`] = `Resolve as ${path}`;
                         }
                     }
@@ -1081,7 +1077,7 @@ states.turn_resolve_tile = {
     },
     resolve_ring() {
         // Corrupt ring bearer
-        log(game.ringBearer + ' increases corruption by 1');
+        log(game, game.ringBearer + ' increases corruption by 1');
         game.players[game.ringBearer].corruption += 1;
         // Draw another tile
         advance_state('turn_reveal_tiles');
@@ -1107,7 +1103,7 @@ states.turn_resolve_tile = {
         push_advance_state('action_discard_group', { count: 1, type: 'card' });
     },
     resolve_event() {
-        log('resolve event ' + data.tiles[game.action.lasttile].type);
+        log(game, 'resolve event ' + data.tiles[game.action.lasttile].type);
         game.conflict.eventValue += 1;
         // TBD - resolve event
         // Next state
@@ -1120,14 +1116,14 @@ states.turn_resolve_tile = {
         }
     },
     resolve_corruption(p) {
-        log(p + ' increases corruption by 2');
+        log(game, p + ' increases corruption by 2');
         game.players[p].corruption += 2;
         // Draw another tile
         advance_state('turn_reveal_tiles');
     },
     resolve_sauron() {
         game.sauron -= 1;
-        log('Sauron moves to ' + game.sauron);
+        log(game, 'Sauron moves to ' + game.sauron);
         // Draw another tile
         advance_state('turn_reveal_tiles');
     },
@@ -1138,7 +1134,7 @@ states.turn_resolve_tile = {
             // Advance path
             game.conflict[path] += 1;
             // Get reward
-            if (resolve_reward(path) === false) {
+            if (resolve_reward(game, path) === false) {
                 // Need to roll dice and advance to next turn phase
                 //TBD - resolve roll dice
             } else {
@@ -1172,7 +1168,7 @@ states.turn_play = {
         } else if (game.action.phase === 'play') {
             buttons['pass'] = 'Pass';
             // Only allow player to play a valid card based on active quests/paths
-            const cardInfo = count_card_type_by_player(game.currentPlayer, get_board_active_quests(), game.action.filter);
+            const cardInfo = count_card_type_by_player(game, game.currentPlayer, get_board_active_quests(game), game.action.filter);
             return {
                 player: game.currentPlayer,
                 message: `Play ${game.action.count} cards`,
@@ -1203,10 +1199,10 @@ states.turn_play = {
     },
     card(cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
-        const cardValue = discard_card_from_player(game.currentPlayer, cardInt);
+        const cardValue = discard_card_from_player(game, game.currentPlayer, cardInt);
         if (cardValue >= 0) {
             // Create log record of transaction
-            log(`${game.currentPlayer} plays C${cardInt}`);
+            log(game, `${game.currentPlayer} plays C${cardInt}`);
             // Keep track of which card was played unless pippin is the current player
             const cardData = data.cards[cardInt];
             if (game.currentPlayer !== 'Pippin') {
@@ -1217,10 +1213,10 @@ states.turn_play = {
             const isFrodoWild = game.currentPlayer === 'Frodo' && cardData.type === 'white';
             if (cardData.quest === 'wild' || isFrodoWild) {
                 // Have user pick track
-                log('WILD');
+                log(game, 'WILD');
             } else {
                 // Auto advance track
-                log('NO-WILD');
+                log(game, 'NO-WILD');
             }
             // Decrease count and check if both cards were played
             game.action.count = game.action.count - 1;
@@ -1235,7 +1231,7 @@ states.turn_play = {
     },
     draw() {
         // Draw 2 cards
-        draw_x_cards(game.currentPlayer, 2);
+        draw_x_cards(game, game.currentPlayer, 2);
         // Action is complete
         game.action.phase = 'complete';
     },
@@ -1248,14 +1244,14 @@ states.turn_play = {
     },
     fini() {
         // Advance to next Player
-        game.currentPlayer = get_next_player(game.currentPlayer);
+        game.currentPlayer = get_next_player(game, game.currentPlayer);
         advance_state('new_player_turn');
     },
 };
 
 states.conflict_board_start = {
     init(a) {
-        log(`=t ${a.name}`);
+        log(game, `=t ${a.name}`);
 
         // Setup board
         game.loc = a.loc;
@@ -1300,7 +1296,7 @@ states.conflict_decent_into_darkness = {
     },
     next() {
         game.players[game.action.player].corruption += game.action.corruption;
-        log(
+        log(game,
             `${game.action.player} increases corruption by ${game.action.corruption} to ${game.players[game.action.player].corruption}`,
         );
         resume_previous_state();
@@ -1313,7 +1309,7 @@ states.conflict_board_end = {
         game.conflict.active = false;
         // Descent into darkness
         // Loop through each player and apply 1 corruption for each missing life token
-        const plist = get_active_players_in_order(game.ringBearer);
+        const plist = get_active_players_in_order(game, game.ringBearer);
         plist.reverse();
         for (const p of plist) {
             let lifeTokenCount = 0;
@@ -1335,7 +1331,7 @@ states.conflict_board_end = {
     },
     fini() {
         // Determine the next ring-bearer (current ring-bearer always loses ties)
-        let plist = get_active_players_in_order(game.ringBearer);
+        let plist = get_active_players_in_order(game, game.ringBearer);
         let winner = plist[0]; // start with first
         let maxRings = game.players[winner].ring;
 
@@ -1348,20 +1344,20 @@ states.conflict_board_end = {
         }
 
         // Make current player the new ring-bearer
-        log(`${winner} becomes the next ring-bearer`);
+        log(game, `${winner} becomes the next ring-bearer`);
         game.ringBearer = winner;
         game.currentPlayer = game.ringBearer;
 
         // Ring-bearer gets 2 new cards
-        draw_x_cards(game.ringBearer, 2);
+        draw_x_cards(game, game.ringBearer, 2);
 
         // Fatty if active gets 2 new cards
         if (game.players.Fatty.active) {
-            draw_x_cards('Fatty', 2);
+            draw_x_cards(game, 'Fatty', 2);
         }
 
         // Return all Heart, Sun, and Ring tokens to zero for each player
-        plist = get_active_players_in_order(game.currentPlayer);
+        plist = get_active_players_in_order(game, game.currentPlayer);
         for (const p of plist) {
             game.players[p].heart = 0;
             game.players[p].sun = 0;
@@ -1388,7 +1384,7 @@ states.conflict_board_end = {
 
 states.game_end_loss = {
     init(a) {
-        log('SAURON HAS WON');
+        log(game, 'SAURON HAS WON');
     },
     prompt() {
         return {
@@ -1399,7 +1395,7 @@ states.game_end_loss = {
 
 states.game_end_win = {
     init(a) {
-        log('The Free People have destroyed the RING');
+        log(game, 'The Free People have destroyed the RING');
     },
     prompt() {
         return {
@@ -1436,7 +1432,7 @@ states.global_debug_menu = {
         game.players[game.currentPlayer].shield += 1;
     },
     debug_reshuffle() {
-        reshuffle_deck();
+        reshuffle_deck(game);
     },
     debug_undo_queue() {
         console.log('--------------------');
@@ -1605,13 +1601,13 @@ function execute_button(g, buttonName, args) {
 /* Game Engine Functions */
 function check_end_of_game() {
     // No active players left
-    if (get_active_player_list().length == 0) {
-        log('All players have become corrupted');
+    if (get_active_player_list(game).length == 0) {
+        log(game, 'All players have become corrupted');
         advance_state('game_end_loss');
     }
     // No active players left
     if (game.players[game.ringBearer].active === false) {
-        log('The ring-bearer has become corrupted');
+        log(game, 'The ring-bearer has become corrupted');
         advance_state('game_end_loss');
     }
 }
@@ -1675,7 +1671,7 @@ function execute_state() {
         }
 
         // Determine if a players state has changed to inactive
-        update_player_active();
+        update_player_active(game);
 
         // Determine if the game has ended
         if (check_end_of_game() == true) {
