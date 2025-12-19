@@ -1,3 +1,5 @@
+import data from './data.js';
+
 //////////////////////
 /* Board function */
 

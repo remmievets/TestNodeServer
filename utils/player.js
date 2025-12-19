@@ -1,3 +1,6 @@
+import data from './data.js';
+import * as util from './util.js';
+
 //////////////////////
 /* Player functions */
 
@@ -115,7 +118,7 @@ export function update_player_active(game) {
             game.players[p].active = true;
         } else {
             // Send a message to the player indicating the change in state
-            log(game, `${p} has become corrupted by the ring`);
+            game.log.push(`${p} has become corrupted by the ring`);
             // Make player inactive
             game.players[p].active = false;
             // Discard all cards

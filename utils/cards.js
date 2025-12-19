@@ -1,3 +1,5 @@
+import * as util from './util.js';
+
 //////////////////////
 /* Card functions */
 
@@ -18,7 +20,7 @@ export function deal_card(game) {
 export function draw_x_cards(game, p, cnt) {
     for (let i = 0; i < cnt; i++) {
         let card = deal_card(game);
-        log(game, `C${card} given to ${p}`);
+        game.log.push(`C${card} given to ${p}`);
         util.set_add(game.players[p].hand, card);
     }
 }
