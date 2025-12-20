@@ -1,5 +1,4 @@
 import { create_deck, deal_card, draw_x_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
-import { get_board_active_quests, is_path_complete, resolve_reward } from '../utils/board.js';
 import {
     count_card_type_by_player,
     distribute_card_from_select,
@@ -133,7 +132,7 @@ const action_roll_die = {
     },
     prompt(ctx) {
         const buttons = {};
-        if (ctx.game.action.count === -1) {
+        if (ctx.game.action.count < 0) {
             buttons['roll'] = 'Roll';
         } else if (ctx.game.action.resolved === false) {
             buttons['resolve'] = 'Resolve';

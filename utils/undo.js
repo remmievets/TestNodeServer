@@ -3,8 +3,13 @@
 
 /// @brief Save a snapshot of the current game state.
 export function save_undo(game) {
-    if (!game.undo) game.undo = [];
-
+    if (!game) {
+        console.warn('save_undo called with undefined game');
+        return;
+    }
+    if (!Array.isArray(game.undo)) {
+        game.undo = [];
+    }
     // Deep copy of game without the undo stack itself
     let snapshot = structuredClone({ ...game, undo: undefined });
 

@@ -1,5 +1,4 @@
 import { create_deck, deal_card, draw_x_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
-import { get_board_active_quests, is_path_complete, resolve_reward } from '../utils/board.js';
 import {
     count_card_type_by_player,
     distribute_card_from_select,
@@ -12,6 +11,68 @@ import {
 import { save_undo, clear_undo, pop_undo } from '../utils/undo.js';
 import data from '../utils/data.js';
 import * as util from '../utils/util.js';
+
+//////////////////////
+/* Conflict Helper functions */
+
+function is_path_complete(game, path) {
+    const quest = data[game.loc][path]; // might be undefined
+    const progress = game.conflict[path];
+    let result;
+
+    if (!quest) {
+        // if path does not exist at all → consider it complete
+        result = true;
+    } else if (progress < quest.length - 1) {
+        result = false;
+    } else {
+        result = true;
+    }
+    return result;
+}
+
+function get_board_active_quests(game) {
+    const quests = data.tracks.filter((t) => !is_path_complete(game, t));
+    return quests;
+}
+
+function resolve_reward(ctx, path) {
+    const pathData = data[ctx.game.loc][path];
+    const curIndex = ctx.game.conflict[path];
+
+    switch (pathData[curIndex].action) {
+        case 'shield':
+        case 'ring':
+        case 'sun':
+        case 'heart':
+            ctx.game.players[ctx.game.currentPlayer][pathData[curIndex].action] += 1;
+            ctx.log(`${ctx.game.currentPlayer} receives a ${pathData[curIndex].action}`);
+            break;
+        case 'bigshield':
+            const shieldValue = ctx.game.shield.pop();
+            ctx.game.players[ctx.game.currentPlayer].shield += shieldValue;
+            ctx.log(`${ctx.game.currentPlayer} receives ${shieldValue} shields`);
+            break;
+        case 'heal':
+            if (ctx.game.players[ctx.game.currentPlayer].corruption > 0) {
+                ctx.game.players[ctx.game.currentPlayer].corruption -= 1;
+                ctx.log(`${ctx.game.currentPlayer} heals one corruption`);
+            }
+            break;
+        case 'roll':
+            ctx.log(`${ctx.game.currentPlayer} rolls a die??`);
+            ctx.push_advance_state('action_roll_die');
+            break;
+        case 'card':
+            ctx.log(`${ctx.game.currentPlayer} gets a card???`);
+            break;
+        default:
+            break;
+    }
+}
+
+//////////////////////
+/* Conflict States */
 
 const new_player_turn = {
     init(ctx, args) {
@@ -43,7 +104,7 @@ const turn_reveal_tiles = {
         const t = ctx.game.story.pop();
         ctx.log(ctx.game.currentPlayer + ' draws a tile');
         ctx.log('T' + t);
-        ctx.advance_state('turn_resolve_tile', { lasttile: t, number: 0 });
+        ctx.advance_state('turn_resolve_tile', { lasttile: t });
     },
 };
 
@@ -51,8 +112,6 @@ const turn_resolve_tile = {
     init(ctx, args) {
         // Save the tile we are attempting to resolve
         ctx.game.action.lasttile = args.lasttile;
-        // Keep track of count for discard (so far no discards)
-        ctx.game.action.number = args.number;
     },
     prompt(ctx) {
         // Build buttons dynamically
@@ -180,39 +239,59 @@ const turn_resolve_tile = {
         if (data[ctx.game.loc][path]) {
             // Advance path
             ctx.game.conflict[path] += 1;
-            // Get reward
-            if (resolve_reward(ctx.game, path) === false) {
-                // Need to roll dice and advance to next turn phase
-                //TBD - resolve roll dice
-            } else {
-                // Advance to next turn phase
-                //TBD - tile
-            }
-            ctx.advance_state('turn_play', 'first');
+            ctx.log(`${ctx.game.currentPlayer} advances on ${path}`);
+            // Advance to next turn phase
+            ctx.advance_state('turn_play_pick');
+            // Get reward - which may contain a side action and push state
+            resolve_reward(ctx, path);
         }
     },
 };
 
-const turn_play = {
-    init(ctx, args) {
-        if (a === 'first') {
-            ctx.game.action.phase = 'pick';
+const turn_play_pick = {
+    prompt(ctx) {
+        // Build buttons dynamically
+        const buttons = {};
+        buttons['play'] = 'Play cards';
+        buttons['draw'] = 'Draw 2 cards';
+        buttons['heal'] = 'Heal';
+        // Have player select an option - play/draw/heal
+        return {
+            player: ctx.game.currentPlayer,
+            message: 'Select option',
+            buttons,
+        };
+    },
+    play(ctx) {
+        // Allow player to select 2 cards to play
+        ctx.advance_state('turn_play_cards');
+    },
+    draw(ctx) {
+        // Draw 2 cards
+        draw_x_cards(ctx.game, ctx.game.currentPlayer, 2);
+        // Action is complete, advance to next Player
+        ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
+        ctx.advance_state('new_player_turn');
+    },
+    heal(ctx) {
+        if (ctx.game.players[ctx.game.currentPlayer].corruption > 0) {
+            ctx.game.players[ctx.game.currentPlayer].corruption -= 1;
         }
+        // Action is complete, advance to next Player
+        ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
+        ctx.advance_state('new_player_turn');
+    },
+};
+
+const turn_play_cards = {
+    init(ctx, args) {
+        ctx.game.action.filter = ['white', 'grey'];
+        ctx.game.action.count = 2;
     },
     prompt(ctx) {
         // Build buttons dynamically
         const buttons = {};
-        if (ctx.game.action.phase === 'pick') {
-            buttons['play'] = 'Play cards';
-            buttons['draw'] = 'Draw 2 cards';
-            buttons['heal'] = 'Heal';
-            // Have player select an option - play/draw/heal
-            return {
-                player: ctx.game.currentPlayer,
-                message: 'Select option',
-                buttons,
-            };
-        } else if (ctx.game.action.phase === 'play') {
+        if (ctx.game.action.count > 0) {
             buttons['pass'] = 'Pass';
             // Only allow player to play a valid card based on active quests/paths
             const cardInfo = count_card_type_by_player(
@@ -227,27 +306,15 @@ const turn_play = {
                 buttons,
                 cards: cardInfo.cardList.slice(),
             };
-        } else if (ctx.game.action.phase === 'path') {
-            buttons['pass'] = 'Pass';
-            return {
-                player: ctx.game.currentPlayer,
-                message: `Play ${ctx.game.action.count} cards`,
-                buttons,
-            };
         } else {
             // Completed playing cards - return null to end phase
             return null;
         }
     },
     pass(ctx) {
-        // Action is complete
-        ctx.game.action.phase = 'complete';
-    },
-    play(ctx) {
-        // Select two cards
-        ctx.game.action.phase = 'play';
-        ctx.game.action.filter = ['white', 'grey'];
-        ctx.game.action.count = 2;
+        // Advance to next Player
+        ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
+        ctx.advance_state('new_player_turn');
     },
     card(ctx, cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
@@ -257,47 +324,83 @@ const turn_play = {
             ctx.log(`${ctx.game.currentPlayer} plays C${cardInt}`);
             // Keep track of which card was played unless pippin is the current player
             const cardData = data.cards[cardInt];
+            // Pippin: can play any two cards
             if (ctx.game.currentPlayer !== 'Pippin') {
                 ctx.game.action.filter = ctx.game.action.filter.filter((t) => t !== cardData.type);
             }
-
+            // Decrease count and check if both cards were played
+            ctx.game.action.count -= 1;
+            // Create a variable for quest
+            let questPath = cardData.quest;
             // Frodo: treat white as wild
             const isFrodoWild = ctx.game.currentPlayer === 'Frodo' && cardData.type === 'white';
-            if (cardData.quest === 'wild' || isFrodoWild) {
+            if (isFrodoWild) {
                 // Have user pick track
-                ctx.log('WILD');
-            } else {
-                // Auto advance track
-                ctx.log('NO-WILD');
+                questPath = 'wild';
             }
-            // Decrease count and check if both cards were played
-            ctx.game.action.count = ctx.game.action.count - 1;
-            if (ctx.game.action.count === 0) {
-                // Action is complete
-                ctx.game.action.phase = 'complete';
-            }
+            // Advance on path with information from card
+            ctx.push_advance_state('turn_play_path', { path: questPath, value: cardValue });
         }
-    },
-    playcards(ctx, c) {
-        const card = parseInt(c[0], 10); // Convert to int if needed
-    },
-    draw(ctx) {
-        // Draw 2 cards
-        draw_x_cards(ctx.game, ctx.game.currentPlayer, 2);
-        // Action is complete
-        ctx.game.action.phase = 'complete';
-    },
-    heal(ctx) {
-        if (ctx.game.players[ctx.game.currentPlayer].corruption > 0) {
-            ctx.game.players[ctx.game.currentPlayer].corruption -= 1;
-        }
-        // Action is complete
-        ctx.game.action.phase = 'complete';
     },
     fini(ctx) {
         // Advance to next Player
         ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
         ctx.advance_state('new_player_turn');
+    },
+};
+
+const turn_play_path = {
+    init(ctx, args) {
+        // If path is complete then change to wild
+        if (is_path_complete(ctx.game, args.path) == true) {
+            ctx.game.action.paths = get_board_active_quests(ctx.game);
+        } else {
+            ctx.game.action.paths = [args.path];
+        }
+        ctx.game.action.count = args.value;
+        ctx.log(`${ctx.game.currentPlayer} can advance ${ctx.game.action.count} on ${ctx.game.action.paths}`);
+    },
+    prompt(ctx) {
+        // Build buttons dynamically
+        const buttons = {};
+        if (ctx.game.action.count > 0) {
+            // Create button for each path which is available
+            for (const p of ctx.game.action.paths) {
+                buttons[`resolve_path ${p}`] = `Advance as ${p}`;
+            }
+            return {
+                player: ctx.game.currentPlayer,
+                message: `Select path to advance by ${ctx.game.action.count} spaces`,
+                buttons,
+            };
+        } else {
+            // Completed playing cards - return null to end phase
+            return null;
+        }
+    },
+    resolve_path(ctx, t) {
+        const path = t[0];
+        // Advance on desired track and claim rewards/items
+        if (data[ctx.game.loc][path]) {
+            // Advance path
+            ctx.game.conflict[path] += 1;
+            ctx.log(`${ctx.game.currentPlayer} advances on ${path}`);
+            // Allow advance multiple spaces if needed
+            if (is_path_complete(ctx.game, path) === true) {
+                // Path is complete allow state to end
+                ctx.game.action.count = 0;
+            } else {
+                // Current path is not complete, so allow multiple actions on same path
+                ctx.game.action.count -= 1;
+                // Once path is selected then do not allow path to change
+                ctx.game.action.paths = [path];
+            }
+            // Get reward
+            resolve_reward(ctx, path);
+        }
+    },
+    fini(ctx) {
+        ctx.resume_previous_state();
     },
 };
 
@@ -439,7 +542,9 @@ export function conflict_states() {
         new_player_turn,
         turn_reveal_tiles,
         turn_resolve_tile,
-        turn_play,
+        turn_play_pick,
+        turn_play_cards,
+        turn_play_path,
         conflict_board_start,
         conflict_decent_into_darkness,
         conflict_board_end,

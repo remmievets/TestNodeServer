@@ -1,5 +1,4 @@
 import { create_deck, deal_card, draw_x_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
-import { get_board_active_quests, is_path_complete, resolve_reward } from '../utils/board.js';
 import {
     count_card_type_by_player,
     distribute_card_from_select,
