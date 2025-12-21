@@ -60,11 +60,14 @@ function resolve_reward(ctx, path) {
             }
             break;
         case 'roll':
-            ctx.log(`${ctx.game.currentPlayer} rolls a die??`);
             ctx.push_advance_state('action_roll_die');
             break;
         case 'card':
-            ctx.log(`${ctx.game.currentPlayer} gets a card???`);
+            const cardList = pathData[curIndex].cards;
+            for (const card of cardList) {
+                ctx.log(`C${card} given to ${ctx.game.currentPlayer}`);
+                util.set_add(ctx.game.players[ctx.game.currentPlayer].hand, card);
+            }
             break;
         default:
             break;
@@ -614,7 +617,7 @@ const conflict_board_end = {
                 ctx.advance_state('conflict_board_start', { name: 'Mordor', loc: 'mordor' });
                 break;
             case 'mordor':
-                ctx.advance_state('game_end_loss');
+                ctx.advance_state('global_game_end', { victory: true, reason: 'Completed mordor' });
                 break;
         }
     },

@@ -625,7 +625,7 @@ const data = {
             /// 11 (79)
             name: 'Eomer',
             type: 'white',
-            quest: 'friendship',
+            quest: 'fight',
             count: 2,
             deck: "Helm's Deep",
         },

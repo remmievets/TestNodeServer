@@ -14,8 +14,7 @@ import * as util from '../utils/util.js';
 
 function calculate_score(ctx) {
     let score = 0;
-    switch (ctx.game.loc)
-    {
+    switch (ctx.game.loc) {
         case 'bagend':
             score = 0;
             break;
@@ -57,7 +56,6 @@ const global_game_end = {
             // Plus the number of shields held by the players
             // TBD
         } else {
-
             ctx.game.score = calculate_score(ctx);
         }
         ctx.log(`Final scoure is ${ctx.game.score}`);
