@@ -158,8 +158,13 @@ Action List
 -   Shelob's lair events
 -   Mordor events
 - Winning game                      ***
-- Lose by final event               ***
+    - Destroy the ring state
 - Gollum card with die roll when played
+- If asked to discard and player does not have enough cards then player dies
+Rules
+Additionally, if at any time a player does not have enough cards
+or runes to pay a cost, he must discard everything he has and is
+immediately eliminated from the game.
 
 - Client Side
 -   When cards with a player are present then pull cards to top of play area

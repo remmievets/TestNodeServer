@@ -76,7 +76,7 @@ const action_discard_group = {
         let allCards = [];
 
         for (const p of players) {
-            const cardInfo = count_card_type_by_player(ctx.game, p, game.action.type);
+            const cardInfo = count_card_type_by_player(ctx.game, p, ctx.game.action.type);
             allCards.push(...cardInfo.cardList);
         }
 

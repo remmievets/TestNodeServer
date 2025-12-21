@@ -226,6 +226,9 @@ const turn_resolve_tile = {
         if (ctx.game.conflict.eventValue < 6) {
             // Draw another tile
             ctx.advance_state('turn_reveal_tiles');
+        } else if (ctx.game.loc === 'mordor') {
+            // TBD - Potentially temp depending on how that works out
+            ctx.advance_state('global_game_end', { victory: false, reason: 'Ring is mine event' });
         } else {
             // End of board
             ctx.advance_state('conflict_board_end');

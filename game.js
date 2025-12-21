@@ -38,6 +38,8 @@ const initialGame = {
     seed: 0,
     /// @brief True until the game ends
     active: true,
+    /// @brief Player score at the end of the game
+    score: 0,
     /// @brief Full deck of cards (hidden)
     deck: [],
     /// @brief All available gandalf cards
@@ -176,12 +178,12 @@ function check_end_of_game() {
     // No active players left
     if (get_active_player_list(game).length == 0) {
         log('All players have become corrupted');
-        advance_state('game_end_loss');
+        advance_state('global_game_end', { victory: false, reason: 'All players corrupted' });
     }
-    // No active players left
+    // Ring bearer was corrupted
     if (game.players[game.ringBearer].active === false) {
         log('The ring-bearer has become corrupted');
-        advance_state('game_end_loss');
+        advance_state('global_game_end', { victory: false, reason: 'Ring bearer corrupted' });
     }
 }
 

@@ -12,24 +12,59 @@ import { save_undo, clear_undo, pop_undo } from '../utils/undo.js';
 import data from '../utils/data.js';
 import * as util from '../utils/util.js';
 
-const game_end_loss = {
+function calculate_score(ctx) {
+    let score = 0;
+    switch (ctx.game.loc)
+    {
+        case 'bagend':
+            score = 0;
+            break;
+        case 'rivendell':
+            score = 0;
+            break;
+        case 'lothlorien':
+            score = 20;
+            break;
+        default:
+            const mainpath = data[ctx.game.loc].mainpath;
+            const pathspace = ctx.game.conflict[mainpath];
+            score = data[ctx.game.loc][mainpath][pathspace];
+            break;
+    }
+    return score;
+}
+
+const global_game_end = {
     init(ctx, args) {
-        ctx.log('SAURON HAS WON');
+        // Inform player of situation
+        ctx.log('=t GAME OVER');
+        ctx.log('=! ' + args.reason);
+        if (args.victory) {
+            ctx.log('The Free People have destroyed the RING!!');
+            ctx.game.action.message = 'GAME OVER - WON';
+        } else {
+            ctx.log('SAURON HAS WON');
+            ctx.game.action.message = 'GAME OVER - LOST';
+        }
+        // Prevent game changes
+        clear_undo(ctx.game);
+        ctx.game.stateQueue = [];
+        // Make game inactive
+        ctx.game.active = false;
+        // Calculate final score
+        if (args.victory) {
+            ctx.game.score = 60;
+            // Plus the number of shields held by the players
+            // TBD
+        } else {
+
+            ctx.game.score = calculate_score(ctx);
+        }
+        ctx.log(`Final scoure is ${ctx.game.score}`);
     },
     prompt(ctx) {
         return {
-            message: 'GAME OVER - LOST',
-        };
-    },
-};
-
-const game_end_win = {
-    init(a) {
-        ctx.log('The Free People have destroyed the RING');
-    },
-    prompt() {
-        return {
-            message: 'GAME OVER - WON',
+            message: ctx.game.action.message,
         };
     },
 };
@@ -96,8 +131,7 @@ const global_debug_menu = {
 
 export function global_states() {
     return {
-        game_end_loss,
-        game_end_win,
+        global_game_end,
         global_debug_menu,
     };
 }
