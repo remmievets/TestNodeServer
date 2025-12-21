@@ -404,6 +404,62 @@ const turn_play_path = {
     },
 };
 
+const turn_play_ring = {
+    init(ctx, args) {
+        const symbolsSam = [0, 1, 1, 1, 1, 1, 0];
+        const symbolsOth = [0, 1, 2, 3, 2, 1, 0];
+        // Roll die for ring
+        ctx.game.action.roll = util.roll_d6();
+        // Movement from ring is 4 - die roll symbols
+        if (ctx.game.ringBearer === 'Sam') {
+            ctx.game.action.count = 4 - symbolsSam[ctx.game.action.roll];
+        } else {
+            ctx.game.action.count = 4 - symbolsOth[ctx.game.action.roll];
+        }
+        // Resolve die roll results
+        ctx.push_advance_state('action_roll_die', { player: ctx.game.ringBearer, roll: ctx.game.action.roll });
+        // Mark ring used
+        ctx.game.conflict.ringUsed = true;
+    },
+    prompt(ctx) {
+        // Build buttons dynamically
+        const buttons = {};
+        if (ctx.game.action.count > 0) {
+            // Create button for each path which is available
+            for (const p of get_board_active_quests(ctx.game)) {
+                buttons[`resolve_path ${p}`] = `Advance as ${p}`;
+            }
+            return {
+                player: ctx.game.ringBearer,
+                message: `Select path to advance by ${ctx.game.action.count} spaces`,
+                buttons,
+            };
+        } else {
+            // Completed playing cards - return null to end phase
+            return null;
+        }
+    },
+    resolve_path(ctx, t) {
+        const path = t[0];
+        // Advance on desired track and ignore rewards
+        if (data[ctx.game.loc][path]) {
+            // Provide log
+            ctx.log(`${ctx.game.currentPlayer} advances on ${path}`);
+            // Advance path
+            ctx.game.conflict[path] += ctx.game.action.count;
+            // Check for path overflow
+            if (ctx.game.conflict[path] > data[ctx.game.loc][path].length) {
+                ctx.game.conflict[path] = data[ctx.game.loc][path].length - 1;
+            }
+            // Path is complete allow state to end
+            ctx.game.action.count = 0;
+        }
+    },
+    fini(ctx) {
+        ctx.resume_previous_state();
+    },
+};
+
 const conflict_board_start = {
     init(ctx, args) {
         ctx.log(`=t ${args.name}`);
@@ -545,6 +601,7 @@ export function conflict_states() {
         turn_play_pick,
         turn_play_cards,
         turn_play_path,
+        turn_play_ring,
         conflict_board_start,
         conflict_decent_into_darkness,
         conflict_board_end,

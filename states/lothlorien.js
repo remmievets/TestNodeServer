@@ -138,7 +138,7 @@ const lothlorien_test_of_gladriel = {
         ctx.game.action.count = ctx.game.action.count - 1;
         const np = get_next_player(ctx.game, ctx.game.currentPlayer);
         ctx.advance_state('lothlorien_test_of_gladriel', { p: np, cnt: ctx.game.action.count });
-        ctx.push_advance_state('action_roll_die', { roll_skip: true });
+        ctx.push_advance_state('action_roll_die', { roll: util.roll_d6() });
     },
     card(ctx, cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed

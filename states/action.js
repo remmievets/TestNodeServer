@@ -112,20 +112,10 @@ const action_roll_die = {
     init(ctx, args) {
         // Save parameters
         ctx.game.action.player = args.player ?? ctx.game.currentPlayer;
-        ctx.game.action.ring = args.ring ?? false;
-        ctx.game.action.roll_skip = args.roll_skip ?? false;
-        // If ring then
-        if (ctx.game.action.ring) {
-            // Mark it used
-            ctx.game.conflict.ringUsed = true;
-        }
-        if (ctx.game.action.roll_skip) {
+        ctx.game.action.count = args.roll ?? -1;
+        if (ctx.game.action.count > 0) {
             // Skip dialog to roll dice
-            ctx.game.action.count = util.roll_d6();
             ctx.log(ctx.game.action.player + ' rolls a D' + ctx.game.action.count);
-        } else {
-            // Die has not been rolled yet
-            ctx.game.action.count = -1;
         }
         // Resolution of die has not been completed
         ctx.game.action.resolved = false;
@@ -136,8 +126,6 @@ const action_roll_die = {
             buttons['roll'] = 'Roll';
         } else if (ctx.game.action.resolved === false) {
             buttons['resolve'] = 'Resolve';
-        } else if (ctx.game.action.ring === true) {
-            buttons['ringit'] = 'RING ME';
         } else {
             return null;
         }
@@ -194,10 +182,6 @@ const action_roll_die = {
                 // No damage
                 break;
         }
-    },
-    ringit(ctx) {
-        // TBD - Figure out which track to advance on
-        ctx.resume_previous_state();
     },
     fini(ctx) {
         ctx.resume_previous_state();

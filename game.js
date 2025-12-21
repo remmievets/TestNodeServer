@@ -119,7 +119,7 @@ function setup_game() {
 /* Global game specific functions */
 
 function use_ring_handler() {
-    push_advance_state('action_roll_die', { player: game.ringBearer, ring: true });
+    push_advance_state('turn_play_ring');
 }
 
 function yellow_handler() {
