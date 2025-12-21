@@ -939,6 +939,7 @@ const data = {
         fatty: [50, 50],
     },
     moria: {
+        mainpath: 'fight',
         fight: [
             { x: 553, y: 536 },
             { x: 643, y: 498, action: 'shield' },
@@ -983,6 +984,7 @@ const data = {
         ],
     },
     helmsdeep: {
+        mainpath: 'fight',
         fight: [
             { x: 400, y: 233 },
             { x: 477, y: 287, action: 'shield' },
@@ -1030,6 +1032,7 @@ const data = {
         ],
     },
     shelobslair: {
+        mainpath: 'fight',
         fight: [
             { x: 456, y: 522 },
             { x: 523, y: 458, action: 'shield' },
@@ -1077,6 +1080,7 @@ const data = {
         ],
     },
     mordor: {
+        mainpath: 'travel',
         travel: [
             { x: 401, y: 486 },
             { x: 481, y: 454, action: 'shield' },

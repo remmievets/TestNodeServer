@@ -147,39 +147,23 @@ Actions which can be pushed and interrupt a state
 
 Action List
 
-- turn_reveal_tiles
-    - use_ring - Need to implement
-- turn_resolve_tile
-    - event_life - discard 1 card, 1 life token, 1 shield as a group
-    - use_ring - Need to implement
-    - resolve_path - claim rewards
-    - resolve_event - implement resolution to events
-- turn_play
-    - ??
+- Buy/play gandalf cards
+- Play yellow cards
+- discard life tokens for events    ***
+- discard shields for events        ***
+- Give player card as reward        ***
+- Resolve event
+-   Moria events
+-   Helms deep events
+-   Shelob's lair events
+-   Mordor events
+- Winning game                      ***
+- Lose by final event               ***
+- Gollum card with die roll when played
 
-- Create function for advancement on path (use for story tile / card play)
-    - move marker
-    - give rewards
-- Create function to check for end of conflict board
-    - Ends when main path is complete
-    - Ends after event 6 is processed
-- Story tile stuff remaining
-    - advancement on path for good tiles
-    - handling event resolution or move to event resolution state
-    - Handling of remove 3 items event tiles
-- Turn actions
-    - Play 2 cards (one grey/one white)
-    - Heal 1 space
-    - Draw 2 cards
-
-- Global buttons
-    - use_ring
-        - When on a conflict board and ring is not yet used
-    - Play Yellow Card
-        - Anytime a player has > 5 shields can play gandalf card
-        - Anytime
-        
-- action_roll_die (action=ring arg)
--   Do rewards if ring is used
-- action_resolve_die
-- Maybe (action_discard)
+- Client Side
+-   When cards with a player are present then pull cards to top of play area
+-   Allow hide of board?
+-   Add corruption value to side display
+- Show gandalf cards
+- Popup text for cards with card text on yellow cards

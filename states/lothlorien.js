@@ -45,8 +45,8 @@ const lothlorien_gladriel = {
 
 const lothlorien_recovery = {
     init(ctx, args) {
-        log('=! Recovery');
-        log('EACH PLAYER: May discard 2 shields to either draw 2 hobbit cards or heal');
+        ctx.log('=! Recovery');
+        ctx.log('EACH PLAYER: May discard 2 shields to either draw 2 hobbit cards or heal');
         ctx.game.currentPlayer = ctx.game.ringBearer;
         ctx.game.action.count = get_active_player_list(ctx.game).length;
     },

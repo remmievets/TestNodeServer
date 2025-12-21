@@ -71,6 +71,16 @@ function resolve_reward(ctx, path) {
     }
 }
 
+function check_end_of_mainpath(ctx) {
+    const path = data[ctx.game.loc].mainpath;
+    if (is_path_complete(ctx.game, path)) {
+        // Main path is complete, so transition to end of board
+        ctx.advance_state('conflict_board_end');
+        return true;
+    }
+    return false;
+}
+
 //////////////////////
 /* Conflict States */
 
@@ -249,6 +259,10 @@ const turn_resolve_tile = {
 };
 
 const turn_play_pick = {
+    init(ctx, args) {
+        // Verify that main path is still valid
+        check_end_of_mainpath(ctx);
+    },
     prompt(ctx) {
         // Build buttons dynamically
         const buttons = {};
@@ -400,7 +414,10 @@ const turn_play_path = {
         }
     },
     fini(ctx) {
-        ctx.resume_previous_state();
+        // Check for end of board
+        if (check_end_of_mainpath(ctx) === false) {
+            ctx.resume_previous_state();
+        }
     },
 };
 
@@ -453,6 +470,8 @@ const turn_play_ring = {
             }
             // Path is complete allow state to end
             ctx.game.action.count = 0;
+            // Check for end of board
+            check_end_of_mainpath(ctx);
         }
     },
     fini(ctx) {
@@ -516,8 +535,12 @@ const conflict_decent_into_darkness = {
 
 const conflict_board_end = {
     init(ctx, args) {
+        ctx.log('=t Board ends');
+        ctx.log('=! Descent into darkness');
         // Conflict board is no longer active
         ctx.game.conflict.active = false;
+        // Clear state queue
+        ctx.game.stateQueue = [];
         // Descent into darkness
         // Loop through each player and apply 1 corruption for each missing life token
         const plist = get_active_players_in_order(ctx.game, ctx.game.ringBearer);
@@ -541,6 +564,7 @@ const conflict_board_end = {
         }
     },
     fini(ctx) {
+        ctx.log('=! Determine Ring-Bearer');
         // Determine the next ring-bearer (current ring-bearer always loses ties)
         let plist = get_active_players_in_order(ctx.game, ctx.game.ringBearer);
         let winner = plist[0]; // start with first
@@ -557,7 +581,7 @@ const conflict_board_end = {
         // Make current player the new ring-bearer
         ctx.log(`${winner} becomes the next ring-bearer`);
         ctx.game.ringBearer = winner;
-        ctx.game.currentPlayer = game.ringBearer;
+        ctx.game.currentPlayer = ctx.game.ringBearer;
 
         // Ring-bearer gets 2 new cards
         draw_x_cards(ctx.game, ctx.game.ringBearer, 2);
