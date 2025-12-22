@@ -19,7 +19,7 @@ const rivendell_elrond = {
         ctx.log('=! Elrond');
         ctx.log('Deal feature cards');
         let featureDeck = [];
-        create_deck(featureDeck, 102, 113);
+        create_deck(featureDeck, data.RIVENDELL_DECK[0], data.RIVENDELL_DECK[1]);
         util.shuffle(featureDeck);
 
         // Players in order

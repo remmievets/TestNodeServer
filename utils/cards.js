@@ -41,7 +41,7 @@ export function set_of_player_cards(game) {
 // Reshuffle quest cards 0-59.  Make sure to remove cards that are already in players hands.
 export function reshuffle_deck(game) {
     // Rebuild entire deck of initial quest cards
-    create_deck(game.deck, 0, 59);
+    create_deck(game.deck, data.QUEST_DECK[0], data.QUEST_DECK[1]);
     // Collect all cards from all players’ hands
     let cardsInHands = set_of_player_cards(game);
     // Filter out any cards that are in players’ hands

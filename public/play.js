@@ -74,6 +74,7 @@ let ui = {
     hand_select: document.getElementById('hand_select'),
 
     sauron: document.getElementById('info_sauron'),
+    gandalf_hand: document.getElementById('cards_gandalf'),
 
     players: {
         frodo: {
@@ -241,6 +242,14 @@ function on_init(view) {
     show_piece_at(ui.tokens_element, ui.sauron_marker, data.board[space][0] + 25, data.board[space][1] + 75);
 
     ui.sauron.textContent = 'Sauron ' + view.sauron;
+
+    // Gandalf cards
+    ui.gandalf_hand.replaceChildren();
+    for (const card of view.gandalf) {
+        const cardDiv = document.createElement('div');
+        cardDiv.classList.add('card', `card_${card}`);
+        ui.gandalf_hand.appendChild(cardDiv);
+    }
 
     // Fellowship location
     if (!ui.location_marker) {

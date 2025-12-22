@@ -103,11 +103,11 @@ function setup_game() {
     util.set_seed(game.seed);
 
     // Create deck of cards
-    create_deck(game.deck, 0, 59);
+    create_deck(game.deck, data.QUEST_DECK[0], data.QUEST_DECK[1]);
     util.shuffle(game.deck);
 
     // Create deck of gandalf cards
-    create_deck(game.gandalf, 0, 7);
+    create_deck(game.gandalf, data.GANDALF_DECK[0], data.GANDALF_DECK[1]);
 
     // Create a special shield list with 2 of each shield type for end of board bonus
     game.shield = [1, 1, 2, 2, 3, 3];

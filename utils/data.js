@@ -1,4 +1,9 @@
 const data = {
+    QUEST_DECK: [0, 59],
+    GANDALF_DECK: [60, 66],
+    GANDALF_DECK_FOES: [60, 67],
+    RIVENDELL_DECK: [102, 113],
+    LOTHLORIEN_DECK: [85, 96],
     cards: [
         {
             /// 0

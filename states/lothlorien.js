@@ -19,7 +19,7 @@ const lothlorien_gladriel = {
         ctx.log('=! Gladriel');
         ctx.log('Deal feature cards');
         let featureDeck = [];
-        create_deck(featureDeck, 85, 96);
+        create_deck(featureDeck, data.LOTHLORIEN_DECK[0], data.LOTHLORIEN_DECK[1]);
         util.shuffle(featureDeck);
 
         // Players in order
