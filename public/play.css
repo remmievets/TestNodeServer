@@ -144,7 +144,7 @@ main {
 	grid-row: 1;
 }
 
-.frodo { background-color: hsl(60, 100%, 50%) }
+.frodo { background-color: hsla(60, 100%, 50%, 0.627) }
 .sam { background-color: hsl(0, 100%, 65%) }
 .pippin { background-color: hsl(120, 100%, 40%) }
 .merry { background-color: hsl(240, 100%, 70%) }
@@ -315,6 +315,11 @@ main {
 	box-shadow: 0 0 0 3px yellow;
 }
 
+/* Frodo override */
+#hand_frodo .card.action {
+    box-shadow: 0 0 0 3px deepskyblue;
+}
+
 .card.selected {
 	box-shadow: 0 0 0 3px red;
 }
@@ -355,6 +360,10 @@ main {
 	font-weight: bold;
 	margin-bottom: 0.5rem;
 	color: black;
+}
+
+.active-hand {
+    outline: 2px solid gold;
 }
 
 /* IMAGES @1X */

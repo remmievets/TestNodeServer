@@ -6,10 +6,10 @@
 
 function toggle_counters() {
     // Cycle between showing the board and hiding the board
-    if (ui.board.classList.contains("hidden")) {
-        ui.board.classList.remove("hidden");
+    if (ui.board.classList.contains('hidden')) {
+        ui.board.classList.remove('hidden');
     } else {
-        ui.board.classList.add("hidden");
+        ui.board.classList.add('hidden');
     }
 }
 
@@ -41,6 +41,7 @@ const CARDS = data.cards;
 /* ANIMATION */
 
 /* BUILD UI */
+let activePlayer = '';
 
 let ui = {
     favicon: document.getElementById('favicon'),
@@ -126,7 +127,43 @@ let ui = {
             marker: null,
         },
     },
+    hand_home: {},
 };
+
+function cacheHandHomes() {
+    Object.entries(ui.players).forEach(([playerId, player]) => {
+        if (!player.hand) return;
+
+        // cards_frodo -> hand_frodo
+        const handWrapper = player.hand.closest('.player-hand');
+        if (!handWrapper) return;
+
+        ui.hand_home[playerId] = {
+            wrapper: handWrapper,
+            parent: handWrapper.parentElement,
+            nextSibling: handWrapper.nextElementSibling,
+        };
+    });
+}
+cacheHandHomes();
+
+function moveHandToSelect(playerId) {
+    const home = ui.hand_home[playerId];
+    if (!home) return;
+
+    ui.select.appendChild(home.wrapper);
+}
+
+function returnHand(playerId) {
+    const home = ui.hand_home[playerId];
+    if (!home) return;
+
+    if (home.nextSibling) {
+        home.parent.insertBefore(home.wrapper, home.nextSibling);
+    } else {
+        home.parent.appendChild(home.wrapper);
+    }
+}
 
 function reset_all_card_states() {
     const cards = document.querySelectorAll('.card.action, .card.selected');
@@ -195,9 +232,6 @@ function on_init(view) {
 
     scroll_log_to_end();
     // LOG END
-
-    // Update last played card
-    // TBD
 
     // Sauron location
     if (!ui.sauron_marker) {
@@ -328,9 +362,18 @@ function on_init(view) {
             }
         }
 
+        // Undo active player hand
+        if (activePlayer !== '') {
+            returnHand(activePlayer);
+            activePlayer = '';
+        }
         // Update if there are selectable cards or not
         if (view.prompt.cards) {
             enable_card_selection(view.prompt.cards);
+            if (view.prompt.player) {
+                activePlayer = view.prompt.player.toLowerCase();
+                moveHandToSelect(activePlayer);
+            }
             //send_action("DISTRIBUTE", `${view.prompt.action.cards[0]} Frodo`);
         } else {
             reset_all_card_states();

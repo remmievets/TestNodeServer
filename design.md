@@ -19,6 +19,5 @@ or runes to pay a cost, he must discard everything he has and is
 immediately eliminated from the game.
 
 - Client Side
--   When cards with a player are present then pull cards to top of play area
 - Show gandalf cards
 - Popup text for cards with card text on yellow cards
