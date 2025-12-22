@@ -21,3 +21,5 @@ immediately eliminated from the game.
 - Client Side
 - Show gandalf cards
 - Popup text for cards with card text on yellow cards
+
+Errors

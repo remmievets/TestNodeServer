@@ -92,22 +92,17 @@ const rivendell_council = {
         }
 
         // Advance to next state
-        ctx.advance_state('rivendell_fellowship', 'first');
+        ctx.advance_state('rivendell_fellowship');
     },
 };
 
 const rivendell_fellowship = {
     init(ctx, args) {
-        if (args === 'first') {
-            ctx.log('=! Fellowship');
-            ctx.log('EACH PLAYER: Discard 1 friendship or roll die');
-            ctx.game.currentPlayer = ctx.game.ringBearer;
-            ctx.game.action.count = get_active_player_list(ctx.game).length;
-        } else {
-            // Come back into this state from roll action
-            ctx.game.action.count = args.cnt;
-            ctx.game.currentPlayer = args.p;
-        }
+        ctx.log('=! Fellowship');
+        ctx.log('EACH PLAYER: Discard 1 friendship or roll die');
+        ctx.game.currentPlayer = ctx.game.ringBearer;
+        ctx.game.action.count = get_active_player_list(ctx.game).length;
+        ctx.game.action.player = ctx.game.currentPlayer;
     },
     prompt(ctx) {
         if (ctx.game.action.count > 0) {
@@ -116,9 +111,9 @@ const rivendell_fellowship = {
                 roll: 'Roll',
             };
 
-            const cardInfo = count_card_type_by_player(ctx.game, ctx.game.currentPlayer, 'friendship');
+            const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, 'friendship');
             return {
-                player: ctx.game.currentPlayer,
+                player: ctx.game.action.player,
                 message: 'Discard friendship or roll',
                 buttons,
                 cards: cardInfo.cardList.slice(),
@@ -129,20 +124,22 @@ const rivendell_fellowship = {
     },
     card(ctx, cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
-        if (discard_card_from_player(ctx.game, ctx.game.currentPlayer, cardInt) >= 0) {
+        if (discard_card_from_player(ctx.game, ctx.game.action.player, cardInt) >= 0) {
             // Create log record of transaction
-            ctx.log(`${ctx.game.currentPlayer} discards C${cardInt}`);
+            ctx.log(`${ctx.game.action.player} discards C${cardInt}`);
             // Decrease count and advance to next player
             ctx.game.action.count = ctx.game.action.count - 1;
-            ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
+            ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
         }
     },
     roll(ctx) {
-        // Setup to come back to this state
-        game.action.count = ctx.game.action.count - 1;
-        const np = get_next_player(ctx.game, ctx.game.currentPlayer);
-        ctx.advance_state('rivendell_fellowship', { p: np, cnt: ctx.game.action.count });
-        ctx.push_advance_state('action_roll_die', { roll: util.roll_d6() });
+        // Save current player
+        const cp = ctx.game.action.player;
+        // Decrease cpimt amd advamce to next player
+        ctx.game.action.count = ctx.game.action.count - 1;
+        ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
+        // Push action to roll die with player prior to switching players
+        ctx.push_advance_state('action_roll_die', { player: cp, roll: util.roll_d6() });
     },
     fini(ctx) {
         ctx.advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
