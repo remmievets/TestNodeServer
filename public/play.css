@@ -149,6 +149,7 @@ main {
 .pippin { background-color: hsl(120, 100%, 40%) }
 .merry { background-color: hsl(240, 100%, 70%) }
 .fatty { background-color: hsl(30, 100%, 50%) }
+.sauron { background-color: hsl(194, 42%, 6%); color: white }
 
 .role {
 	cursor: pointer;
@@ -347,14 +348,13 @@ main {
 	padding: 0.5rem;
 	border: 1px solid #555;
 	border-radius: 0.5rem;
-	background: #333;
 	width: 1650px;
 }
 
 .player-name {
 	font-weight: bold;
 	margin-bottom: 0.5rem;
-	color: #fff;
+	color: black;
 }
 
 /* IMAGES @1X */

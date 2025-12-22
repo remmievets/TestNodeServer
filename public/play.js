@@ -4,20 +4,13 @@
     global view, data, roles, send_action, action_button
 */
 
-// TODO: show "reshuffle" flag next to card deck display
-
 function toggle_counters() {
-    // Cycle between showing everything, only markers, and nothing.
-    /*
-    if (ui.map.classList.contains("hide_markers")) {
-        ui.map.classList.remove("hide_markers")
-        ui.map.classList.remove("hide_pieces")
-    } else if (ui.map.classList.contains("hide_pieces")) {
-        ui.map.classList.add("hide_markers")
+    // Cycle between showing the board and hiding the board
+    if (ui.board.classList.contains("hidden")) {
+        ui.board.classList.remove("hidden");
     } else {
-        ui.map.classList.add("hide_pieces")
+        ui.board.classList.add("hidden");
     }
-    */
 }
 
 /* COMMON */
@@ -61,6 +54,7 @@ let ui = {
     hand: document.getElementById('hand'),
     mapw: document.getElementById('mapwrap'),
     map: document.getElementById('map'),
+    board: document.getElementById('board'),
 
     last_played: document.getElementById('last_played'),
     tokens_element: document.getElementById('tokens'),
@@ -78,6 +72,8 @@ let ui = {
 
     hand_select: document.getElementById('hand_select'),
 
+    sauron: document.getElementById('info_sauron'),
+
     players: {
         frodo: {
             hand: document.getElementById('cards_frodo'),
@@ -85,6 +81,8 @@ let ui = {
             heart: document.getElementById('heart_1_text'),
             sun: document.getElementById('sun_1_text'),
             shield: document.getElementById('shields_1_text'),
+            corruption: document.getElementById('user_1'),
+            info: document.getElementById('info_1'),
             marker: null,
         },
         sam: {
@@ -93,6 +91,8 @@ let ui = {
             heart: document.getElementById('heart_2_text'),
             sun: document.getElementById('sun_2_text'),
             shield: document.getElementById('shields_2_text'),
+            corruption: document.getElementById('user_2'),
+            info: document.getElementById('info_2'),
             marker: null,
         },
         pippin: {
@@ -101,6 +101,8 @@ let ui = {
             heart: document.getElementById('heart_3_text'),
             sun: document.getElementById('sun_3_text'),
             shield: document.getElementById('shields_3_text'),
+            corruption: document.getElementById('user_3'),
+            info: document.getElementById('info_3'),
             marker: null,
         },
         merry: {
@@ -109,6 +111,8 @@ let ui = {
             heart: document.getElementById('heart_4_text'),
             sun: document.getElementById('sun_4_text'),
             shield: document.getElementById('shields_4_text'),
+            corruption: document.getElementById('user_4'),
+            info: document.getElementById('info_4'),
             marker: null,
         },
         fatty: {
@@ -117,6 +121,8 @@ let ui = {
             heart: document.getElementById('heart_5_text'),
             sun: document.getElementById('sun_5_text'),
             shield: document.getElementById('shields_5_text'),
+            corruption: document.getElementById('user_5'),
+            info: document.getElementById('info_5'),
             marker: null,
         },
     },
@@ -200,6 +206,8 @@ function on_init(view) {
     let space = 'track_' + view.sauron;
     show_piece_at(ui.tokens_element, ui.sauron_marker, data.board[space][0] + 25, data.board[space][1] + 75);
 
+    ui.sauron.textContent = 'Sauron ' + view.sauron;
+
     // Fellowship location
     if (!ui.location_marker) {
         ui.location_marker = build_piece('marker grey');
@@ -224,6 +232,16 @@ function on_init(view) {
         ui.players[p].heart.textContent = view.players[player].heart;
         ui.players[p].sun.textContent = view.players[player].sun;
         ui.players[p].shield.textContent = view.players[player].shield;
+        if (view.players[player].active) {
+            ui.players[p].corruption.textContent = view.players[player].corruption;
+        } else {
+            ui.players[p].corruption.textContent = 'D';
+        }
+        if (view.ringBearer === player) {
+            ui.players[p].info.textContent = 'Ring';
+        } else {
+            ui.players[p].info.textContent = '';
+        }
 
         // Update player markers
         if (!ui.players[p].marker) {
@@ -255,7 +273,7 @@ function on_init(view) {
 
     // Update tokens on map
     ui.markers_element.replaceChildren();
-    if (view.loc in data) {
+    if (view.conflict.active) {
         // Make sure location is viewable
         ui.map.className = view.loc;
         ui.mapw.className = '';
