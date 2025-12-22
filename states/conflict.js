@@ -7,6 +7,8 @@ import {
     get_next_player,
     get_active_players_in_order,
     update_player_active,
+    count_total_life_token,
+    count_total_shields,
 } from '../utils/player.js';
 import { save_undo, clear_undo, pop_undo } from '../utils/undo.js';
 import data from '../utils/data.js';
@@ -152,8 +154,11 @@ const turn_resolve_tile = {
             case 'event_life':
                 // Discard 1 card, 1 life token, 1 shield as a group
                 // Make sure the group has the required items to discard
-                if (set_of_player_cards(ctx.game).size >= 1) {
-                    // TBD - Make sure 1 life token and 1 shield
+                if (
+                    set_of_player_cards(ctx.game).size >= 1 &&
+                    count_total_life_token(ctx.game) >= 1 &&
+                    count_total_shields(ctx.game) >= 1
+                ) {
                     buttons['avoid_event_items'] = 'Discard Items';
                 }
                 // Default action

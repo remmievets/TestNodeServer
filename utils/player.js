@@ -112,8 +112,8 @@ export function get_active_players_in_order(game, p) {
 }
 
 export function update_player_active(game) {
-    let pArray = get_active_player_list(game);
-    for (let p of pArray) {
+    const pArray = get_active_player_list(game);
+    for (const p of pArray) {
         if (game.players[p].corruption < game.sauron) {
             game.players[p].active = true;
         } else {
@@ -125,4 +125,22 @@ export function update_player_active(game) {
             util.set_clear(game.players[p].hand);
         }
     }
+}
+
+export function count_total_life_token(game) {
+    let result = 0;
+    const pArray = get_active_player_list(game);
+    for (const p of pArray) {
+        result += game.players[p].ring + game.players[p].heart + game.players[p].sun;
+    }
+    return result;
+}
+
+export function count_total_shields(game) {
+    let result = 0;
+    const pArray = get_active_player_list(game);
+    for (const p of pArray) {
+        result += game.players[p].shield;
+    }
+    return result;
 }
