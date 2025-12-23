@@ -1,8 +1,15 @@
-import { create_deck, deal_card, draw_x_cards, give_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
+import {
+    create_deck,
+    deal_card,
+    give_cards,
+    draw_cards,
+    discard_cards,
+    set_of_player_cards,
+    reshuffle_deck,
+} from '../utils/cards.js';
 import {
     count_card_type_by_player,
     distribute_card_from_select,
-    discard_card_from_player,
     get_active_player_list,
     get_next_player,
     get_active_players_in_order,
@@ -288,7 +295,7 @@ const turn_play_pick = {
     },
     draw(ctx) {
         // Draw 2 cards
-        draw_x_cards(ctx.game, ctx.game.currentPlayer, 2);
+        draw_cards(ctx.game, ctx.game.currentPlayer, 2);
         // Action is complete, advance to next Player
         ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
         ctx.advance_state('new_player_turn');
@@ -338,7 +345,7 @@ const turn_play_cards = {
     },
     card(ctx, cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
-        const cardValue = discard_card_from_player(ctx.game, ctx.game.currentPlayer, cardInt);
+        const cardValue = discard_cards(ctx.game, ctx.game.currentPlayer, cardInt);
         if (cardValue >= 0) {
             // Create log record of transaction
             ctx.log(`${ctx.game.currentPlayer} plays C${cardInt}`);
@@ -590,11 +597,11 @@ const conflict_board_end = {
         ctx.game.currentPlayer = ctx.game.ringBearer;
 
         // Ring-bearer gets 2 new cards
-        draw_x_cards(ctx.game, ctx.game.ringBearer, 2);
+        draw_cards(ctx.game, ctx.game.ringBearer, 2);
 
         // Fatty if active gets 2 new cards
         if (ctx.game.players.Fatty.active) {
-            draw_x_cards(ctx.game, 'Fatty', 2);
+            draw_cards(ctx.game, 'Fatty', 2);
         }
 
         // Return all Heart, Sun, and Ring tokens to zero for each player

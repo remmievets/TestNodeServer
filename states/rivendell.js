@@ -1,8 +1,15 @@
-import { create_deck, deal_card, draw_x_cards, give_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
+import {
+    create_deck,
+    deal_card,
+    give_cards,
+    draw_cards,
+    discard_cards,
+    set_of_player_cards,
+    reshuffle_deck,
+} from '../utils/cards.js';
 import {
     count_card_type_by_player,
     distribute_card_from_select,
-    discard_card_from_player,
     get_active_player_list,
     get_next_player,
     get_active_players_in_order,
@@ -31,8 +38,7 @@ const rivendell_elrond = {
         while (featureDeck.length > 0) {
             const player = porder[i % porder.length];
             let card = featureDeck.pop();
-            ctx.log(`C${card} given to ${player}`);
-            util.set_add(ctx.game.players[player].hand, card);
+            give_cards(ctx.game, player, card);
             i++;
         }
 
@@ -85,10 +91,10 @@ const rivendell_council = {
             // Convert to int
             const cardInt = parseInt(c, 10);
             // Discard card from current player
-            discard_card_from_player(ctx.game, ctx.game.currentPlayer, cardInt);
+            discard_cards(ctx.game, ctx.game.currentPlayer, cardInt);
             // Advance to next player and give them the card
             ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
-            util.set_add(ctx.game.players[ctx.game.currentPlayer].hand, cardInt);
+            give_cards(ctx.game, ctx.game.currentPlayer, cardInt);
         }
 
         // Advance to next state
@@ -123,10 +129,7 @@ const rivendell_fellowship = {
         }
     },
     card(ctx, cardArray) {
-        const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
-        if (discard_card_from_player(ctx.game, ctx.game.action.player, cardInt) >= 0) {
-            // Create log record of transaction
-            ctx.log(`${ctx.game.action.player} discards C${cardInt}`);
+        if (discard_cards(ctx.game, ctx.game.action.player, cardArray) >= 0) {
             // Decrease count and advance to next player
             ctx.game.action.count = ctx.game.action.count - 1;
             ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);

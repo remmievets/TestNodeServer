@@ -1,8 +1,15 @@
-import { create_deck, deal_card, draw_x_cards, give_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
+import {
+    create_deck,
+    deal_card,
+    give_cards,
+    draw_cards,
+    discard_cards,
+    set_of_player_cards,
+    reshuffle_deck,
+} from '../utils/cards.js';
 import {
     count_card_type_by_player,
     distribute_card_from_select,
-    discard_card_from_player,
     get_active_player_list,
     get_next_player,
     get_active_players_in_order,
@@ -31,8 +38,7 @@ const lothlorien_gladriel = {
         while (featureDeck.length > 0) {
             const player = porder[i % porder.length];
             let card = featureDeck.pop();
-            ctx.log(`C${card} given to ${player}`);
-            util.set_add(ctx.game.players[player].hand, card);
+            give_cards(ctx.game, player, card);
             i++;
         }
 
@@ -84,7 +90,7 @@ const lothlorien_recovery = {
         ctx.log(`${ctx.game.currentPlayer} discards 2 shields to draw 2 cards`);
         ctx.game.players[ctx.game.currentPlayer].shield = ctx.game.players[ctx.game.currentPlayer].shield - 2;
         // Deal 2 cards
-        draw_x_cards(ctx.game, ctx.game.currentPlayer, 2);
+        draw_cards(ctx.game, ctx.game.currentPlayer, 2);
         // Decrease count and advance to next player
         ctx.game.action.count = ctx.game.action.count - 1;
         ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
@@ -129,10 +135,7 @@ const lothlorien_test_of_gladriel = {
         }
     },
     card(ctx, cardArray) {
-        const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
-        if (discard_card_from_player(ctx.game, ctx.game.action.player, cardInt) >= 0) {
-            // Create log record of transaction
-            ctx.log(`${ctx.game.action.player} discards C${cardInt}`);
+        if (discard_cards(ctx.game, ctx.game.action.player, cardArray) >= 0) {
             // Decrease count and advance to next player
             ctx.game.action.count = ctx.game.action.count - 1;
             ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);

@@ -1,8 +1,15 @@
-import { create_deck, deal_card, draw_x_cards, give_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
+import {
+    create_deck,
+    deal_card,
+    give_cards,
+    draw_cards,
+    discard_cards,
+    set_of_player_cards,
+    reshuffle_deck,
+} from '../utils/cards.js';
 import {
     count_card_type_by_player,
     distribute_card_from_select,
-    discard_card_from_player,
     get_active_player_list,
     get_next_player,
     get_active_players_in_order,
@@ -53,9 +60,9 @@ const shelobslair_gollum = {
         // Current player receives Gollum card
         give_cards(ctx.game, ctx.game.currentPlayer, 114);
         // All other players receive 2 cards
-        const otherPlayers = get_active_player_list(game).filter((p) => p !== ctx.game.currentPlayer);
-        for (const p in otherPlayers) {
-            draw_x_cards(ctx.game, p, 2);
+        const otherPlayers = get_active_player_list(ctx.game).filter((p) => p !== ctx.game.currentPlayer);
+        for (const p of otherPlayers) {
+            draw_cards(ctx.game, p, 2);
         }
         // Return to prior state
         ctx.resume_previous_state();

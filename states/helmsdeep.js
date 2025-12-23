@@ -1,8 +1,15 @@
-import { create_deck, deal_card, draw_x_cards, give_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
+import {
+    create_deck,
+    deal_card,
+    give_cards,
+    draw_cards,
+    discard_cards,
+    set_of_player_cards,
+    reshuffle_deck,
+} from '../utils/cards.js';
 import {
     count_card_type_by_player,
     distribute_card_from_select,
-    discard_card_from_player,
     get_active_player_list,
     get_next_player,
     get_active_players_in_order,
@@ -71,7 +78,7 @@ const helmsdeep_orcs_conquer = {
     },
 };
 
-export function helms_deep_states() {
+export function helmsdeep_states() {
     return {
         helmsdeep_wormtongue,
         helmsdeep_riders_of_rohan,

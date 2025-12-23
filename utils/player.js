@@ -65,25 +65,6 @@ export function distribute_card_from_select(game, p, cardInt) {
     return true;
 }
 
-/// @brief Lookup card by int number and discard from player hand
-/// @return the count value of the card, or -1 if card not found.
-export function discard_card_from_player(game, p, cardInt) {
-    // Ensure the card actually exists in selectHand
-    if (!util.set_has(game.players[p].hand, cardInt)) {
-        return -1;
-    }
-
-    // Remove the card from hand
-    util.set_delete(game.players[p].hand, cardInt);
-
-    let rc = 0;
-    if (data.cards[cardInt].count) {
-        rc = data.cards[cardInt].count;
-    }
-
-    return rc;
-}
-
 export function get_active_player_list(game) {
     const porder = ['Frodo', 'Sam', 'Pippin', 'Merry', 'Fatty'];
     return porder.filter((p) => game.players[p] && game.players[p].active);

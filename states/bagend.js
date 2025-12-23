@@ -1,8 +1,15 @@
-import { create_deck, deal_card, draw_x_cards, give_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
+import {
+    create_deck,
+    deal_card,
+    give_cards,
+    draw_cards,
+    discard_cards,
+    set_of_player_cards,
+    reshuffle_deck,
+} from '../utils/cards.js';
 import {
     count_card_type_by_player,
     distribute_card_from_select,
-    discard_card_from_player,
     get_active_player_list,
     get_next_player,
     get_active_players_in_order,
@@ -25,7 +32,7 @@ const bagend_gandalf = {
         // Deal cards round-robin until deck is empty
         for (let i = 0; i < 6 * porder.length; i++) {
             const player = porder[i % porder.length];
-            util.set_add(ctx.game.players[player].hand, deal_card(ctx.game));
+            give_cards(ctx.game, player, deal_card(ctx.game));
         }
 
         // Go to next state

@@ -1,4 +1,5 @@
 import { get_active_player_list } from './player.js';
+import data from './data.js';
 import * as util from './util.js';
 
 //////////////////////
@@ -18,20 +19,43 @@ export function deal_card(game) {
     return game.deck.pop();
 }
 
-export function draw_x_cards(game, p, cnt) {
-    for (let i = 0; i < cnt; i++) {
-        let card = deal_card(game);
-        game.log.push(`C${card} given to ${p}`);
-        util.set_add(game.players[p].hand, card);
-    }
-}
-
 export function give_cards(game, p, cards) {
     const cardList = Array.isArray(cards) ? cards : [cards];
     for (const card of cardList) {
         game.log.push(`C${card} given to ${p}`);
         util.set_add(game.players[p].hand, card);
     }
+}
+
+export function draw_cards(game, p, cnt) {
+    let cards = [];
+    for (let i = 0; i < cnt; i++) {
+        cards.push(deal_card(game));
+    }
+    give_cards(game, p, cards);
+}
+
+/// @brief Lookup card by int number and discard from player hand
+/// @return the count value of the card, or 0 if card not found.
+export function discard_cards(game, p, cards) {
+    let discardValue = 0;
+    const cardList = Array.isArray(cards) ? cards : [cards];
+    for (const card of cardList) {
+        // Convert card to int to make sure all cards are integer values
+        const cardInt = parseInt(card, 10);
+        // Ensure the card actually exists in hand
+        if (util.set_has(game.players[p].hand, cardInt)) {
+            // Create log record of transaction
+            game.log.push(`${p} discards C${cardInt}`);
+            // Remove the card from hand
+            util.set_delete(game.players[p].hand, cardInt);
+            // Get the value of the card
+            if (data.cards[cardInt].count) {
+                discardValue = data.cards[cardInt].count;
+            }
+        }
+    }
+    return discardValue;
 }
 
 // Gather a full 'set' of all player cards

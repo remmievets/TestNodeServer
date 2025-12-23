@@ -1,8 +1,15 @@
-import { create_deck, deal_card, draw_x_cards, give_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
+import {
+    create_deck,
+    deal_card,
+    give_cards,
+    draw_cards,
+    discard_cards,
+    set_of_player_cards,
+    reshuffle_deck,
+} from '../utils/cards.js';
 import {
     count_card_type_by_player,
     distribute_card_from_select,
-    discard_card_from_player,
     get_active_player_list,
     get_next_player,
     get_active_players_in_order,
@@ -44,14 +51,8 @@ const action_discard = {
         }
     },
     card(ctx, cardArray) {
-        for (let i = 0; i < cardArray.length; i++) {
-            const cardInt = parseInt(cardArray[i], 10); // Convert to int if needed
-            if (discard_card_from_player(ctx.game, ctx.game.action.player, cardInt) >= 0) {
-                ctx.game.action.count = ctx.game.action.count - 1;
-            }
-
-            // Create log record of transaction
-            ctx.log(`${ctx.game.action.player} discard C${cardInt}`);
+        if (discard_cards(ctx.game, ctx.game.action.player, cardArray) >= 0) {
+            ctx.game.action.count = ctx.game.action.count - 1;
         }
     },
     fini(ctx) {
@@ -93,12 +94,9 @@ const action_discard_group = {
             let pArray = get_active_player_list(ctx.game);
             for (let p of pArray) {
                 // Attempt to discard from player
-                if (discard_card_from_player(ctx.game, p, cardInt) >= 0) {
+                if (discard_cards(ctx.game, p, cardInt) >= 0) {
                     // Decrease card count
                     ctx.game.action.count = ctx.game.action.count - 1;
-
-                    // Create log record of transaction
-                    ctx.log(`${p} discard C${cardInt}`);
                     break;
                 }
             }
