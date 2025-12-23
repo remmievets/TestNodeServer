@@ -2,8 +2,6 @@ Work list
 
 - Buy/play gandalf cards
 - Play yellow cards
-- discard life tokens for events    ***
-- discard shields for events        ***
 - Resolve event
 -   Moria events
 -   Helms deep events

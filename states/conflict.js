@@ -1,4 +1,4 @@
-import { create_deck, deal_card, draw_x_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
+import { create_deck, deal_card, draw_x_cards, give_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
 import {
     count_card_type_by_player,
     distribute_card_from_select,
@@ -65,11 +65,8 @@ function resolve_reward(ctx, path) {
             ctx.push_advance_state('action_roll_die');
             break;
         case 'card':
-            const cardList = pathData[curIndex].cards;
-            for (const card of cardList) {
-                ctx.log(`C${card} given to ${ctx.game.currentPlayer}`);
-                util.set_add(ctx.game.players[ctx.game.currentPlayer].hand, card);
-            }
+            // Give the reward to the current player
+            give_cards(ctx.game, ctx.game.currentPlayer, pathData[curIndex].cards);
             break;
         default:
             break;
@@ -218,29 +215,27 @@ const turn_resolve_tile = {
         ctx.advance_state('turn_reveal_tiles');
 
         // Interrupt action with discarding the 1 shield
-        //push_advance_state('action_discard_item_group', { count: 1, type: 'shield' });    TBD - Discard shield
+        ctx.push_advance_state('action_discard_item_group', { count: 1, type: 'shield' });
 
         // Interrupt action with discarding the 1 life token
-        //push_advance_state('action_discard_item_group', { count: 1, type: 'life_token' });    TBD - Discard life token
+        ctx.push_advance_state('action_discard_item_group', { count: 1, type: 'life_token' });
 
         // Interrupt action with discarding the 1 card
         ctx.push_advance_state('action_discard_group', { count: 1, type: 'card' });
     },
     resolve_event(ctx) {
-        ctx.log('resolve event ' + data.tiles[ctx.game.action.lasttile].type);
         ctx.game.conflict.eventValue += 1;
-        // TBD - resolve event
+        ctx.log('=! Resolve event ' + data[ctx.game.loc].events[ctx.game.conflict.eventValue].name);
         // Next state
         if (ctx.game.conflict.eventValue < 6) {
             // Draw another tile
             ctx.advance_state('turn_reveal_tiles');
-        } else if (ctx.game.loc === 'mordor') {
-            // TBD - Potentially temp depending on how that works out
-            ctx.advance_state('global_game_end', { victory: false, reason: 'Ring is mine event' });
         } else {
             // End of board
             ctx.advance_state('conflict_board_end');
         }
+        // Push resolve event
+        ctx.push_advance_state(data[ctx.game.loc].events[ctx.game.conflict.eventValue].state);
     },
     resolve_corruption(ctx, p) {
         ctx.log(p + ' increases corruption by 2');

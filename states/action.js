@@ -1,4 +1,4 @@
-import { create_deck, deal_card, draw_x_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
+import { create_deck, deal_card, draw_x_cards, give_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
 import {
     count_card_type_by_player,
     distribute_card_from_select,
@@ -7,6 +7,8 @@ import {
     get_next_player,
     get_active_players_in_order,
     update_player_active,
+    get_active_players_with_resource,
+    count_total_life_token,
 } from '../utils/player.js';
 import { save_undo, clear_undo, pop_undo } from '../utils/undo.js';
 import data from '../utils/data.js';
@@ -59,9 +61,8 @@ const action_discard = {
 
 const action_discard_group = {
     init(ctx, args) {
-        /// a.count - The number of items to Discard
-        /// a.type - 'card', or specific card type to discard 'wild'/'hide',etc
-        /// a.cardArray - The available cards which can be discarded
+        /// args.count - The number of items to Discard
+        /// args.type - 'card', or specific card type to discard 'wild'/'hide',etc
         ctx.game.action.count = args.count;
         ctx.game.action.type = args.type;
     },
@@ -102,6 +103,49 @@ const action_discard_group = {
                 }
             }
         }
+    },
+    fini(ctx) {
+        ctx.resume_previous_state();
+    },
+};
+
+const action_discard_item_group = {
+    init(ctx, args) {
+        /// args.count - The number of items group must discard
+        /// args.type - 'shield', 'life_token', or a specific life token type
+        ctx.game.action.count = args.count;
+        ctx.game.action.type = Array.isArray(args.type) ? args.type : [args.type];
+        if (ctx.game.action.type[0] === 'life_token') {
+            ctx.game.action.type = ['ring', 'heart', 'sun'];
+        }
+    },
+    prompt(ctx) {
+        // Exit path for this state
+        if (ctx.game.action.count <= 0) {
+            return null;
+        }
+
+        // Create a button for each item/player which can be discarded
+        const buttons = {};
+
+        // Get list of cards for the entire group of active players
+        for (const item of ctx.game.action.type) {
+            const players = get_active_players_with_resource(ctx.game, item);
+            for (const p of players) {
+                buttons[`discard ${p} ${item}`] = `${p} ${item}`;
+            }
+        }
+        return {
+            message: `Select to discard(${ctx.game.action.count})`,
+            buttons,
+        };
+    },
+    discard(ctx, args) {
+        const p = args[0];
+        const resource = args[1];
+        ctx.log(`${p} discards ${resource}`);
+        ctx.game.players[p][resource] -= 1;
+        ctx.game.action.count -= 1;
     },
     fini(ctx) {
         ctx.resume_previous_state();
@@ -192,6 +236,7 @@ export function action_states() {
     return {
         action_discard,
         action_discard_group,
+        action_discard_item_group,
         action_roll_die,
     };
 }

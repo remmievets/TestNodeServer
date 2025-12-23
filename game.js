@@ -7,7 +7,7 @@ const DEBUG = 1;
 import crypto from 'crypto';
 
 // Game modules
-import { create_deck, deal_card, draw_x_cards, set_of_player_cards, reshuffle_deck } from './utils/cards.js';
+import { create_deck, deal_card, draw_x_cards, give_cards, set_of_player_cards, reshuffle_deck } from '../utils/cards.js';
 import {
     count_card_type_by_player,
     distribute_card_from_select,

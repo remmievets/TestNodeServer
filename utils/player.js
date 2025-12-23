@@ -127,6 +127,10 @@ export function update_player_active(game) {
     }
 }
 
+export function get_active_players_with_resource(game, resource, minAmount = 1) {
+    return get_active_player_list(game).filter((p) => (game.players[p][resource] ?? 0) >= minAmount);
+}
+
 export function count_total_life_token(game) {
     let result = 0;
     const pArray = get_active_player_list(game);

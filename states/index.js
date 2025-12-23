@@ -32,7 +32,11 @@
 
 import { bagend_states } from './bagend.js';
 import { rivendell_states } from './rivendell.js';
+import { moria_states } from './moria.js';
 import { lothlorien_states } from './lothlorien.js';
+import { helmsdeep_states } from './helmsdeep.js';
+import { shelobslair_states } from './shelobslair.js';
+import { mordor_states } from './mordor.js';
 import { action_states } from './action.js';
 import { conflict_states } from './conflict.js';
 import { global_states } from './global.js';
@@ -41,7 +45,11 @@ export function create_states() {
     return {
         ...bagend_states(),
         ...rivendell_states(),
+        ...moria_states(),
         ...lothlorien_states(),
+        ...helmsdeep_states(),
+        ...shelobslair_states(),
+        ...mordor_states(),
         ...action_states(),
         ...conflict_states(),
         ...global_states(),

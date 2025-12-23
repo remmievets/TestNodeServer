@@ -26,6 +26,14 @@ export function draw_x_cards(game, p, cnt) {
     }
 }
 
+export function give_cards(game, p, cards) {
+    const cardList = Array.isArray(cards) ? cards : [cards];
+    for (const card of cardList) {
+        game.log.push(`C${card} given to ${p}`);
+        util.set_add(game.players[p].hand, card);
+    }
+}
+
 // Gather a full 'set' of all player cards
 export function set_of_player_cards(game) {
     let pArray = get_active_player_list(game);
