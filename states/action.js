@@ -4,6 +4,7 @@ import {
     give_cards,
     draw_cards,
     discard_cards,
+    find_player_with_card,
     set_of_player_cards,
     reshuffle_deck,
 } from '../utils/cards.js';
@@ -51,9 +52,10 @@ const action_discard = {
         }
     },
     card(ctx, cardArray) {
-        if (discard_cards(ctx.game, ctx.game.action.player, cardArray) >= 0) {
-            ctx.game.action.count = ctx.game.action.count - 1;
-        }
+        // Discard cards in array
+        const rt = discard_cards(ctx.game, ctx.game.action.player, cardArray);
+        // Decrease action count by number of cards discarded
+        ctx.game.action.count -= rt.discardCount;
     },
     fini(ctx) {
         ctx.resume_previous_state();
@@ -88,17 +90,14 @@ const action_discard_group = {
         };
     },
     card(ctx, cardArray) {
-        for (let i = 0; i < cardArray.length; i++) {
-            const cardInt = parseInt(cardArray[i], 10); // Convert to int if needed
-
-            let pArray = get_active_player_list(ctx.game);
-            for (let p of pArray) {
-                // Attempt to discard from player
-                if (discard_cards(ctx.game, p, cardInt) >= 0) {
-                    // Decrease card count
-                    ctx.game.action.count = ctx.game.action.count - 1;
-                    break;
-                }
+        for (const card of cardArray) {
+            // Find who is holding card - this does not accept an array
+            const p = find_player_with_card(ctx.game, card);
+            if (p) {
+                // Discard cards in array
+                const rt = discard_cards(ctx.game, p, card);
+                // Decrease action count by number of cards discarded
+                ctx.game.action.count -= rt.discardCount;
             }
         }
     },

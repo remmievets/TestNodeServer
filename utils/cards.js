@@ -39,6 +39,7 @@ export function draw_cards(game, p, cnt) {
 /// @return the count value of the card, or 0 if card not found.
 export function discard_cards(game, p, cards) {
     let discardValue = 0;
+    let discardCount = 0;
     const cardList = Array.isArray(cards) ? cards : [cards];
     for (const card of cardList) {
         // Convert card to int to make sure all cards are integer values
@@ -49,13 +50,29 @@ export function discard_cards(game, p, cards) {
             game.log.push(`${p} discards C${cardInt}`);
             // Remove the card from hand
             util.set_delete(game.players[p].hand, cardInt);
+            discardCount++;
             // Get the value of the card
             if (data.cards[cardInt].count) {
-                discardValue = data.cards[cardInt].count;
+                discardValue += data.cards[cardInt].count;
             }
         }
     }
-    return discardValue;
+    return {
+        count: discardCount,
+        value: discardValue,
+    };
+}
+
+// Find out who is holding a card or null if no one has the card
+export function find_player_with_card(game, card) {
+    // Convert card to int to make sure all cards are integer values
+    const cardInt = parseInt(card, 10);
+    for (const p of get_active_player_list(game)) {
+        if (util.set_has(game.players[p].hand, cardInt)) {
+            return p;
+        }
+    }
+    return null;
 }
 
 // Gather a full 'set' of all player cards

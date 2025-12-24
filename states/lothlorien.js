@@ -4,6 +4,7 @@ import {
     give_cards,
     draw_cards,
     discard_cards,
+    find_player_with_card,
     set_of_player_cards,
     reshuffle_deck,
 } from '../utils/cards.js';
@@ -57,50 +58,50 @@ const lothlorien_recovery = {
         ctx.game.action.count = get_active_player_list(ctx.game).length;
     },
     prompt(ctx) {
-        if (ctx.game.action.count > 0) {
-            // Build buttons dynamically
-            const buttons = {
-                pass: 'Next',
-            };
-            // First check if player has 2 shields
-            if (ctx.game.players[ctx.game.currentPlayer].shield >= 2) {
-                buttons['card'] = 'Discard shields to gain 2 cards';
-                if (ctx.game.players[ctx.game.currentPlayer].corruption > 0) {
-                    buttons['heal'] = 'Discard shields to heal 1 space';
-                }
-            }
-            // Determine if buttons should be given
-            return {
-                player: ctx.game.currentPlayer,
-                message: 'Optionally, discard 2 shields to draw 2 hobbit cards or heal',
-                buttons,
-            };
-        } else {
+        // Once all players have completed then exit
+        if (ctx.game.action.count <= 0) {
             return null;
         }
+        // Build buttons dynamically
+        const buttons = {
+            pass: 'Next',
+        };
+        // First check if player has 2 shields
+        if (ctx.game.players[ctx.game.currentPlayer].shield >= 2) {
+            buttons['card'] = 'Discard shields to gain 2 cards';
+            if (ctx.game.players[ctx.game.currentPlayer].corruption > 0) {
+                buttons['heal'] = 'Discard shields to heal 1 space';
+            }
+        }
+        // Determine if buttons should be given
+        return {
+            player: ctx.game.currentPlayer,
+            message: 'Optionally, discard 2 shields to draw 2 hobbit cards or heal',
+            buttons,
+        };
     },
     pass(ctx) {
         // Players turn has completed - skipped option
         ctx.log(`${ctx.game.currentPlayer} passes`);
         // Decrease count and advance to next player
-        ctx.game.action.count = ctx.game.action.count - 1;
+        ctx.game.action.count -= 1;
         ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
     },
     card(ctx) {
         ctx.log(`${ctx.game.currentPlayer} discards 2 shields to draw 2 cards`);
-        ctx.game.players[ctx.game.currentPlayer].shield = ctx.game.players[ctx.game.currentPlayer].shield - 2;
+        ctx.game.players[ctx.game.currentPlayer].shield -= 2;
         // Deal 2 cards
         draw_cards(ctx.game, ctx.game.currentPlayer, 2);
         // Decrease count and advance to next player
-        ctx.game.action.count = ctx.game.action.count - 1;
+        ctx.game.action.count -= 1;
         ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
     },
     heal(ctx) {
         ctx.log(`${ctx.game.currentPlayer} discards 2 shields to heal 1 space`);
-        ctx.game.players[ctx.game.currentPlayer].shield = ctx.game.players[ctx.game.currentPlayer].shield - 2;
-        ctx.game.players[ctx.game.currentPlayer].corruption = ctx.game.players[ctx.game.currentPlayer].corruption - 1;
+        ctx.game.players[ctx.game.currentPlayer].shield -= 2;
+        ctx.game.players[ctx.game.currentPlayer].corruption -= 1;
         // Decrease count and advance to next player
-        ctx.game.action.count = ctx.game.action.count - 1;
+        ctx.game.action.count -= 1;
         ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
     },
     fini(ctx) {
@@ -135,9 +136,10 @@ const lothlorien_test_of_gladriel = {
         }
     },
     card(ctx, cardArray) {
-        if (discard_cards(ctx.game, ctx.game.action.player, cardArray) >= 0) {
+        const rt = discard_cards(ctx.game, ctx.game.action.player, cardArray);
+        if (rt.discardCount > 0) {
             // Decrease count and advance to next player
-            ctx.game.action.count = ctx.game.action.count - 1;
+            ctx.game.action.count -= rt.discardCount;
             ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
         }
     },

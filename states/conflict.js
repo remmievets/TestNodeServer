@@ -4,6 +4,7 @@ import {
     give_cards,
     draw_cards,
     discard_cards,
+    find_player_with_card,
     set_of_player_cards,
     reshuffle_deck,
 } from '../utils/cards.js';
@@ -345,8 +346,8 @@ const turn_play_cards = {
     },
     card(ctx, cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
-        const cardValue = discard_cards(ctx.game, ctx.game.currentPlayer, cardInt);
-        if (cardValue >= 0) {
+        const rt = discard_cards(ctx.game, ctx.game.currentPlayer, cardInt);
+        if (rt.discardValue >= 0) {
             // Create log record of transaction
             ctx.log(`${ctx.game.currentPlayer} plays C${cardInt}`);
             // Keep track of which card was played unless pippin is the current player
@@ -366,7 +367,7 @@ const turn_play_cards = {
                 questPath = 'wild';
             }
             // Advance on path with information from card
-            ctx.push_advance_state('turn_play_path', { path: questPath, value: cardValue });
+            ctx.push_advance_state('turn_play_path', { path: questPath, value: rt.discardValue });
         }
     },
     fini(ctx) {

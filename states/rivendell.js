@@ -4,6 +4,7 @@ import {
     give_cards,
     draw_cards,
     discard_cards,
+    find_player_with_card,
     set_of_player_cards,
     reshuffle_deck,
 } from '../utils/cards.js';
@@ -87,14 +88,12 @@ const rivendell_council = {
     },
     fini(ctx) {
         // Initiate all trades
-        for (const c of ctx.game.action.pass) {
-            // Convert to int
-            const cardInt = parseInt(c, 10);
+        for (const card of ctx.game.action.pass) {
             // Discard card from current player
-            discard_cards(ctx.game, ctx.game.currentPlayer, cardInt);
+            discard_cards(ctx.game, ctx.game.currentPlayer, card);
             // Advance to next player and give them the card
             ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
-            give_cards(ctx.game, ctx.game.currentPlayer, cardInt);
+            give_cards(ctx.game, ctx.game.currentPlayer, card);
         }
 
         // Advance to next state
@@ -129,9 +128,10 @@ const rivendell_fellowship = {
         }
     },
     card(ctx, cardArray) {
-        if (discard_cards(ctx.game, ctx.game.action.player, cardArray) >= 0) {
+        const rt = discard_cards(ctx.game, ctx.game.action.player, cardArray);
+        if (rt.discardCount > 0) {
             // Decrease count and advance to next player
-            ctx.game.action.count = ctx.game.action.count - 1;
+            ctx.game.action.count -= rt.discardCount;
             ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
         }
     },

@@ -4,6 +4,7 @@ import {
     give_cards,
     draw_cards,
     discard_cards,
+    find_player_with_card,
     set_of_player_cards,
     reshuffle_deck,
 } from '../utils/cards.js';
@@ -74,7 +75,7 @@ const moria_fly_you_fools = {
         ctx.log('Ring-bearer may roll and reveal 4 hobbit cards face up to distribute');
     },
     fini(ctx) {
-        ctx.advance_state('global_game_end', { victory: false, reason: 'Ring is mine event' });
+        ctx.resume_previous_state();
     },
 };
 
