@@ -137,9 +137,9 @@ const lothlorien_test_of_gladriel = {
     },
     card(ctx, cardArray) {
         const rt = discard_cards(ctx.game, ctx.game.action.player, cardArray);
-        if (rt.discardCount > 0) {
+        if (rt.count > 0) {
             // Decrease count and advance to next player
-            ctx.game.action.count -= rt.discardCount;
+            ctx.game.action.count -= rt.count;
             ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
         }
     },

@@ -55,7 +55,7 @@ const action_discard = {
         // Discard cards in array
         const rt = discard_cards(ctx.game, ctx.game.action.player, cardArray);
         // Decrease action count by number of cards discarded
-        ctx.game.action.count -= rt.discardCount;
+        ctx.game.action.count -= rt.count;
     },
     fini(ctx) {
         ctx.resume_previous_state();
@@ -97,7 +97,7 @@ const action_discard_group = {
                 // Discard cards in array
                 const rt = discard_cards(ctx.game, p, card);
                 // Decrease action count by number of cards discarded
-                ctx.game.action.count -= rt.discardCount;
+                ctx.game.action.count -= rt.count;
             }
         }
     },

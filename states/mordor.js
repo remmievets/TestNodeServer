@@ -37,9 +37,7 @@ const mordor_sam_saves_frodo = {
             return null;
         }
         // Build buttons dynamically
-        const buttons = {
-            pass: 'Next',
-        };
+        const buttons = {};
         // First check if player has 2 shields
         if (ctx.game.players[ctx.game.action.player].shield >= 3) {
             buttons['card'] = 'Discard shields to gain 2 cards';
@@ -47,19 +45,12 @@ const mordor_sam_saves_frodo = {
                 buttons['heal'] = 'Discard shields to heal 1 space';
             }
         }
-        // Determine if buttons should be given
+        buttons['pass'] = 'Pass';
         return {
             player: ctx.game.action.player,
-            message: 'Optionally, discard 3 shields to draw 2 hobbit cards or heal',
+            message: 'May discard 3 shields to draw 2 hobbit cards or heal',
             buttons,
         };
-    },
-    pass(ctx) {
-        // Players turn has completed - skipped option
-        ctx.log(`${ctx.game.action.player} passes`);
-        // Decrease count and advance to next player
-        ctx.game.action.count -= 1;
-        ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
     },
     card(ctx) {
         ctx.log(`${ctx.game.action.player} discards 3 shields to draw 2 cards`);
@@ -78,6 +69,13 @@ const mordor_sam_saves_frodo = {
         ctx.game.action.count -= 1;
         ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
     },
+    pass(ctx) {
+        // Players turn has completed - skipped option
+        ctx.log(`${ctx.game.action.player} passes`);
+        // Decrease count and advance to next player
+        ctx.game.action.count -= 1;
+        ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
+    },
     fini(ctx) {
         ctx.resume_previous_state();
     },
@@ -91,7 +89,7 @@ const mordor_nazgul_attacks = {
     prompt(ctx) {
         // Build buttons dynamically
         const buttons = {};
-        if (find_player_with_card(ctx.game, 99)) {
+        if (find_player_with_card(ctx.game, data.EOWYN_CARD)) {
             buttons['discard'] = 'Discard Eowyn';
         }
         buttons['pass'] = 'Pass';
@@ -101,9 +99,9 @@ const mordor_nazgul_attacks = {
         };
     },
     discard(ctx) {
-        const p = find_player_with_card(ctx.game, 99);
+        const p = find_player_with_card(ctx.game, data.EOWYN_CARD);
         if (p) {
-            discard_cards(ctx.game, p, 99);
+            discard_cards(ctx.game, p, data.EOWYN_CARD);
         }
         ctx.resume_previous_state();
     },
@@ -125,6 +123,44 @@ const mordor_pelennor_fields = {
         ctx.game.action.player = ctx.game.currentPlayer;
         ctx.game.action.count = get_active_player_list(ctx.game).length;
     },
+    prompt(ctx) {
+        // Once all players have completed then exit
+        if (ctx.game.action.count <= 0) {
+            return null;
+        }
+        // Build buttons dynamically
+        const buttons = {};
+        // First check if player has a heart
+        if (ctx.game.players[ctx.game.action.player].heart >= 1) {
+            buttons['discard'] = 'Discard heart';
+        }
+        buttons['pass'] = 'Pass';
+        return {
+            player: ctx.game.action.player,
+            message: 'Discard heart or roll die and discard 2 cards',
+            buttons,
+        };
+    },
+    discard(ctx) {
+        // Log message
+        ctx.log(`${ctx.game.action.player} discards a heart token`);
+        // Decrement heart
+        ctx.game.players[ctx.game.action.player].heart -= 1;
+        // Decrease count and advance to next player
+        ctx.game.action.count -= 1;
+        ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
+    },
+    pass(ctx) {
+        // Log message
+        ctx.log(`${ctx.game.action.player} will roll die and discard 2 cards`);
+        // Decrease count and advance to next player
+        ctx.game.action.count -= 1;
+        const p = ctx.game.action.player;
+        ctx.game.action.player = get_next_player(ctx.game, p);
+        // Push actions
+        ctx.push_advance_state('action_discard', { player: p, count: 2, type: 'card' });
+        ctx.push_advance_state('action_roll_die', { player: p });
+    },
     fini(ctx) {
         ctx.resume_previous_state();
     },
@@ -136,6 +172,44 @@ const mordor_mouth_of_sauron = {
         ctx.log('Otherwise, rolls die and discard 2 cards');
         ctx.game.action.player = ctx.game.currentPlayer;
         ctx.game.action.count = get_active_player_list(ctx.game).length;
+    },
+    prompt(ctx) {
+        // Once all players have completed then exit
+        if (ctx.game.action.count <= 0) {
+            return null;
+        }
+        // Build buttons dynamically
+        const buttons = {};
+        // First check if player has a sun
+        if (ctx.game.players[ctx.game.action.player].sun >= 1) {
+            buttons['discard'] = 'Discard sun';
+        }
+        buttons['pass'] = 'Pass';
+        return {
+            player: ctx.game.action.player,
+            message: 'Discard sun or roll die and discard 2 cards',
+            buttons,
+        };
+    },
+    discard(ctx) {
+        // Log message
+        ctx.log(`${ctx.game.action.player} discards a sun token`);
+        // Decrement sun
+        ctx.game.players[ctx.game.action.player].sun -= 1;
+        // Decrease count and advance to next player
+        ctx.game.action.count -= 1;
+        ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
+    },
+    pass(ctx) {
+        // Log message
+        ctx.log(`${ctx.game.action.player} will roll die and discard 2 cards`);
+        // Decrease count and advance to next player
+        ctx.game.action.count -= 1;
+        const p = ctx.game.action.player;
+        ctx.game.action.player = get_next_player(ctx.game, p);
+        // Push actions
+        ctx.push_advance_state('action_discard', { player: p, count: 2, type: 'card' });
+        ctx.push_advance_state('action_roll_die', { player: p });
     },
     fini(ctx) {
         ctx.resume_previous_state();
@@ -151,8 +225,8 @@ const mordor_dark_forces = {
         // Build buttons dynamically
         const buttons = {};
         // Check that players as a group have at least 7 cards
-        if (set_of_player_cards(ctx.game).length >= 7) {
-            buttons['discard'] = 'Discard';
+        if (set_of_player_cards(ctx.game).size >= 7) {
+            buttons['discard'] = 'Discard 7 cards';
         }
         buttons['sauron'] = 'Move sauron 3 spaces';
         return {

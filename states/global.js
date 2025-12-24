@@ -35,7 +35,7 @@ function calculate_score(ctx) {
         default:
             const mainpath = data[ctx.game.loc].mainpath;
             const pathspace = ctx.game.conflict[mainpath];
-            score = data[ctx.game.loc][mainpath][pathspace];
+            score = data[ctx.game.loc][mainpath][pathspace].score;
             break;
     }
     return score;
@@ -54,7 +54,7 @@ const global_game_end = {
             ctx.game.action.message = 'GAME OVER - LOST';
         }
         // Prevent game changes
-        clear_undo(ctx.game);
+        //clear_undo(ctx.game);
         ctx.game.stateQueue = [];
         // Make game inactive
         ctx.game.active = false;

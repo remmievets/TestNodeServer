@@ -59,7 +59,7 @@ const shelobslair_gollum = {
     fini(ctx) {
         // Give reward
         // Current player receives Gollum card
-        give_cards(ctx.game, ctx.game.currentPlayer, 114);
+        give_cards(ctx.game, ctx.game.currentPlayer, data.GOLLUM_CARD);
         // All other players receive 2 cards
         const otherPlayers = get_active_player_list(ctx.game).filter((p) => p !== ctx.game.currentPlayer);
         for (const p of otherPlayers) {
