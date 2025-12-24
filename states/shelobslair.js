@@ -72,7 +72,58 @@ const shelobslair_gollum = {
 
 const shelobslair_faces = {
     init(ctx, args) {
-        ctx.log('EACH PLAYER: Discard wild otherwise discard 3 shield');
+        ctx.log('EACH PLAYER: Discard wild');
+        ctx.log('Otherwise discard 3 shield');
+        ctx.game.action.player = ctx.game.currentPlayer;
+        ctx.game.action.count = get_active_player_list(ctx.game).length;
+    },
+    prompt(ctx) {
+        // Once all players have completed then exit
+        if (ctx.game.action.count <= 0) {
+            return null;
+        }
+        // Build buttons dynamically
+        const buttons = {};
+        // Find card list
+        const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, 'wild');
+        if (ctx.game.players[ctx.game.action.player].shield >= 3) {
+            buttons['shield'] = 'Discard 3 shields';
+        }
+        if (cardInfo.cardList.length === 0 && ctx.game.players[ctx.game.action.player].shield < 3) {
+            buttons['die'] = 'Player is corrupted';
+        }
+        return {
+            player: ctx.game.action.player,
+            message: 'Discard Wild or 3 shields or player is corrupted',
+            buttons,
+            cards: cardInfo.cardList.slice(),
+        };
+    },
+    card(ctx, cardArray) {
+        const p = ctx.game.action.player;
+        const rt = discard_cards(ctx.game, p, cardArray);
+        if (rt.count > 0) {
+            // Decrease count and advance to next player
+            ctx.game.action.count -= rt.count;
+            ctx.game.action.player = get_next_player(ctx.game, p);
+        }
+    },
+    shield(ctx) {
+        const p = ctx.game.action.player;
+        // Log message
+        ctx.log(`${ctx.game.action.player} discards 3 shields`);
+        ctx.game.players[p].shield -= 3;
+        // Decrease count and advance to next player
+        ctx.game.action.count -= 1;
+        ctx.game.action.player = get_next_player(ctx.game, p);
+    },
+    die(ctx) {
+        const p = ctx.game.action.player;
+        // If player cannot pay they are corrupted
+        ctx.game.players[p].corruption = ctx.game.sauron;
+        // Decrease count and advance to next player
+        ctx.game.action.count -= 1;
+        ctx.game.action.player = get_next_player(ctx.game, p);
     },
     fini(ctx) {
         ctx.resume_previous_state();
@@ -84,7 +135,33 @@ const shelobslair_pool = {
         ctx.log('One player discard 5 shields then each player draws 1 Hobbit card');
         ctx.log('Otherwise move sauron 2 spaces');
     },
-    fini(ctx) {
+    prompt(ctx) {
+        // Build buttons dynamically
+        const buttons = {};
+        const players = get_active_players_with_resource(ctx.game, 'shield');
+        for (const p of players) {
+            buttons[`discard ${p}`] = `${p}`;
+        }
+        buttons['sauron'] = 'Move Sauron 2 Spaces';
+        return {
+            message: 'One player discard 5 shields or move sauron 2 spaces',
+            buttons,
+        };
+    },
+    discard(ctx, args) {
+        const p = args[0];
+        ctx.log(`${p} discards 5 shields`);
+        ctx.game.players[p].shield -= 5;
+        // Each player draws a hobbit card
+        const players = get_active_player_list(ctx.game);
+        for (const p of players) {
+            draw_cards(ctx.game, p, 1);
+        }
+        ctx.resume_previous_state();
+    },
+    sauron(ctx) {
+        ctx.game.sauron -= 2;
+        ctx.log('Sauron advances to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
     },
 };
@@ -93,6 +170,12 @@ const shelobslair_nazgul = {
     init(ctx, args) {
         ctx.log('Reveal 1 card from the deck and Ring-bearer discard 3 matching card symbols to heal');
         ctx.log('Otherwise each player rolls the die');
+        ///TBD
+        // Each player must roll a die, go in reverse order so action starts with current player
+        const plist = get_active_players_in_order(ctx.game, ctx.game.currentPlayer).reverse();
+        for (const p of plist) {
+            ctx.push_advance_state('action_roll_die', { player: p });
+        }
     },
     fini(ctx) {
         ctx.resume_previous_state();
@@ -104,7 +187,25 @@ const shelobslair_appears = {
         ctx.log('Active player rolls the die twice');
         ctx.log('Otherwise move sauron 2 spaces');
     },
-    fini(ctx) {
+    prompt(ctx) {
+        // Build buttons dynamically
+        const buttons = {};
+        buttons['roll'] = 'Active player roll 2 dice';
+        buttons['sauron'] = 'Move Sauron 2 spaces';
+        return {
+            player: ctx.game.currentPlayer,
+            message: 'Active player rolls 2 dice or move Sauron 2 spaces',
+            buttons,
+        };
+    },
+    roll(ctx) {
+        ctx.resume_previous_state();
+        ctx.push_advance_state('action_roll_die', { player: ctx.game.currentPlayer });
+        ctx.push_advance_state('action_roll_die', { player: ctx.game.currentPlayer });
+    },
+    sauron(ctx) {
+        ctx.game.sauron -= 2;
+        ctx.log('Sauron advances to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
     },
 };
@@ -114,7 +215,33 @@ const shelobslair_attacks = {
         ctx.log('Group discards 7 fight cards');
         ctx.log('Otherwise move sauron 3 spaces');
     },
-    fini(ctx) {
+    prompt(ctx) {
+        // Build buttons dynamically
+        const buttons = {};
+        // Determine if group has the cards
+        const plist = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
+        let fightValue = 0;
+        for (const p of plist) {
+            const rt = count_card_type_by_player(ctx.game, p, 'fight');
+            fightValue += rt.value;
+        }
+        if (fightValue >= 7) {
+            buttons['discard'] = 'Discard 7 Fight';
+        }
+        buttons['sauron'] = 'Move Sauron 2 Spaces';
+        return {
+            message: 'Select option',
+            buttons,
+        };
+    },
+    discard(ctx) {
+        ctx.resume_previous_state();
+        // Discard 5 fight as group
+        ctx.push_advance_state('action_discard_group', { count: 7, type: 'fight' });
+    },
+    sauron(ctx) {
+        ctx.game.sauron -= 3;
+        ctx.log('Sauron advances to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
     },
 };

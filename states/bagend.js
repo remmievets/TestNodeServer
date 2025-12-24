@@ -56,13 +56,13 @@ const bagend_preparations = {
             },
         };
     },
-    roll(ctx, args) {
+    roll(ctx) {
         // Once we roll we are done with this current state, so setup next state
         ctx.advance_state('bagend_preparations_cards');
         // Now push state to queue and interrupt with dice roll
         ctx.push_advance_state('action_roll_die', { roll: util.roll_d6() });
     },
-    pass(ctx, args) {
+    pass(ctx) {
         ctx.log('Ring-bearer passes');
         ctx.advance_state('bagend_nazgul_appears');
     },

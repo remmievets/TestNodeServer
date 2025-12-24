@@ -240,6 +240,8 @@ const mordor_dark_forces = {
         ctx.push_advance_state('action_discard_group', { count: 7, type: 'card' });
     },
     sauron(ctx) {
+        ctx.game.sauron -= 3;
+        ctx.log('Sauron advances to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
     },
 };

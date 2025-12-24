@@ -135,7 +135,7 @@ const rivendell_fellowship = {
     roll(ctx) {
         // Save current player
         const cp = ctx.game.action.player;
-        // Decrease cpimt amd advamce to next player
+        // Decrease count amd advance to next player
         ctx.game.action.count = ctx.game.action.count - 1;
         ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
         // Push action to roll die with player prior to switching players
