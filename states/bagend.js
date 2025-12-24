@@ -86,20 +86,19 @@ const bagend_preparations_distribute = {
         // Exit path for this state
         if (ctx.game.action.count <= 0) {
             return null;
-        } else {
-            return {
-                player: ctx.game.currentPlayer,
-                message: 'Select cards to distribute',
-                buttons: {
-                    'pick Frodo': 'To Frodo',
-                    'pick Sam': 'To Sam',
-                    'pick Pippin': 'To Pippin',
-                    'pick Merry': 'To Merry',
-                    'pick Fatty': 'To Fatty',
-                },
-                cards: ctx.game.selectHand.slice(),
-            };
         }
+        return {
+            player: ctx.game.currentPlayer,
+            message: 'Select cards to distribute',
+            buttons: {
+                'pick Frodo': 'To Frodo',
+                'pick Sam': 'To Sam',
+                'pick Pippin': 'To Pippin',
+                'pick Merry': 'To Merry',
+                'pick Fatty': 'To Fatty',
+            },
+            cards: ctx.game.selectHand.slice(),
+        };
     },
     card(ctx, cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed

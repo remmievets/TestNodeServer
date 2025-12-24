@@ -59,16 +59,15 @@ const rivendell_council = {
         ctx.game.action.pass = [];
     },
     prompt(ctx) {
-        if (ctx.game.action.count > 0) {
-            const list = ctx.game.players[ctx.game.currentPlayer].hand.slice();
-            return {
-                player: ctx.game.currentPlayer,
-                message: 'Pass 1 card to the left',
-                cards: list.slice(),
-            };
-        } else {
+        if (ctx.game.action.count <= 0) {
             return null;
         }
+        const list = ctx.game.players[ctx.game.currentPlayer].hand.slice();
+        return {
+            player: ctx.game.currentPlayer,
+            message: 'Pass 1 card to the left',
+            cards: list.slice(),
+        };
     },
     card(ctx, args) {
         // Verify the correct value was passed
@@ -110,22 +109,20 @@ const rivendell_fellowship = {
         ctx.game.action.player = ctx.game.currentPlayer;
     },
     prompt(ctx) {
-        if (ctx.game.action.count > 0) {
-            // Build buttons dynamically
-            const buttons = {
-                roll: 'Roll',
-            };
-
-            const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, 'friendship');
-            return {
-                player: ctx.game.action.player,
-                message: 'Discard friendship or roll',
-                buttons,
-                cards: cardInfo.cardList.slice(),
-            };
-        } else {
+        if (ctx.game.action.count <= 0) {
             return null;
         }
+        // Build buttons dynamically
+        const buttons = {
+            roll: 'Roll',
+        };
+        const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, 'friendship');
+        return {
+            player: ctx.game.action.player,
+            message: 'Discard friendship or roll',
+            buttons,
+            cards: cardInfo.cardList.slice(),
+        };
     },
     card(ctx, cardArray) {
         const rt = discard_cards(ctx.game, ctx.game.action.player, cardArray);

@@ -33,10 +33,12 @@ function is_path_complete(game, path) {
     if (!quest) {
         // if path does not exist at all → consider it complete
         result = true;
-    } else if (progress < quest.length - 1) {
-        result = false;
-    } else {
+    } else if (game.loc === 'mordor' && progress >= quest.length - 2) {
         result = true;
+    } else if (progress >= quest.length - 1) {
+        result = true;
+    } else {
+        result = false;
     }
     return result;
 }
@@ -317,27 +319,25 @@ const turn_play_cards = {
         ctx.game.action.count = 2;
     },
     prompt(ctx) {
-        // Build buttons dynamically
-        const buttons = {};
-        if (ctx.game.action.count > 0) {
-            buttons['pass'] = 'Pass';
-            // Only allow player to play a valid card based on active quests/paths
-            const cardInfo = count_card_type_by_player(
-                ctx.game,
-                ctx.game.currentPlayer,
-                get_board_active_quests(ctx.game),
-                ctx.game.action.filter,
-            );
-            return {
-                player: ctx.game.currentPlayer,
-                message: `Play ${ctx.game.action.count} cards`,
-                buttons,
-                cards: cardInfo.cardList.slice(),
-            };
-        } else {
-            // Completed playing cards - return null to end phase
+        if (ctx.game.action.count <= 0) {
             return null;
         }
+        // Build buttons dynamically
+        const buttons = {};
+        buttons['pass'] = 'Pass';
+        // Only allow player to play a valid card based on active quests/paths
+        const cardInfo = count_card_type_by_player(
+            ctx.game,
+            ctx.game.currentPlayer,
+            get_board_active_quests(ctx.game),
+            ctx.game.action.filter,
+        );
+        return {
+            player: ctx.game.currentPlayer,
+            message: `Play ${ctx.game.action.count} cards`,
+            buttons,
+            cards: cardInfo.cardList.slice(),
+        };
     },
     pass(ctx) {
         // Advance to next Player
@@ -347,7 +347,7 @@ const turn_play_cards = {
     card(ctx, cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
         const rt = discard_cards(ctx.game, ctx.game.currentPlayer, cardInt);
-        if (rt.value > 0) {
+        if (rt.count > 0) {
             // Create log record of transaction
             ctx.log(`${ctx.game.currentPlayer} plays C${cardInt}`);
             // Keep track of which card was played unless pippin is the current player
@@ -389,22 +389,20 @@ const turn_play_path = {
         ctx.log(`${ctx.game.currentPlayer} can advance ${ctx.game.action.count} on ${ctx.game.action.paths}`);
     },
     prompt(ctx) {
-        // Build buttons dynamically
-        const buttons = {};
-        if (ctx.game.action.count > 0) {
-            // Create button for each path which is available
-            for (const p of ctx.game.action.paths) {
-                buttons[`resolve_path ${p}`] = `Advance as ${p}`;
-            }
-            return {
-                player: ctx.game.currentPlayer,
-                message: `Select path to advance by ${ctx.game.action.count} spaces`,
-                buttons,
-            };
-        } else {
-            // Completed playing cards - return null to end phase
+        if (ctx.game.action.count <= 0) {
             return null;
         }
+        // Build buttons dynamically
+        const buttons = {};
+        // Create button for each path which is available
+        for (const p of ctx.game.action.paths) {
+            buttons[`resolve_path ${p}`] = `Advance as ${p}`;
+        }
+        return {
+            player: ctx.game.currentPlayer,
+            message: `Select path to advance by ${ctx.game.action.count} spaces`,
+            buttons,
+        };
     },
     resolve_path(ctx, t) {
         const path = t[0];
@@ -453,22 +451,20 @@ const turn_play_ring = {
         ctx.game.conflict.ringUsed = true;
     },
     prompt(ctx) {
-        // Build buttons dynamically
-        const buttons = {};
-        if (ctx.game.action.count > 0) {
-            // Create button for each path which is available
-            for (const p of get_board_active_quests(ctx.game)) {
-                buttons[`resolve_path ${p}`] = `Advance as ${p}`;
-            }
-            return {
-                player: ctx.game.ringBearer,
-                message: `Select path to advance by ${ctx.game.action.count} spaces`,
-                buttons,
-            };
-        } else {
-            // Completed playing cards - return null to end phase
+        if (ctx.game.action.count <= 0) {
             return null;
         }
+        // Build buttons dynamically
+        const buttons = {};
+        // Create button for each path which is available
+        for (const p of get_board_active_quests(ctx.game)) {
+            buttons[`resolve_path ${p}`] = `Advance as ${p}`;
+        }
+        return {
+            player: ctx.game.ringBearer,
+            message: `Select path to advance by ${ctx.game.action.count} spaces`,
+            buttons,
+        };
     },
     resolve_path(ctx, t) {
         const path = t[0];
@@ -549,6 +545,12 @@ const conflict_decent_into_darkness = {
 
 const conflict_board_end = {
     init(ctx, args) {
+        if (ctx.game.loc === 'mordor') {
+            ctx.log('=t Destroy the ring');
+            /// TBD - no ring bearer
+            /// TBD - roll die for each remaining player
+            return;
+        }
         ctx.log('=t Board ends');
         ctx.log('=! Descent into darkness');
         // Conflict board is no longer active
@@ -578,39 +580,41 @@ const conflict_board_end = {
         }
     },
     fini(ctx) {
-        ctx.log('=! Determine Ring-Bearer');
-        // Determine the next ring-bearer (current ring-bearer always loses ties)
-        let plist = get_active_players_in_order(ctx.game, ctx.game.ringBearer);
-        let winner = plist[0]; // start with first
-        let maxRings = ctx.game.players[winner].ring;
+        if (ctx.game.loc !== 'mordor') {
+            ctx.log('=! Determine Ring-Bearer');
+            // Determine the next ring-bearer (current ring-bearer always loses ties)
+            let plist = get_active_players_in_order(ctx.game, ctx.game.ringBearer);
+            let winner = plist[0]; // start with first
+            let maxRings = ctx.game.players[winner].ring;
 
-        for (let i = plist.length - 1; i > 0; i--) {
-            const p = plist[i];
-            if (ctx.game.players[p].ring >= maxRings) {
-                winner = p;
-                maxRings = ctx.game.players[p].ring;
+            for (let i = plist.length - 1; i > 0; i--) {
+                const p = plist[i];
+                if (ctx.game.players[p].ring >= maxRings) {
+                    winner = p;
+                    maxRings = ctx.game.players[p].ring;
+                }
             }
-        }
 
-        // Make current player the new ring-bearer
-        ctx.log(`${winner} becomes the next ring-bearer`);
-        ctx.game.ringBearer = winner;
-        ctx.game.currentPlayer = ctx.game.ringBearer;
+            // Make current player the new ring-bearer
+            ctx.log(`${winner} becomes the next ring-bearer`);
+            ctx.game.ringBearer = winner;
+            ctx.game.currentPlayer = ctx.game.ringBearer;
 
-        // Ring-bearer gets 2 new cards
-        draw_cards(ctx.game, ctx.game.ringBearer, 2);
+            // Ring-bearer gets 2 new cards
+            draw_cards(ctx.game, ctx.game.ringBearer, 2);
 
-        // Fatty if active gets 2 new cards
-        if (ctx.game.players.Fatty.active) {
-            draw_cards(ctx.game, 'Fatty', 2);
-        }
+            // Fatty if active gets 2 new cards
+            if (ctx.game.players.Fatty.active) {
+                draw_cards(ctx.game, 'Fatty', 2);
+            }
 
-        // Return all Heart, Sun, and Ring tokens to zero for each player
-        plist = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
-        for (const p of plist) {
-            ctx.game.players[p].heart = 0;
-            ctx.game.players[p].sun = 0;
-            ctx.game.players[p].ring = 0;
+            // Return all Heart, Sun, and Ring tokens to zero for each player
+            plist = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
+            for (const p of plist) {
+                ctx.game.players[p].heart = 0;
+                ctx.game.players[p].sun = 0;
+                ctx.game.players[p].ring = 0;
+            }
         }
 
         // Determine next state, based on current location
@@ -625,7 +629,7 @@ const conflict_board_end = {
                 ctx.advance_state('conflict_board_start', { name: 'Mordor', loc: 'mordor' });
                 break;
             case 'mordor':
-                ctx.advance_state('global_game_end', { victory: true, reason: 'Completed mordor' });
+                ctx.advance_state('global_game_end', { victory: true, reason: 'Ring Destroyed' });
                 break;
         }
     },

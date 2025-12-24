@@ -119,21 +119,20 @@ const lothlorien_test_of_gladriel = {
         ctx.game.action.player = ctx.game.currentPlayer;
     },
     prompt(ctx) {
-        if (ctx.game.action.count > 0) {
-            // Build buttons dynamically
-            const buttons = {
-                roll: 'Roll',
-            };
-            const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, 'wild');
-            return {
-                player: ctx.game.action.player,
-                message: 'Discard wild quest card or roll',
-                buttons,
-                cards: cardInfo.cardList.slice(),
-            };
-        } else {
+        if (ctx.game.action.count <= 0) {
             return null;
         }
+        // Build buttons dynamically
+        const buttons = {
+            roll: 'Roll',
+        };
+        const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, 'wild');
+        return {
+            player: ctx.game.action.player,
+            message: 'Discard wild quest card or roll',
+            buttons,
+            cards: cardInfo.cardList.slice(),
+        };
     },
     card(ctx, cardArray) {
         const rt = discard_cards(ctx.game, ctx.game.action.player, cardArray);

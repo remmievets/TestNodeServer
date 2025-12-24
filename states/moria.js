@@ -27,9 +27,30 @@ import * as util from '../utils/util.js';
 
 const moria_speak_friend = {
     init(ctx, args) {
-        ctx.log('Ring-bearer may roll and reveal 4 hobbit cards face up to distribute');
+        ctx.log('Group discard friendship and wild');
+        ctx.log('Otherwise, sauron moves 1 space');
     },
-    fini(ctx) {
+    prompt(ctx) {
+        // Build buttons dynamically
+        const buttons = {};
+        if (find_player_with_card(ctx.game, data.EOWYN_CARD)) {
+            buttons['discard'] = 'Discard';
+        }
+        buttons['pass'] = 'Pass';
+        return {
+            message: 'Select option',
+            buttons,
+        };
+    },
+    discard(ctx) {
+        ctx.resume_previous_state();
+        // Discard friendship / wild as group
+        ctx.push_advance_state('action_discard_group', { count: 1, type: 'friendship' });
+        ctx.push_advance_state('action_discard_group', { count: 1, type: 'wild' });
+    },
+    pass(ctx) {
+        ctx.game.sauron -= 1;
+        ctx.log('Sauron advances to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
     },
 };

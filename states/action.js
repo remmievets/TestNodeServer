@@ -32,24 +32,20 @@ const action_discard = {
         ctx.game.action.type = args.type;
     },
     prompt(ctx) {
+        if (ctx.game.action.count <= 0) {
+            return null;
+        }
         // Find card list
         const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, ctx.game.action.type);
-
         // Check that count is not higher than hand size, otherwise adjust count.
         if (ctx.game.action.count > cardInfo.value) {
             ctx.game.action.count = cardInfo.value;
         }
-
-        // Exit path for this state
-        if (ctx.game.action.count <= 0) {
-            return null;
-        } else {
-            return {
-                message: `Select ${ctx.game.action.count} cards to discard`,
-                player: ctx.game.action.player,
-                cards: cardInfo.cardList.slice(),
-            };
-        }
+        return {
+            message: `Select ${ctx.game.action.count} cards to discard`,
+            player: ctx.game.action.player,
+            cards: cardInfo.cardList.slice(),
+        };
     },
     card(ctx, cardArray) {
         // Discard cards in array
@@ -121,10 +117,8 @@ const action_discard_item_group = {
         if (ctx.game.action.count <= 0) {
             return null;
         }
-
         // Create a button for each item/player which can be discarded
         const buttons = {};
-
         // Get list of cards for the entire group of active players
         for (const item of ctx.game.action.type) {
             const players = get_active_players_with_resource(ctx.game, item);
@@ -213,7 +207,7 @@ const action_roll_die = {
                 if (p === 'Sam') {
                     discardCount = 1;
                 }
-                ctx.push_advance_state('action_discard', { count: discardCount, type: 'card' });
+                ctx.push_advance_state('action_discard', { player: p, count: discardCount, type: 'card' });
                 break;
             case 5:
                 ctx.game.sauron -= 1;
