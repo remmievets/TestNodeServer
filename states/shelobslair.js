@@ -170,7 +170,36 @@ const shelobslair_nazgul = {
     init(ctx, args) {
         ctx.log('Reveal 1 card from the deck and Ring-bearer discard 3 matching card symbols to heal');
         ctx.log('Otherwise each player rolls the die');
-        ///TBD
+        ctx.game.action.card = deal_card(ctx.game);
+        ctx.game.action.type = data.cards[ctx.game.action.card].quest;
+        ctx.game.action.count = 3;
+    },
+    prompt(ctx) {
+        if (ctx.game.action.count <= 0) {
+            return null;
+        }
+        // Build buttons dynamically
+        const buttons = {
+            roll: 'Each player rolls die',
+        };
+        const cardInfo = count_card_type_by_player(ctx.game, ctx.game.ringBearer, ctx.game.action.type);
+        return {
+            player: ctx.game.ringBearer,
+            message: `Discard ${ctx.game.action.count} ${ctx.game.action.type} symbols or each player rolls die`,
+            buttons,
+            cards: cardInfo.cardList.slice(),
+        };
+    },
+    card(ctx, cardArray) {
+        const rt = discard_cards(ctx.game, ctx.game.ringBearer, cardArray);
+        if (rt.value > 0) {
+            // Decrease amount needed
+            ctx.game.action.count -= rt.value;
+        }
+    },
+    roll(ctx) {
+        // Return to prior state, but push actions for die rolls
+        ctx.resume_previous_state();
         // Each player must roll a die, go in reverse order so action starts with current player
         const plist = get_active_players_in_order(ctx.game, ctx.game.currentPlayer).reverse();
         for (const p of plist) {
@@ -178,6 +207,9 @@ const shelobslair_nazgul = {
         }
     },
     fini(ctx) {
+        if (ctx.game.players[ctx.game.ringBearer].corruption > 0) {
+            ctx.game.players[ctx.game.ringBearer].corruption -= 1;
+        }
         ctx.resume_previous_state();
     },
 };

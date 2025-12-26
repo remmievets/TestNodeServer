@@ -22,8 +22,9 @@ export function deal_card(game) {
 export function give_cards(game, p, cards) {
     const cardList = Array.isArray(cards) ? cards : [cards];
     for (const card of cardList) {
-        game.log.push(`C${card} given to ${p}`);
-        util.set_add(game.players[p].hand, card);
+        const cardInt = parseInt(card, 10);
+        game.log.push(`C${cardInt} given to ${p}`);
+        util.set_add(game.players[p].hand, cardInt);
     }
 }
 

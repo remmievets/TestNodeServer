@@ -40,16 +40,19 @@ const helmsdeep_riders_of_rohan = {
     init(ctx, args) {
         ctx.log('If Friendship is complete then active player receives the Riders of Rohan card');
         ctx.log('Otherwise move Sauron and Ring-bearer rolls die');
-        ///TBD
-    },
-    sauron(ctx) {
-        ctx.game.sauron -= 1;
-        ctx.log('Sauron advances to space ' + ctx.game.sauron);
-        ctx.resume_previous_state();
-        ctx.push_advance_state('action_roll_die', { player: ctx.game.ringBearer });
     },
     fini(ctx) {
         ctx.resume_previous_state();
+        if (ctx.game.conflict.friendship < 7) {
+            ctx.log('First part of friendship is NOT complete');
+            ctx.game.sauron -= 1;
+            ctx.log('Sauron advances to space ' + ctx.game.sauron);
+            ctx.push_advance_state('action_roll_die', { player: ctx.game.ringBearer });
+        } else {
+            ctx.log('First part of friendship is complete');
+            // Give active player the card
+            give_cards(ctx.game, ctx.game.currentPlayer, data.RIDERS_OF_ROHAN);
+        }
     },
 };
 
@@ -57,20 +60,21 @@ const helmsdeep_orcs_attack = {
     init(ctx, args) {
         ctx.log('If first part of Travelling complete then each player receives 1 Hobbit card');
         ctx.log('Otherwise move Sauron 2 spaces');
-        ///TBD
-        // Each player draws a hobbit card
-        const players = get_active_player_list(ctx.game);
-        for (const p of players) {
-            draw_cards(ctx.game, p, 1);
-        }
-    },
-    sauron(ctx) {
-        ctx.game.sauron -= 2;
-        ctx.log('Sauron advances to space ' + ctx.game.sauron);
-        ctx.resume_previous_state();
     },
     fini(ctx) {
         ctx.resume_previous_state();
+        if (ctx.game.conflict.travel < 5) {
+            ctx.log('First part of travelling is NOT complete');
+            ctx.game.sauron -= 2;
+            ctx.log('Sauron advances to space ' + ctx.game.sauron);
+        } else {
+            ctx.log('First part of travelling is complete');
+            // Each player draws a hobbit card
+            const players = get_active_player_list(ctx.game);
+            for (const p of players) {
+                draw_cards(ctx.game, p, 1);
+            }
+        }
     },
 };
 
@@ -78,7 +82,36 @@ const helmsdeep_orthanc = {
     init(ctx, args) {
         ctx.log('Reveal 1 Hobbit card from the deck and Active player discards 2 matching card symbols');
         ctx.log('Otherwise each player rolls a die');
-        ///TBD
+        ctx.game.action.card = deal_card(ctx.game);
+        ctx.game.action.type = data.cards[ctx.game.action.card].quest;
+        ctx.game.action.count = 2;
+    },
+    prompt(ctx) {
+        if (ctx.game.action.count <= 0) {
+            return null;
+        }
+        // Build buttons dynamically
+        const buttons = {
+            roll: 'Each player rolls die',
+        };
+        const cardInfo = count_card_type_by_player(ctx.game, ctx.game.currentPlayer, ctx.game.action.type);
+        return {
+            player: ctx.game.currentPlayer,
+            message: `Discard ${ctx.game.action.count} ${ctx.game.action.type} symbols or each player rolls die`,
+            buttons,
+            cards: cardInfo.cardList.slice(),
+        };
+    },
+    card(ctx, cardArray) {
+        const rt = discard_cards(ctx.game, ctx.game.currentPlayer, cardArray);
+        if (rt.value > 0) {
+            // Decrease amount needed
+            ctx.game.action.count -= rt.value;
+        }
+    },
+    roll(ctx) {
+        // Return to prior state, but push actions for die rolls
+        ctx.resume_previous_state();
         // Each player must roll a die, go in reverse order so action starts with current player
         const plist = get_active_players_in_order(ctx.game, ctx.game.currentPlayer).reverse();
         for (const p of plist) {
@@ -96,6 +129,7 @@ const helmsdeep_orcs_storm = {
         ctx.log('Otherwise move Sauron 2 spaces');
         ///TBD
     },
+    discard(ctx) {},
     sauron(ctx) {
         ctx.game.sauron -= 2;
         ctx.log('Sauron advances to space ' + ctx.game.sauron);
@@ -110,17 +144,18 @@ const helmsdeep_orcs_conquer = {
     init(ctx, args) {
         ctx.log('If second Travelling complete then move Sauron 2 spaces');
         ctx.log('Otherwise move Sauron 2 spaces and ring-bearer 2 dice');
-        ///TBD
-    },
-    sauron(ctx) {
-        ctx.game.sauron -= 2;
-        ctx.log('Sauron advances to space ' + ctx.game.sauron);
-        ctx.resume_previous_state();
-        ctx.push_advance_state('action_roll_die', { player: ctx.game.ringBearer });
-        ctx.push_advance_state('action_roll_die', { player: ctx.game.ringBearer });
     },
     fini(ctx) {
         ctx.resume_previous_state();
+        ctx.game.sauron -= 2;
+        ctx.log('Sauron advances to space ' + ctx.game.sauron);
+        if (ctx.game.conflict.travel < 10) {
+            ctx.log('Travelling is NOT complete');
+            ctx.push_advance_state('action_roll_die', { player: ctx.game.ringBearer });
+            ctx.push_advance_state('action_roll_die', { player: ctx.game.ringBearer });
+        } else {
+            ctx.log('Travelling is complete');
+        }
     },
 };
 

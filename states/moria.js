@@ -114,14 +114,45 @@ const moria_stone = {
     init(ctx, args) {
         ctx.log('Reveal 1 hobbit card from the deck and active player discard 2 matching card symbols to receive Pipe card');
         ctx.log('Otherwise, Sauron and next event');
-        //TBD
+        ctx.game.action.card = deal_card(ctx.game);
+        ctx.game.action.type = data.cards[ctx.game.action.card].quest;
+        ctx.game.action.count = 2;
+    },
+    prompt(ctx) {
+        if (ctx.game.action.count <= 0) {
+            return null;
+        }
+        // Build buttons dynamically
+        const buttons = {
+            sauron: 'Move Sauron 2 Spaces',
+        };
+        const cardInfo = count_card_type_by_player(ctx.game, ctx.game.currentPlayer, ctx.game.action.type);
+        return {
+            player: ctx.game.currentPlayer,
+            message: `Discard ${ctx.game.action.count} ${ctx.game.action.type} symbols or move Sauron`,
+            buttons,
+            cards: cardInfo.cardList.slice(),
+        };
+    },
+    card(ctx, cardArray) {
+        const rt = discard_cards(ctx.game, ctx.game.currentPlayer, cardArray);
+        if (rt.value > 0) {
+            // Decrease amount needed
+            ctx.game.action.count -= rt.value;
+        }
     },
     sauron(ctx) {
         ctx.game.sauron -= 1;
         ctx.log('Sauron advances to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
+        // Force next event to occur
+        ctx.game.conflict.eventValue += 1;
+        ctx.push_advance_state(data[ctx.game.loc].events[ctx.game.conflict.eventValue].state);
     },
     fini(ctx) {
+        // Give active player the pipe card
+        give_cards(ctx.game, ctx.game.currentPlayer, data.PIPE_CARD);
+        // Return to prior state
         ctx.resume_previous_state();
     },
 };
@@ -182,9 +213,27 @@ const moria_fly_you_fools = {
     init(ctx, args) {
         ctx.log('One player 3 corruption');
         ctx.log('Otherwise, each player rolls die');
-        //TBD
     },
-    fini(ctx) {
+    prompt(ctx) {
+        // Build buttons dynamically
+        const buttons = {};
+        // Get all active players
+        const plist = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
+        for (const p of plist) {
+            buttons[`corrupt ${p}`] = p;
+        }
+        buttons['roll'] = 'Roll';
+        return {
+            message: 'One player receives 3 corruption or each player rolls die',
+            buttons,
+        };
+    },
+    corrupt(ctx, args) {
+        const p = args[0];
+        ctx.game.player[p].corruption += 3;
+        ctx.resume_previous_state();
+    },
+    roll(ctx) {
         ctx.resume_previous_state();
         // Each player must roll a die, go in reverse order so action starts with current player
         const plist = get_active_players_in_order(ctx.game, ctx.game.currentPlayer).reverse();
