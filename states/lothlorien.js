@@ -123,31 +123,33 @@ const lothlorien_test_of_gladriel = {
             return null;
         }
         // Build buttons dynamically
-        const buttons = {
-            roll: 'Roll',
-        };
+        const buttons = {};
         const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, 'wild');
+        if (cardInfo.value >= 1) {
+            buttons['discard'] = 'Discard wild';
+        }
+        buttons['roll'] = 'Roll';
         return {
             player: ctx.game.action.player,
-            message: 'Discard wild quest card or roll',
+            message: 'Discard wild or roll',
             buttons,
-            cards: cardInfo.cardList.slice(),
         };
     },
-    card(ctx, cardArray) {
-        const rt = discard_cards(ctx.game, ctx.game.action.player, cardArray);
-        if (rt.count > 0) {
-            // Decrease count and advance to next player
-            ctx.game.action.count -= rt.count;
-            ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
-        }
+    discard(ctx) {
+        // Save current player
+        const cp = ctx.game.action.player;
+        // Decrease count and advance to next player
+        ctx.game.action.count -= 1;
+        ctx.game.action.player = get_next_player(ctx.game, cp);
+        // Push action to discard card
+        ctx.push_advance_state('action_discard', { player: cp, count: 1, type: 'wild' });
     },
     roll(ctx) {
         // Save current player
         const cp = ctx.game.action.player;
-        // Decrease cpimt amd advamce to next player
-        ctx.game.action.count = ctx.game.action.count - 1;
-        ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
+        // Decrease count and advance to next player
+        ctx.game.action.count -= 1;
+        ctx.game.action.player = get_next_player(ctx.game, cp);
         // Push action to roll die with player prior to switching players
         ctx.push_advance_state('action_roll_die', { player: cp, roll: util.roll_d6() });
     },

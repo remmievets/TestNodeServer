@@ -27,9 +27,10 @@ const action_discard = {
         /// a.player - Identify the player who needs to discard (optional).  Current player is not used
         /// a.count - The number of items to Discard
         /// a.type - 'card', or specific card type to discard 'wild'/'hide',etc
+        ///          Type can be an array if multiple card types must be discarded
         ctx.game.action.player = args.player ?? ctx.game.currentPlayer;
         ctx.game.action.count = args.count;
-        ctx.game.action.type = args.type;
+        ctx.game.action.type = Array.isArray(args.type) ? args.type : [args.type];
     },
     prompt(ctx) {
         if (ctx.game.action.count <= 0) {
@@ -48,10 +49,26 @@ const action_discard = {
         };
     },
     card(ctx, cardArray) {
-        // Discard cards in array
-        const rt = discard_cards(ctx.game, ctx.game.action.player, cardArray);
         // Decrease action count by number of cards discarded
-        ctx.game.action.count -= rt.count;
+        for (const card of cardArray) {
+            const cardData = data.cards[card];
+            const usedType = cardData.type;
+            // Discard cards in array
+            const rt = discard_cards(ctx.game, ctx.game.action.player, card);
+            // Decrease action count by number of cards/value discarded
+            if (ctx.game.action.type.includes('card')) {
+                ctx.game.action.count -= rt.count;
+            } else if (usedType === 'wild' || ctx.game.action.type.length === 1) {
+                // If only one type or if this is a wild card then use value
+                ctx.game.action.count -= rt.value;
+            } else {
+                ctx.game.action.count -= rt.count;
+            }
+            // Remove from array each card type matched
+            if (usedType && ctx.game.action.type.includes(usedType)) {
+                ctx.game.action.type = ctx.game.action.type.filter((t) => t !== usedType);
+            }
+        }
     },
     fini(ctx) {
         ctx.resume_previous_state();
@@ -63,7 +80,7 @@ const action_discard_group = {
         /// args.count - The number of items to Discard
         /// args.type - 'card', or specific card type to discard 'wild'/'hide',etc
         ctx.game.action.count = args.count;
-        ctx.game.action.type = args.type;
+        ctx.game.action.type = Array.isArray(args.type) ? args.type : [args.type];
     },
     prompt(ctx) {
         // Exit path for this state
@@ -90,10 +107,23 @@ const action_discard_group = {
             // Find who is holding card - this does not accept an array
             const p = find_player_with_card(ctx.game, card);
             if (p) {
+                const cardData = data.cards[card];
+                const usedType = cardData.type;
                 // Discard cards in array
                 const rt = discard_cards(ctx.game, p, card);
-                // Decrease action count by number of cards discarded
-                ctx.game.action.count -= rt.count;
+                // Decrease action count by number of cards/value discarded
+                if (ctx.game.action.type.includes('card')) {
+                    ctx.game.action.count -= rt.count;
+                } else if (usedType === 'wild' || ctx.game.action.type.length === 1) {
+                    // If only one type or if this is a wild card then use value
+                    ctx.game.action.count -= rt.value;
+                } else {
+                    ctx.game.action.count -= rt.count;
+                }
+                // Remove from array each card type matched
+                if (usedType && ctx.game.action.type.includes(usedType)) {
+                    ctx.game.action.type = ctx.game.action.type.filter((t) => t !== usedType);
+                }
             }
         }
     },

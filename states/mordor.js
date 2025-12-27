@@ -228,7 +228,7 @@ const mordor_dark_forces = {
         if (set_of_player_cards(ctx.game).size >= 7) {
             buttons['discard'] = 'Discard 7 cards';
         }
-        buttons['sauron'] = 'Move sauron 3 spaces';
+        buttons['sauron'] = 'Move sauron 3';
         return {
             message: 'Discard 7 cards or move sauron 3 spaces',
             buttons,

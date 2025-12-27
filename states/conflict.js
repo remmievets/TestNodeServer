@@ -178,7 +178,7 @@ const turn_resolve_tile = {
                 for (const p of plist) {
                     buttons[`resolve_corruption ${p}`] = p;
                 }
-                buttons['resolve_sauron'] = 'Move Sauron';
+                buttons['sauron'] = 'Move Sauron';
                 break;
             default:
                 // Good tile - determine if tile is on board
@@ -253,7 +253,7 @@ const turn_resolve_tile = {
         // Draw another tile
         ctx.advance_state('turn_reveal_tiles');
     },
-    resolve_sauron(ctx) {
+    sauron(ctx) {
         ctx.game.sauron -= 1;
         ctx.log('Sauron moves to ' + ctx.game.sauron);
         // Draw another tile

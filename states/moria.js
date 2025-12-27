@@ -46,7 +46,7 @@ const moria_speak_friend = {
         if (countFriendship >= 1 && countWild >= 1) {
             buttons['discard'] = 'Discard';
         }
-        buttons['pass'] = 'Pass';
+        buttons['sauron'] = 'Move Sauron';
         return {
             message: 'Select option',
             buttons,
@@ -58,7 +58,7 @@ const moria_speak_friend = {
         ctx.push_advance_state('action_discard_group', { count: 1, type: 'friendship' });
         ctx.push_advance_state('action_discard_group', { count: 1, type: 'wild' });
     },
-    pass(ctx) {
+    sauron(ctx) {
         ctx.game.sauron -= 1;
         ctx.log('Sauron advances to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
@@ -77,31 +77,33 @@ const moria_watcher = {
             return null;
         }
         // Build buttons dynamically
-        const buttons = {
-            roll: 'Roll',
-        };
+        const buttons = {};
         const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, 'hide');
+        if (cardInfo.value >= 1) {
+            buttons['discard'] = 'Discard hide';
+        }
+        buttons['roll'] = 'Roll';
         return {
             player: ctx.game.action.player,
             message: 'Discard hide or roll',
             buttons,
-            cards: cardInfo.cardList.slice(),
         };
     },
-    card(ctx, cardArray) {
-        const rt = discard_cards(ctx.game, ctx.game.action.player, cardArray);
-        if (rt.count > 0) {
-            // Decrease count and advance to next player
-            ctx.game.action.count -= rt.count;
-            ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
-        }
+    discard(ctx) {
+        // Save current player
+        const cp = ctx.game.action.player;
+        // Decrease count and advance to next player
+        ctx.game.action.count -= 1;
+        ctx.game.action.player = get_next_player(ctx.game, cp);
+        // Push action to discard card
+        ctx.push_advance_state('action_discard', { player: cp, count: 1, type: 'hide' });
     },
     roll(ctx) {
         // Save current player
         const cp = ctx.game.action.player;
-        // Decrease count amd advance to next player
-        ctx.game.action.count = ctx.game.action.count - 1;
-        ctx.game.action.player = get_next_player(ctx.game, ctx.game.action.player);
+        // Decrease count and advance to next player
+        ctx.game.action.count -= 1;
+        ctx.game.action.player = get_next_player(ctx.game, cp);
         // Push action to roll die with player prior to switching players
         ctx.push_advance_state('action_roll_die', { player: cp, roll: util.roll_d6() });
     },
@@ -124,7 +126,7 @@ const moria_stone = {
         }
         // Build buttons dynamically
         const buttons = {
-            sauron: 'Move Sauron 2 Spaces',
+            sauron: 'Move Sauron',
         };
         const cardInfo = count_card_type_by_player(ctx.game, ctx.game.currentPlayer, ctx.game.action.type);
         return {
@@ -191,7 +193,7 @@ const moria_orcs_attack = {
         if (fightValue >= 5) {
             buttons['discard'] = 'Discard 5 Fight';
         }
-        buttons['pass'] = 'Pass';
+        buttons['sauron'] = 'Move Sauron 2';
         return {
             message: 'Select option',
             buttons,
@@ -202,7 +204,7 @@ const moria_orcs_attack = {
         // Discard 5 fight as group
         ctx.push_advance_state('action_discard_group', { count: 5, type: 'fight' });
     },
-    pass(ctx) {
+    sauron(ctx) {
         ctx.game.sauron -= 2;
         ctx.log('Sauron advances to space ' + ctx.game.sauron);
         ctx.resume_previous_state();

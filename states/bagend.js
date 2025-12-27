@@ -127,19 +127,16 @@ const bagend_nazgul_appears = {
     },
     prompt(ctx) {
         // Build buttons dynamically
-        const buttons = {
-            sauron: 'Move Sauron',
-        };
-
+        const buttons = {};
         // Determine which players are active and have cards to play this action
         const plist = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
         for (const p of plist) {
-            const val = count_card_type_by_player(ctx.game, p, 'hide');
-            if (val.value >= 2) {
+            const cardInfo = count_card_type_by_player(ctx.game, p, 'hide');
+            if (cardInfo.value >= 2) {
                 buttons[`discard ${p}`] = p;
             }
         }
-
+        buttons['sauron'] = 'Move Sauron';
         return {
             message: 'One player discard 2 hiding, otherwise sauron moves 1 space',
             buttons,
@@ -147,14 +144,14 @@ const bagend_nazgul_appears = {
     },
     discard(ctx, args) {
         const p = args[0];
-        ctx.log(`${p} discards 2 hiding`);
+        ctx.log(`${p} will discard 2 hiding`);
         ctx.game.currentPlayer = p;
         ctx.advance_state('rivendell_elrond');
         ctx.push_advance_state('action_discard', { count: 2, type: 'hide' });
     },
     sauron(ctx) {
-        ctx.log('Sauron moves 1 space');
         ctx.game.sauron -= 1;
+        ctx.log('Sauron advances to space ' + ctx.game.sauron);
         ctx.advance_state('rivendell_elrond');
     },
 };

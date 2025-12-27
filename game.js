@@ -63,6 +63,8 @@ const initialGame = {
         Merry: structuredClone(initialPlayer),
         Fatty: structuredClone(initialPlayer),
     },
+    /// @brief game
+    globals: { discard_helms_deep_feature_cards: false },
     loc: 'bagend',
     log: [],
     undo: [],
@@ -321,6 +323,7 @@ export function getGameView(gameId) {
         active: undefined,
         seed: undefined,
         deck: undefined,
+        score: undefined,
         shield: undefined,
         story: undefined,
         state: undefined,

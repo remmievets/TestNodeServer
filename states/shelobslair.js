@@ -74,8 +74,8 @@ const shelobslair_faces = {
     init(ctx, args) {
         ctx.log('EACH PLAYER: Discard wild');
         ctx.log('Otherwise discard 3 shield');
-        ctx.game.action.player = ctx.game.currentPlayer;
         ctx.game.action.count = get_active_player_list(ctx.game).length;
+        ctx.game.action.player = ctx.game.currentPlayer;
     },
     prompt(ctx) {
         // Once all players have completed then exit
@@ -84,46 +84,47 @@ const shelobslair_faces = {
         }
         // Build buttons dynamically
         const buttons = {};
-        // Find card list
         const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, 'wild');
+        if (cardInfo.value >= 1) {
+            buttons['discard'] = 'Discard wild';
+        }
         if (ctx.game.players[ctx.game.action.player].shield >= 3) {
             buttons['shield'] = 'Discard 3 shields';
         }
-        if (cardInfo.cardList.length === 0 && ctx.game.players[ctx.game.action.player].shield < 3) {
+        if (cardInfo.value === 0 && ctx.game.players[ctx.game.action.player].shield < 3) {
             buttons['die'] = 'Player is corrupted';
         }
         return {
             player: ctx.game.action.player,
-            message: 'Discard Wild or 3 shields or player is corrupted',
+            message: 'Discard wild or 3 shields',
             buttons,
-            cards: cardInfo.cardList.slice(),
         };
     },
-    card(ctx, cardArray) {
-        const p = ctx.game.action.player;
-        const rt = discard_cards(ctx.game, p, cardArray);
-        if (rt.count > 0) {
-            // Decrease count and advance to next player
-            ctx.game.action.count -= rt.count;
-            ctx.game.action.player = get_next_player(ctx.game, p);
-        }
+    discard(ctx) {
+        // Save current player
+        const cp = ctx.game.action.player;
+        // Decrease count and advance to next player
+        ctx.game.action.count -= 1;
+        ctx.game.action.player = get_next_player(ctx.game, cp);
+        // Push action to discard card
+        ctx.push_advance_state('action_discard', { player: cp, count: 1, type: 'wild' });
     },
     shield(ctx) {
-        const p = ctx.game.action.player;
+        const cp = ctx.game.action.player;
         // Log message
         ctx.log(`${ctx.game.action.player} discards 3 shields`);
-        ctx.game.players[p].shield -= 3;
+        ctx.game.players[cp].shield -= 3;
         // Decrease count and advance to next player
         ctx.game.action.count -= 1;
-        ctx.game.action.player = get_next_player(ctx.game, p);
+        ctx.game.action.player = get_next_player(ctx.game, cp);
     },
     die(ctx) {
-        const p = ctx.game.action.player;
+        const cp = ctx.game.action.player;
         // If player cannot pay they are corrupted
-        ctx.game.players[p].corruption = ctx.game.sauron;
+        ctx.game.players[cp].corruption = ctx.game.sauron;
         // Decrease count and advance to next player
         ctx.game.action.count -= 1;
-        ctx.game.action.player = get_next_player(ctx.game, p);
+        ctx.game.action.player = get_next_player(ctx.game, cp);
     },
     fini(ctx) {
         ctx.resume_previous_state();
@@ -142,7 +143,7 @@ const shelobslair_pool = {
         for (const p of players) {
             buttons[`discard ${p}`] = `${p}`;
         }
-        buttons['sauron'] = 'Move Sauron 2 Spaces';
+        buttons['sauron'] = 'Move Sauron 2';
         return {
             message: 'One player discard 5 shields or move sauron 2 spaces',
             buttons,
@@ -223,7 +224,7 @@ const shelobslair_appears = {
         // Build buttons dynamically
         const buttons = {};
         buttons['roll'] = 'Active player roll 2 dice';
-        buttons['sauron'] = 'Move Sauron 2 spaces';
+        buttons['sauron'] = 'Move Sauron 2';
         return {
             player: ctx.game.currentPlayer,
             message: 'Active player rolls 2 dice or move Sauron 2 spaces',
@@ -260,7 +261,7 @@ const shelobslair_attacks = {
         if (fightValue >= 7) {
             buttons['discard'] = 'Discard 7 Fight';
         }
-        buttons['sauron'] = 'Move Sauron 2 Spaces';
+        buttons['sauron'] = 'Move Sauron 3';
         return {
             message: 'Select option',
             buttons,
