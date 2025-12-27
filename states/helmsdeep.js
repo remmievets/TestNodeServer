@@ -153,7 +153,31 @@ const helmsdeep_orcs_storm = {
         ctx.log('Otherwise move Sauron 2 spaces');
         ///TBD
     },
-    discard(ctx) {},
+    prompt(ctx) {
+        let ringCount = 0;
+        let heartCount = 0;
+        let sunCount = 0;
+        const pArray = get_active_player_list(ctx.game);
+        for (const p of pArray) {
+            ringCount += ctx.game.players[p].ring;
+            heartCount += ctx.game.players[p].heart;
+            sunCount += ctx.game.players[p].sun;
+        }
+        // Build buttons dynamically
+        const buttons = {};
+        if (ringCount >= 1 && heartCount >= 1 && sunCount >= 1) {
+            buttons['discard'] = 'Discard 3 life tokens';
+        }
+        buttons['sauron'] = 'Move Sauron 2';
+        return {
+            message: 'Discard 3 life tokens or move Sauron 2 spaces',
+            buttons,
+        };
+    },
+    discard(ctx) {
+        ctx.resume_previous_state();
+        ctx.push_advance_state('action_discard_item_group', { count: 3, type: 'life_token' });
+    },
     sauron(ctx) {
         ctx.game.sauron -= 2;
         ctx.log('Sauron advances to space ' + ctx.game.sauron);

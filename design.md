@@ -10,11 +10,12 @@ Work list
         - Moria - Watcher in the Water - Hide   **Uses action_discard**
         - Shelobs Lair - Faces of the Dead - Wild **Uses action_discard**
     - Group discard
-        - Moria - Speak Friend and Enter - 1 friendship and 1 wild
-        - Moria - Orcs Attack - 5 fight
-        - Shelobs Lair - Shelob Attacks - 7 fight
-        - Mordor - Surrounded by Dark Forces - 7 cards
-        - Helms Deep - Orcs Storm Forward - 1 Heart, 1 Sun, 1 Ring **Not Implemented**
+        - Moria - Speak Friend and Enter - 1 friendship and 1 wild **good**
+        - Moria - Orcs Attack - 5 fight **good**
+        - Shelobs Lair - Shelob Attacks - 7 fight **good**
+        - Mordor - Surrounded by Dark Forces - 7 cards **good**
+        
+        - Helms Deep - Orcs Storm Forward - 1 Heart, 1 Sun, 1 Ring **implemented**
         - Shelobs Lair - Gollum - 7 shield
 
 - Buy/play gandalf cards

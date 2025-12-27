@@ -55,8 +55,7 @@ const moria_speak_friend = {
     discard(ctx) {
         ctx.resume_previous_state();
         // Discard friendship / wild as group
-        ctx.push_advance_state('action_discard_group', { count: 1, type: 'friendship' });
-        ctx.push_advance_state('action_discard_group', { count: 1, type: 'wild' });
+        ctx.push_advance_state('action_discard_group', { count: 2, type: ['friendship', 'wild'] });
     },
     sauron(ctx) {
         ctx.game.sauron -= 1;

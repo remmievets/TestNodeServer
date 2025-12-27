@@ -269,7 +269,7 @@ const shelobslair_attacks = {
     },
     discard(ctx) {
         ctx.resume_previous_state();
-        // Discard 5 fight as group
+        // Discard 7 fight as group
         ctx.push_advance_state('action_discard_group', { count: 7, type: 'fight' });
     },
     sauron(ctx) {
