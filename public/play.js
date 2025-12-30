@@ -191,7 +191,7 @@ function enable_card_selection(cards) {
 }
 
 function on_click_action(evt) {
-    const cardEl = event.currentTarget;
+    const cardEl = evt.currentTarget;
     if (cardEl.classList.contains('action')) {
         cardEl.classList.remove('action');
         cardEl.classList.add('selected');

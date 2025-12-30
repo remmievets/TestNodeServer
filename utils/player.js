@@ -104,6 +104,11 @@ export function update_player_active(game) {
             game.players[p].active = false;
             // Discard all cards
             util.set_clear(game.players[p].hand);
+            // Check if corrupted player was active player
+            if (game.currentPlayer === p) {
+                // Switch to new active player
+                game.currentPlayer = get_next_player(game, p);
+            }
         }
     }
 }

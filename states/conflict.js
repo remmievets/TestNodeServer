@@ -86,8 +86,13 @@ function resolve_reward(ctx, path) {
 function check_end_of_mainpath(ctx) {
     const path = data[ctx.game.loc].mainpath;
     if (is_path_complete(ctx.game, path)) {
-        // Main path is complete, so transition to end of board
-        ctx.advance_state('conflict_board_end');
+        if (ctx.game.loc === 'mordor') {
+            // When main path is complete in mordor transition to attempting to destroy the ring
+            ctx.advance_state('conflict_destroy_ring');
+        } else {
+            // Main path is complete, so transition to end of board
+            ctx.advance_state('conflict_board_end');
+        }
         return true;
     }
     return false;
@@ -545,12 +550,6 @@ const conflict_decent_into_darkness = {
 
 const conflict_board_end = {
     init(ctx, args) {
-        if (ctx.game.loc === 'mordor') {
-            ctx.log('=t Destroy the ring');
-            /// TBD - no ring bearer
-            /// TBD - roll die for each remaining player
-            return;
-        }
         ctx.log('=t Board ends');
         ctx.log('=! Descent into darkness');
         // Conflict board is no longer active
@@ -580,41 +579,39 @@ const conflict_board_end = {
         }
     },
     fini(ctx) {
-        if (ctx.game.loc !== 'mordor') {
-            ctx.log('=! Determine Ring-Bearer');
-            // Determine the next ring-bearer (current ring-bearer always loses ties)
-            let plist = get_active_players_in_order(ctx.game, ctx.game.ringBearer);
-            let winner = plist[0]; // start with first
-            let maxRings = ctx.game.players[winner].ring;
+        ctx.log('=! Determine Ring-Bearer');
+        // Determine the next ring-bearer (current ring-bearer always loses ties)
+        let plist = get_active_players_in_order(ctx.game, ctx.game.ringBearer);
+        let winner = plist[0]; // start with first
+        let maxRings = ctx.game.players[winner].ring;
 
-            for (let i = plist.length - 1; i > 0; i--) {
-                const p = plist[i];
-                if (ctx.game.players[p].ring >= maxRings) {
-                    winner = p;
-                    maxRings = ctx.game.players[p].ring;
-                }
+        for (let i = plist.length - 1; i > 0; i--) {
+            const p = plist[i];
+            if (ctx.game.players[p].ring >= maxRings) {
+                winner = p;
+                maxRings = ctx.game.players[p].ring;
             }
+        }
 
-            // Make current player the new ring-bearer
-            ctx.log(`${winner} becomes the next ring-bearer`);
-            ctx.game.ringBearer = winner;
-            ctx.game.currentPlayer = ctx.game.ringBearer;
+        // Make current player the new ring-bearer
+        ctx.log(`${winner} becomes the next ring-bearer`);
+        ctx.game.ringBearer = winner;
+        ctx.game.currentPlayer = ctx.game.ringBearer;
 
-            // Ring-bearer gets 2 new cards
-            draw_cards(ctx.game, ctx.game.ringBearer, 2);
+        // Ring-bearer gets 2 new cards
+        draw_cards(ctx.game, ctx.game.ringBearer, 2);
 
-            // Fatty if active gets 2 new cards
-            if (ctx.game.players.Fatty.active) {
-                draw_cards(ctx.game, 'Fatty', 2);
-            }
+        // Fatty if active gets 2 new cards
+        if (ctx.game.players.Fatty.active) {
+            draw_cards(ctx.game, 'Fatty', 2);
+        }
 
-            // Return all Heart, Sun, and Ring tokens to zero for each player
-            plist = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
-            for (const p of plist) {
-                ctx.game.players[p].heart = 0;
-                ctx.game.players[p].sun = 0;
-                ctx.game.players[p].ring = 0;
-            }
+        // Return all Heart, Sun, and Ring tokens to zero for each player
+        plist = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
+        for (const p of plist) {
+            ctx.game.players[p].heart = 0;
+            ctx.game.players[p].sun = 0;
+            ctx.game.players[p].ring = 0;
         }
 
         // Determine next state, based on current location
@@ -629,9 +626,54 @@ const conflict_board_end = {
                 ctx.advance_state('conflict_board_start', { name: 'Mordor', loc: 'mordor' });
                 break;
             case 'mordor':
-                ctx.advance_state('global_game_end', { victory: true, reason: 'Ring Destroyed' });
+                ctx.advance_state('global_game_end', { victory: false, reason: 'illegal area' });
                 break;
         }
+    },
+};
+
+const conflict_player_destroy_ring_attempt = {
+    init(ctx, args) {
+        ctx.game.action.player = args.player;
+        ctx.log(`${ctx.game.action.player} attempts to destroy the ring`);
+    },
+    fini(ctx) {
+        ctx.resume_previous_state();
+    },
+};
+
+const conflict_destroy_ring = {
+    init(ctx, args) {
+        ctx.log('=t Board ends');
+        ctx.log('=! Attempt to destroy the ring');
+        // No one is the ring bearer
+        ctx.game.ringBearer = undefined;
+        // Get list of active players to try and destroy the ring
+        ctx.game.action.playerList = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
+    },
+    prompt(ctx) {
+        if (ctx.game.action.playerList.length <= 0) {
+            return null;
+        }
+        // Get next player
+        ctx.game.action.player = ctx.game.action.playerList.shift();
+        // Build buttons dynamically
+        const buttons = {
+            roll: 'Roll die to destroy the Ring',
+        };
+        return {
+            player: ctx.game.action.player,
+            message: `Roll die to attempt to destroy ring`,
+            buttons,
+        };
+    },
+    roll(ctx) {
+        // Push rolling dice state
+        ctx.push_advance_state('conflict_player_destroy_ring_attempt', { player: ctx.game.action.player });
+    },
+    fini(ctx) {
+        //ctx.advance_state('global_game_end', { victory: false, reason: 'Sauron reclaims the one RING!' });
+        ctx.advance_state('global_game_end', { victory: true, reason: 'Ring was destoryed' });
     },
 };
 
@@ -647,5 +689,7 @@ export function conflict_states() {
         conflict_board_start,
         conflict_decent_into_darkness,
         conflict_board_end,
+        conflict_player_destroy_ring_attempt,
+        conflict_destroy_ring,
     };
 }

@@ -151,7 +151,6 @@ const helmsdeep_orcs_storm = {
     init(ctx, args) {
         ctx.log('Group discard heart, sun, and ring tokens');
         ctx.log('Otherwise move Sauron 2 spaces');
-        ///TBD
     },
     prompt(ctx) {
         let ringCount = 0;

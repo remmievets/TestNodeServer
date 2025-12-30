@@ -54,7 +54,7 @@ const global_game_end = {
             ctx.game.action.message = 'GAME OVER - LOST';
         }
         // Prevent game changes
-        //clear_undo(ctx.game);
+        clear_undo(ctx.game);
         ctx.game.stateQueue = [];
         // Make game inactive
         ctx.game.active = false;
@@ -80,12 +80,13 @@ const global_debug_menu = {
         // Build buttons dynamically
         const buttons = {};
         buttons['debug_return'] = 'exit menu';
-        buttons['debug_shield'] = '/bADD SHIELD';
-        buttons['debug_reshuffle'] = '/bRESHUFFLE';
+        //buttons['debug_shield'] = '/bADD SHIELD';
+        //buttons['debug_reshuffle'] = '/bRESHUFFLE';
         buttons['debug_undo_queue'] = '/bUNDO PRINT';
-        buttons['debug_game_print'] = '/bDUMP GAME';
+        //buttons['debug_game_print'] = '/bDUMP GAME';
+        buttons['debug_corrupt'] = '/rCORRUPT PLAYER';
         if (ctx.game.conflict.active === true) {
-            buttons['debug_restart'] = '/rGOTO MORIA';
+            buttons['debug_restart'] = '/rGOTO MORDOR';
             buttons['debug_end_board'] = '/rEND BOARD';
         }
 
@@ -126,12 +127,30 @@ const global_debug_menu = {
     debug_restart(ctx) {
         // Eliminate any state queue information
         ctx.game.stateQueue = [];
-        ctx.advance_state('conflict_board_start', { name: 'Moria', loc: 'moria' });
+        ctx.advance_state('conflict_board_start', { name: 'Mordor', loc: 'mordor' });
+    },
+    debug_corrupt(ctx) {
+        // Corrupt the active player by one
+        ctx.game.players[ctx.game.currentPlayer].corruption++;
     },
     debug_end_board(ctx) {
-        // Eliminate any state queue information
-        ctx.game.stateQueue = [];
-        ctx.advance_state('conflict_board_end');
+        // Give each player one sun and heart
+        const players = get_active_player_list(ctx.game);
+        for (const p of players) {
+            ctx.game.players[p].heart = 1;
+            ctx.game.players[p].sun = 1;
+        }
+        // Complete the path
+        const mainpath = data[ctx.game.loc].mainpath;
+        if (ctx.game.loc === 'mordor') {
+            ctx.game.conflict[mainpath] = data[ctx.game.loc][mainpath].length - 2;
+            // When main path is complete in mordor transition to attempting to destroy the ring
+            ctx.advance_state('conflict_destroy_ring');
+        } else {
+            ctx.game.conflict[mainpath] = data[ctx.game.loc][mainpath].length - 1;
+            // Main path is complete, so transition to end of board
+            ctx.advance_state('conflict_board_end');
+        }
     },
 };
 

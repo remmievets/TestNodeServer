@@ -28,6 +28,7 @@ import { save_undo, clear_undo, pop_undo } from './utils/undo.js';
 import data from './utils/data.js';
 import * as util from './utils/util.js';
 import { create_states } from './states/index.js';
+import reactions from './states/reactions.js';
 
 //////////////////////
 // Database const
@@ -145,12 +146,13 @@ function debug_handler() {
     push_advance_state('global_debug_menu');
 }
 
-const globalButtons = {
+const oldglobalButtons = {
     use_ring: use_ring_handler,
     yellow: yellow_handler,
     undo: undo_handler,
     debug: debug_handler,
 };
+const globalButtons = Object.fromEntries(reactions.map((r) => [r.id, r.action]));
 
 function add_global_buttons(prompt) {
     // If null -> nothing to do
@@ -180,6 +182,15 @@ function add_global_buttons(prompt) {
         prompt.buttons['debug'] = '/bDEBUG';
     }
 
+    const ctx = make_ctx();
+    const state = states[game.state];
+
+    for (const r of reactions) {
+        if (r.when(ctx, state)) {
+            prompt.buttons[r.id] = r.label;
+        }
+    }
+
     return prompt;
 }
 
@@ -190,7 +201,7 @@ function check_end_of_game() {
         advance_state('global_game_end', { victory: false, reason: 'All players corrupted' });
     }
     // Ring bearer was corrupted
-    if (game.players[game.ringBearer].active === false) {
+    if (game.ringBearer !== undefined && game.players[game.ringBearer].active === false) {
         log('The ring-bearer has become corrupted');
         advance_state('global_game_end', { victory: false, reason: 'Ring bearer corrupted' });
     }
@@ -247,17 +258,19 @@ function resume_previous_state() {
     game.action = prev.action;
 }
 
-function execute_button(buttonName, args) {
+function execute_callback(callbackFunc, args) {
     const ctx = make_ctx();
     const state = states[game.state];
 
-    if (state && typeof state[buttonName] === 'function') {
+    if (state && typeof state[callbackFunc] === 'function') {
         // Call the function with view and any other needed arguments
-        state[buttonName](ctx, args);
-    } else if (typeof globalButtons[buttonName] === 'function') {
-        globalButtons[buttonName](args);
+        state[callbackFunc](ctx, args);
+    } else if (typeof globalButtons[callbackFunc] === 'function') {
+        globalButtons[callbackFunc](ctx, args);
+    } else if (typeof oldglobalButtons[callbackFunc] === 'function') {
+        oldglobalButtons[callbackFunc](args);
     } else {
-        throw new Error(`State "${game.state}" does not support move "${buttonName}"`);
+        throw new Error(`State "${game.state}" does not support move "${callbackFunc}"`);
     }
 }
 
@@ -297,8 +310,8 @@ function execute_state() {
 /////////////////////////////////////////
 // Functions exposed to server
 const moveHandlers = {
-    RESET: (button, args) => setup_game(),
-    BUTTON: (button, args) => execute_button(button, args),
+    RESET: (func, args) => setup_game(),
+    BUTTON: (func, args) => execute_callback(func, args),
 };
 
 export function startGame(gameId) {
