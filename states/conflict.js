@@ -636,9 +636,16 @@ const conflict_player_destroy_ring_attempt = {
     init(ctx, args) {
         ctx.game.action.player = args.player;
         ctx.log(`${ctx.game.action.player} attempts to destroy the ring`);
+	    ctx.push_advance_state('action_roll_die', { player: ctx.game.action.player, roll: util.roll_d6() });
     },
     fini(ctx) {
-        ctx.resume_previous_state();
+        // Is player still alive?
+        if (ctx.game.players[ctx.game.action.player].active) {
+            // Game won
+            ctx.advance_state('global_game_end', { victory: true, reason: 'Ring was destoryed' });
+        } else {
+            ctx.resume_previous_state();
+        }
     },
 };
 
@@ -659,11 +666,11 @@ const conflict_destroy_ring = {
         ctx.game.action.player = ctx.game.action.playerList.shift();
         // Build buttons dynamically
         const buttons = {
-            roll: 'Roll die to destroy the Ring',
+            roll: 'Roll',
         };
         return {
             player: ctx.game.action.player,
-            message: `Roll die to attempt to destroy ring`,
+            message: `Roll die to attempt to destroy the one Ring`,
             buttons,
         };
     },
@@ -672,8 +679,7 @@ const conflict_destroy_ring = {
         ctx.push_advance_state('conflict_player_destroy_ring_attempt', { player: ctx.game.action.player });
     },
     fini(ctx) {
-        //ctx.advance_state('global_game_end', { victory: false, reason: 'Sauron reclaims the one RING!' });
-        ctx.advance_state('global_game_end', { victory: true, reason: 'Ring was destoryed' });
+        ctx.advance_state('global_game_end', { victory: false, reason: 'Sauron reclaims the one RING!' });
     },
 };
 

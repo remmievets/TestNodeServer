@@ -201,7 +201,7 @@ function check_end_of_game() {
         advance_state('global_game_end', { victory: false, reason: 'All players corrupted' });
     }
     // Ring bearer was corrupted
-    if (game.ringBearer !== undefined && game.players[game.ringBearer].active === false) {
+    if (game.players?.[game.ringBearer]?.active === false) {
         log('The ring-bearer has become corrupted');
         advance_state('global_game_end', { victory: false, reason: 'Ring bearer corrupted' });
     }

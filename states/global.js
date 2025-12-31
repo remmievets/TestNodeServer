@@ -15,6 +15,7 @@ import {
     get_next_player,
     get_active_players_in_order,
     update_player_active,
+    count_total_shields,
 } from '../utils/player.js';
 import { save_undo, clear_undo, pop_undo } from '../utils/undo.js';
 import data from '../utils/data.js';
@@ -60,9 +61,8 @@ const global_game_end = {
         ctx.game.active = false;
         // Calculate final score
         if (args.victory) {
-            ctx.game.score = 60;
             // Plus the number of shields held by the players
-            // TBD
+            ctx.game.score = 60 + count_total_shields(ctx.game);
         } else {
             ctx.game.score = calculate_score(ctx);
         }

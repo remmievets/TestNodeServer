@@ -18,7 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const HTTP_HOST = process.env.HTTP_HOST || '0.0.0.0';
-const HTTP_PORT = process.env.HTTP_PORT || 8080;
+const HTTP_PORT = process.env.HTTP_PORT || 8090;
 const SITE_NAME = process.env.SITE_NAME || '0.0.0.0';
 const SITE_URL = process.env.SITE_URL || 'http://' + HTTP_HOST + ':' + HTTP_PORT;
 
