@@ -17,6 +17,7 @@ import {
     update_player_active,
     count_total_life_token,
     count_total_shields,
+    get_active_players_with_resource,
 } from '../utils/player.js';
 import { save_undo, clear_undo, pop_undo } from '../utils/undo.js';
 import data from '../utils/data.js';
@@ -74,57 +75,47 @@ const shelobslair_faces = {
     init(ctx, args) {
         ctx.log('EACH PLAYER: Discard wild');
         ctx.log('Otherwise discard 3 shield');
-        ctx.game.action.count = get_active_player_list(ctx.game).length;
-        ctx.game.action.player = ctx.game.currentPlayer;
+        ctx.game.action.playerList = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
     },
     prompt(ctx) {
         // Once all players have completed then exit
-        if (ctx.game.action.count <= 0) {
+        if (ctx.game.action.playerList.length <= 0) {
             return null;
         }
         // Build buttons dynamically
         const buttons = {};
-        const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, 'wild');
+        const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.playerList[0], 'wild');
         if (cardInfo.value >= 1) {
             buttons['discard'] = 'Discard wild';
         }
-        if (ctx.game.players[ctx.game.action.player].shield >= 3) {
+        if (ctx.game.players[ctx.game.action.playerList[0]].shield >= 3) {
             buttons['shield'] = 'Discard 3 shields';
         }
-        if (cardInfo.value === 0 && ctx.game.players[ctx.game.action.player].shield < 3) {
+        if (cardInfo.value === 0 && ctx.game.players[ctx.game.action.playerList[0]].shield < 3) {
             buttons['die'] = 'Player is corrupted';
         }
         return {
-            player: ctx.game.action.player,
+            player: ctx.game.action.playerList[0], // peek
             message: 'Discard wild or 3 shields',
             buttons,
         };
     },
     discard(ctx) {
-        // Save current player
-        const cp = ctx.game.action.player;
-        // Decrease count and advance to next player
-        ctx.game.action.count -= 1;
-        ctx.game.action.player = get_next_player(ctx.game, cp);
+        const p = ctx.game.action.playerList.shift();
         // Push action to discard card
-        ctx.push_advance_state('action_discard', { player: cp, count: 1, type: 'wild' });
+        ctx.push_advance_state('action_discard', { player: p, count: 1, type: 'wild' });
     },
     shield(ctx) {
-        const cp = ctx.game.action.player;
+        const p = ctx.game.action.playerList.shift();
         // Log message
-        ctx.log(`${ctx.game.action.player} discards 3 shields`);
-        ctx.game.players[cp].shield -= 3;
-        // Decrease count and advance to next player
-        ctx.game.action.count -= 1;
-        ctx.game.action.player = get_next_player(ctx.game, cp);
+        ctx.log(`${p} discards 3 shields`);
+        // Decrease 3 shields
+        ctx.game.players[p].shield -= 3;
     },
     die(ctx) {
-        const cp = ctx.game.action.player;
+        const p = ctx.game.action.playerList.shift();
         // If player cannot pay they are corrupted
-        ctx.game.players[cp].corruption = ctx.game.sauron;
-        // Decrease count and advance to next player
-        ctx.game.action.count -= 1;
-        ctx.game.action.player = get_next_player(ctx.game, cp);
+        ctx.game.players[p].corruption = ctx.game.sauron;
     },
     fini(ctx) {
         ctx.resume_previous_state();

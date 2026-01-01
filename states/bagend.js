@@ -104,7 +104,7 @@ const bagend_preparations_distribute = {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
         if (distribute_card_from_select(ctx.game, ctx.game.currentPlayer, cardInt)) {
             // Decrease action count if distribute was successful
-            ctx.game.action.count = ctx.game.action.count - 1;
+            ctx.game.action.count -= 1;
         }
 
         // Create log record of transaction

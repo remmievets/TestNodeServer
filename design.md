@@ -36,7 +36,7 @@ Work list
 - Winning game                      ***
     - Destroy the ring state
 - Discard feature cards need to prevent giving helms deep feature cards
-- Gollum card with die roll when played
+- Gollum card with die roll when played ***
 - If asked to discard and player does not have enough cards then player dies
 Rules
 Additionally, if at any time a player does not have enough cards

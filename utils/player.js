@@ -1,6 +1,8 @@
 import data from './data.js';
 import * as util from './util.js';
 
+const TURN_ORDER = ['Frodo', 'Sam', 'Pippin', 'Merry', 'Fatty'];
+
 //////////////////////
 /* Player functions */
 
@@ -66,15 +68,23 @@ export function distribute_card_from_select(game, p, cardInt) {
 }
 
 export function get_active_player_list(game) {
-    const porder = ['Frodo', 'Sam', 'Pippin', 'Merry', 'Fatty'];
-    return porder.filter((p) => game.players[p] && game.players[p].active);
+    return TURN_ORDER.filter((p) => game.players[p] && game.players[p].active);
 }
 
-export function get_next_player(game, p) {
-    const porder = get_active_player_list(game);
-    const start = porder.indexOf(p);
-    const idx = (start + 1) % porder.length;
-    return porder[idx];
+export function get_next_player(game, fromPlayer) {
+    let idx = TURN_ORDER.indexOf(fromPlayer);
+    // if fromPlayer is invalid or undefined, start at beginning
+    if (idx === -1) idx = 0;
+    // Return next active player
+    for (let i = 0; i < TURN_ORDER.length; i++) {
+        idx = (idx + 1) % TURN_ORDER.length;
+        const candidate = TURN_ORDER[idx];
+        if (game.players[candidate]?.active) {
+            return candidate;
+        }
+    }
+    // No remaining active players
+    return undefined;
 }
 
 export function get_active_players_in_order(game, p) {

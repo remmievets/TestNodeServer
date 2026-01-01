@@ -636,7 +636,7 @@ const conflict_player_destroy_ring_attempt = {
     init(ctx, args) {
         ctx.game.action.player = args.player;
         ctx.log(`${ctx.game.action.player} attempts to destroy the ring`);
-	    ctx.push_advance_state('action_roll_die', { player: ctx.game.action.player, roll: util.roll_d6() });
+        ctx.push_advance_state('action_roll_die', { player: ctx.game.action.player, roll: util.roll_d6() });
     },
     fini(ctx) {
         // Is player still alive?
@@ -659,24 +659,23 @@ const conflict_destroy_ring = {
         ctx.game.action.playerList = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
     },
     prompt(ctx) {
+        // Once all players have completed then exit
         if (ctx.game.action.playerList.length <= 0) {
             return null;
         }
-        // Get next player
-        ctx.game.action.player = ctx.game.action.playerList.shift();
-        // Build buttons dynamically
         const buttons = {
             roll: 'Roll',
         };
         return {
-            player: ctx.game.action.player,
+            player: ctx.game.action.playerList[0], // peek
             message: `Roll die to attempt to destroy the one Ring`,
             buttons,
         };
     },
     roll(ctx) {
         // Push rolling dice state
-        ctx.push_advance_state('conflict_player_destroy_ring_attempt', { player: ctx.game.action.player });
+        const p = ctx.game.action.playerList.shift();
+        ctx.push_advance_state('conflict_player_destroy_ring_attempt', { player: p });
     },
     fini(ctx) {
         ctx.advance_state('global_game_end', { victory: false, reason: 'Sauron reclaims the one RING!' });

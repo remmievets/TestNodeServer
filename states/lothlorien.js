@@ -55,11 +55,11 @@ const lothlorien_recovery = {
         ctx.log('=! Recovery');
         ctx.log('EACH PLAYER: May discard 2 shields to either draw 2 hobbit cards or heal');
         ctx.game.currentPlayer = ctx.game.ringBearer;
-        ctx.game.action.count = get_active_player_list(ctx.game).length;
+        ctx.game.action.playerList = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
     },
     prompt(ctx) {
         // Once all players have completed then exit
-        if (ctx.game.action.count <= 0) {
+        if (ctx.game.action.playerList.length <= 0) {
             return null;
         }
         // Build buttons dynamically
@@ -67,42 +67,36 @@ const lothlorien_recovery = {
             pass: 'Next',
         };
         // First check if player has 2 shields
-        if (ctx.game.players[ctx.game.currentPlayer].shield >= 2) {
+        if (ctx.game.players[ctx.game.action.playerList[0]].shield >= 2) {
             buttons['card'] = 'Discard shields to gain 2 cards';
-            if (ctx.game.players[ctx.game.currentPlayer].corruption > 0) {
+            if (ctx.game.players[ctx.game.action.playerList[0]].corruption > 0) {
                 buttons['heal'] = 'Discard shields to heal 1 space';
             }
         }
         // Determine if buttons should be given
         return {
-            player: ctx.game.currentPlayer,
+            player: ctx.game.action.playerList[0], // peek
             message: 'Optionally, discard 2 shields to draw 2 hobbit cards or heal',
             buttons,
         };
     },
     pass(ctx) {
+        ctx.game.currentPlayer = ctx.game.action.playerList.shift();
         // Players turn has completed - skipped option
         ctx.log(`${ctx.game.currentPlayer} passes`);
-        // Decrease count and advance to next player
-        ctx.game.action.count -= 1;
-        ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
     },
     card(ctx) {
+        ctx.game.currentPlayer = ctx.game.action.playerList.shift();
         ctx.log(`${ctx.game.currentPlayer} discards 2 shields to draw 2 cards`);
         ctx.game.players[ctx.game.currentPlayer].shield -= 2;
         // Deal 2 cards
         draw_cards(ctx.game, ctx.game.currentPlayer, 2);
-        // Decrease count and advance to next player
-        ctx.game.action.count -= 1;
-        ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
     },
     heal(ctx) {
+        ctx.game.currentPlayer = ctx.game.action.playerList.shift();
         ctx.log(`${ctx.game.currentPlayer} discards 2 shields to heal 1 space`);
         ctx.game.players[ctx.game.currentPlayer].shield -= 2;
         ctx.game.players[ctx.game.currentPlayer].corruption -= 1;
-        // Decrease count and advance to next player
-        ctx.game.action.count -= 1;
-        ctx.game.currentPlayer = get_next_player(ctx.game, ctx.game.currentPlayer);
     },
     fini(ctx) {
         // Advance to next state
@@ -115,43 +109,37 @@ const lothlorien_test_of_gladriel = {
         ctx.log('=! Test of Galadriel');
         ctx.log('EACH PLAYER: Discard WILD otherwise roll die');
         ctx.game.currentPlayer = ctx.game.ringBearer;
-        ctx.game.action.count = get_active_player_list(ctx.game).length;
-        ctx.game.action.player = ctx.game.currentPlayer;
+        ctx.game.action.playerList = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
     },
     prompt(ctx) {
-        if (ctx.game.action.count <= 0) {
+        // Once all players have completed then exit
+        if (ctx.game.action.playerList.length <= 0) {
             return null;
         }
         // Build buttons dynamically
         const buttons = {};
-        const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, 'wild');
+        const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.playerList[0], 'wild');
         if (cardInfo.value >= 1) {
             buttons['discard'] = 'Discard wild';
         }
         buttons['roll'] = 'Roll';
         return {
-            player: ctx.game.action.player,
+            player: ctx.game.action.playerList[0], // peek
             message: 'Discard wild or roll',
             buttons,
         };
     },
     discard(ctx) {
         // Save current player
-        const cp = ctx.game.action.player;
-        // Decrease count and advance to next player
-        ctx.game.action.count -= 1;
-        ctx.game.action.player = get_next_player(ctx.game, cp);
+        ctx.game.currentPlayer = ctx.game.action.playerList.shift();
         // Push action to discard card
-        ctx.push_advance_state('action_discard', { player: cp, count: 1, type: 'wild' });
+        ctx.push_advance_state('action_discard', { player: ctx.game.currentPlayer, count: 1, type: 'wild' });
     },
     roll(ctx) {
         // Save current player
-        const cp = ctx.game.action.player;
-        // Decrease count and advance to next player
-        ctx.game.action.count -= 1;
-        ctx.game.action.player = get_next_player(ctx.game, cp);
+        ctx.game.currentPlayer = ctx.game.action.playerList.shift();
         // Push action to roll die with player prior to switching players
-        ctx.push_advance_state('action_roll_die', { player: cp, roll: util.roll_d6() });
+        ctx.push_advance_state('action_roll_die', { player: ctx.game.currentPlayer, roll: util.roll_d6() });
     },
     fini(ctx) {
         // Advance to next state

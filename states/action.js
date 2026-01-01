@@ -39,6 +39,7 @@ const action_discard = {
         // Find card list
         const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, ctx.game.action.type);
         // Check that count is not higher than hand size, otherwise adjust count.
+        // TBD
         if (ctx.game.action.count > cardInfo.value) {
             ctx.game.action.count = cardInfo.value;
         }

@@ -68,43 +68,35 @@ const moria_watcher = {
     init(ctx, args) {
         ctx.log('EACH PLAYER: Discard hide');
         ctx.log('Otherwise, roll die');
-        ctx.game.action.count = get_active_player_list(ctx.game).length;
-        ctx.game.action.player = ctx.game.currentPlayer;
+        ctx.game.action.playerList = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
     },
     prompt(ctx) {
-        if (ctx.game.action.count <= 0) {
+        // Once all players have completed then exit
+        if (ctx.game.action.playerList.length <= 0) {
             return null;
         }
         // Build buttons dynamically
         const buttons = {};
-        const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, 'hide');
+        const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.playerList[0], 'hide');
         if (cardInfo.value >= 1) {
             buttons['discard'] = 'Discard hide';
         }
         buttons['roll'] = 'Roll';
         return {
-            player: ctx.game.action.player,
+            player: ctx.game.action.playerList[0], // peek
             message: 'Discard hide or roll',
             buttons,
         };
     },
     discard(ctx) {
-        // Save current player
-        const cp = ctx.game.action.player;
-        // Decrease count and advance to next player
-        ctx.game.action.count -= 1;
-        ctx.game.action.player = get_next_player(ctx.game, cp);
+        const p = ctx.game.action.playerList.shift();
         // Push action to discard card
-        ctx.push_advance_state('action_discard', { player: cp, count: 1, type: 'hide' });
+        ctx.push_advance_state('action_discard', { player: p, count: 1, type: 'hide' });
     },
     roll(ctx) {
-        // Save current player
-        const cp = ctx.game.action.player;
-        // Decrease count and advance to next player
-        ctx.game.action.count -= 1;
-        ctx.game.action.player = get_next_player(ctx.game, cp);
+        const p = ctx.game.action.playerList.shift();
         // Push action to roll die with player prior to switching players
-        ctx.push_advance_state('action_roll_die', { player: cp, roll: util.roll_d6() });
+        ctx.push_advance_state('action_roll_die', { player: p, roll: util.roll_d6() });
     },
     fini(ctx) {
         ctx.resume_previous_state();

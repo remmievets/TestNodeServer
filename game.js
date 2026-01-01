@@ -139,6 +139,7 @@ function yellow_handler() {
 }
 
 function undo_handler() {
+    console.log('UNDO');
     pop_undo(game);
 }
 
@@ -158,13 +159,18 @@ function add_global_buttons(prompt) {
     // If null -> nothing to do
     if (!prompt) return prompt;
 
+    // Ensure buttons object exists
+    if (!prompt.buttons) prompt.buttons = {};
+
+    // Undo
+    if (game.undo.length > 0) {
+        prompt.buttons['undo'] = '/rUNDO';
+    }
+
     // Skip adding global buttons while inside a global action state
     if (game.state && game.state.startsWith('global_')) {
         return prompt;
     }
-
-    // Ensure buttons object exists
-    if (!prompt.buttons) prompt.buttons = {};
 
     // Add buttons which are global
     // Use Ring
@@ -173,10 +179,6 @@ function add_global_buttons(prompt) {
     }
     // Play Yellow
     prompt.buttons['yellow'] = '/yYellow Card';
-    // Undo
-    if (game.undo.length > 0) {
-        prompt.buttons['undo'] = '/rUNDO';
-    }
     // Debug
     if (DEBUG) {
         prompt.buttons['debug'] = '/bDEBUG';
@@ -300,10 +302,14 @@ function execute_state() {
         // Determine if a players state has changed to inactive
         update_player_active(game);
 
-        // Determine if the game has ended
-        if (check_end_of_game() == true) {
-            // TBD - end of game
+        // Do another loop if player in prompt is not active
+        if (game.prompt && game.prompt.player !== undefined && !game.players[game.prompt.player]?.active) {
+            console.log('inactive main player');
+            game.prompt = null;
         }
+
+        // Determine if the game has ended
+        check_end_of_game();
     } while (!game.prompt);
 }
 
