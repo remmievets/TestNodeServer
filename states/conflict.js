@@ -373,6 +373,10 @@ const turn_play_cards = {
             }
             // Advance on path with information from card
             ctx.push_advance_state('turn_play_path', { path: questPath, value: rt.value });
+            // Force die roll if Gollum was played
+            if (cardInt === data.GOLLUM_CARD) {
+                ctx.push_advance_state('action_roll_die');
+            }
         }
     },
     fini(ctx) {

@@ -33,8 +33,6 @@ Work list
     - Miruvor: One player: May pass 1 card to another player
     - [Gandalf's letter: Call one Gandalf card without discarding 5 shields]
     - [Fire brand: Defeat any 1 foe]
-- Winning game                      ***
-    - Destroy the ring state
 - Discard feature cards need to prevent giving helms deep feature cards
 - Gollum card with die roll when played ***
 - If asked to discard and player does not have enough cards then player dies

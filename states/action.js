@@ -36,16 +36,17 @@ const action_discard = {
         if (ctx.game.action.count <= 0) {
             return null;
         }
+        const buttons = {};
         // Find card list
         const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, ctx.game.action.type);
         // Check that count is not higher than hand size, otherwise adjust count.
-        // TBD
         if (ctx.game.action.count > cardInfo.value) {
-            ctx.game.action.count = cardInfo.value;
+            buttons['Player Corrupted'] = 'die';
         }
         return {
             message: `Select ${ctx.game.action.count} cards to discard`,
             player: ctx.game.action.player,
+            buttons,
             cards: cardInfo.cardList.slice(),
         };
     },
@@ -70,6 +71,10 @@ const action_discard = {
                 ctx.game.action.type = ctx.game.action.type.filter((t) => t !== usedType);
             }
         }
+    },
+    die(ctx) {
+        ctx.log(`${ctx.game.action.player} has become corrupted`);
+        ctx.game.players[ctx.game.action.player].corruption = ctx.game.sauron;
     },
     fini(ctx) {
         ctx.resume_previous_state();
