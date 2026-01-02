@@ -78,6 +78,7 @@ let ui = {
 
     players: {
         frodo: {
+            name : document.getElementById('name_frodo'),
             hand: document.getElementById('cards_frodo'),
             ring: document.getElementById('ring_1_text'),
             heart: document.getElementById('heart_1_text'),
@@ -88,6 +89,7 @@ let ui = {
             marker: null,
         },
         sam: {
+            name : document.getElementById('name_sam'),
             hand: document.getElementById('cards_sam'),
             ring: document.getElementById('ring_2_text'),
             heart: document.getElementById('heart_2_text'),
@@ -98,6 +100,7 @@ let ui = {
             marker: null,
         },
         pippin: {
+            name : document.getElementById('name_pippin'),
             hand: document.getElementById('cards_pippin'),
             ring: document.getElementById('ring_3_text'),
             heart: document.getElementById('heart_3_text'),
@@ -108,6 +111,7 @@ let ui = {
             marker: null,
         },
         merry: {
+            name : document.getElementById('name_merry'),
             hand: document.getElementById('cards_merry'),
             ring: document.getElementById('ring_4_text'),
             heart: document.getElementById('heart_4_text'),
@@ -118,6 +122,7 @@ let ui = {
             marker: null,
         },
         fatty: {
+            name : document.getElementById('name_fatty'),
             hand: document.getElementById('cards_fatty'),
             ring: document.getElementById('ring_5_text'),
             heart: document.getElementById('heart_5_text'),
@@ -281,10 +286,12 @@ function on_init(view) {
             ui.players[p].corruption.textContent = 'D';
         }
         if (view.ringBearer === player) {
-            ui.players[p].info.textContent = 'Ring';
+            ui.players[p].name.textContent = `${player} Ring`;
         } else {
-            ui.players[p].info.textContent = '';
+            ui.players[p].name.textContent = `${player}`;
         }
+        // Display hand size
+        ui.players[p].info.textContent = `Hand Size is ${view.players[player].hand.length}`;
 
         // Update player markers
         if (!ui.players[p].marker) {

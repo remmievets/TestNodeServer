@@ -41,7 +41,7 @@ const action_discard = {
         const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.player, ctx.game.action.type);
         // Check that count is not higher than hand size, otherwise adjust count.
         if (ctx.game.action.count > cardInfo.value) {
-            buttons['Player Corrupted'] = 'die';
+            buttons['die'] = 'Player Corrupted';
         }
         return {
             message: `Select ${ctx.game.action.count} cards to discard`,
@@ -73,8 +73,11 @@ const action_discard = {
         }
     },
     die(ctx) {
+        console.log(`${ctx.game.action.player} has become corrupted`);
         ctx.log(`${ctx.game.action.player} has become corrupted`);
         ctx.game.players[ctx.game.action.player].corruption = ctx.game.sauron;
+        ctx.resume_previous_state();
+        console.log(`${ctx.game.state}`);
     },
     fini(ctx) {
         ctx.resume_previous_state();

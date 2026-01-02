@@ -33,16 +33,9 @@ Work list
     - Miruvor: One player: May pass 1 card to another player
     - [Gandalf's letter: Call one Gandalf card without discarding 5 shields]
     - [Fire brand: Defeat any 1 foe]
-- Discard feature cards need to prevent giving helms deep feature cards
-- Gollum card with die roll when played ***
-- If asked to discard and player does not have enough cards then player dies
-Rules
-Additionally, if at any time a player does not have enough cards
-or runes to pay a cost, he must discard everything he has and is
-immediately eliminated from the game.
+- *** Discard feature cards need to prevent giving helms deep feature cards
 
 - Client Side
-- Show gandalf cards
 - Popup text for cards with card text on yellow cards
 
 Errors

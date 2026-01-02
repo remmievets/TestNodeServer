@@ -304,8 +304,9 @@ function execute_state() {
 
         // Do another loop if player in prompt is not active
         if (game.prompt && game.prompt.player !== undefined && !game.players[game.prompt.player]?.active) {
-            console.log('inactive main player');
+            console.log(`inactive player ${game.prompt.player} ${game.state}`);
             game.prompt = null;
+            resume_previous_state();
         }
 
         // Determine if the game has ended
