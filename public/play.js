@@ -78,7 +78,7 @@ let ui = {
 
     players: {
         frodo: {
-            name : document.getElementById('name_frodo'),
+            name: document.getElementById('name_frodo'),
             hand: document.getElementById('cards_frodo'),
             ring: document.getElementById('ring_1_text'),
             heart: document.getElementById('heart_1_text'),
@@ -89,7 +89,7 @@ let ui = {
             marker: null,
         },
         sam: {
-            name : document.getElementById('name_sam'),
+            name: document.getElementById('name_sam'),
             hand: document.getElementById('cards_sam'),
             ring: document.getElementById('ring_2_text'),
             heart: document.getElementById('heart_2_text'),
@@ -100,7 +100,7 @@ let ui = {
             marker: null,
         },
         pippin: {
-            name : document.getElementById('name_pippin'),
+            name: document.getElementById('name_pippin'),
             hand: document.getElementById('cards_pippin'),
             ring: document.getElementById('ring_3_text'),
             heart: document.getElementById('heart_3_text'),
@@ -111,7 +111,7 @@ let ui = {
             marker: null,
         },
         merry: {
-            name : document.getElementById('name_merry'),
+            name: document.getElementById('name_merry'),
             hand: document.getElementById('cards_merry'),
             ring: document.getElementById('ring_4_text'),
             heart: document.getElementById('heart_4_text'),
@@ -122,7 +122,7 @@ let ui = {
             marker: null,
         },
         fatty: {
-            name : document.getElementById('name_fatty'),
+            name: document.getElementById('name_fatty'),
             hand: document.getElementById('cards_fatty'),
             ring: document.getElementById('ring_5_text'),
             heart: document.getElementById('heart_5_text'),
@@ -181,17 +181,12 @@ function reset_all_card_states() {
 
 function enable_card_selection(cards) {
     cards.forEach((cardId) => {
-        const cardEl = hand.querySelector(`.card_${cardId}`);
-        if (cardEl) {
-            cardEl.classList.add('action');
-            cardEl.addEventListener('click', on_click_action);
-        } else {
-            const cardE2 = select.querySelector(`.card_${cardId}`);
-            if (cardE2) {
-                cardE2.classList.add('action');
-                cardE2.addEventListener('click', on_click_action);
-            }
-        }
+        const cardEl = hand.querySelector(`.card_${cardId}`) || select.querySelector(`.card_${cardId}`);
+        if (!cardEl) return;
+        cardEl.classList.add('action');
+        // Avoid double-binding
+        cardEl.removeEventListener('click', on_click_action);
+        cardEl.addEventListener('click', on_click_action);
     });
 }
 
@@ -206,6 +201,11 @@ function on_click_action(evt) {
         cardEl.classList.remove('selected');
         cardEl.classList.add('action');
     }
+}
+
+function on_yellow_action(card) {
+    // Send action
+    send_action('YELLOW', `${card}`);
 }
 
 function build_piece(cn) {
@@ -273,6 +273,20 @@ function on_init(view) {
             const cardDiv = document.createElement('div');
             cardDiv.classList.add('card', `card_${card}`);
             cardContainer.appendChild(cardDiv);
+            // Yellow card action button
+            const cardData = data.cards[card];
+            if (cardData.type === 'yellow') {
+                console.log('Yellow card found');
+                console.log(card);
+                const btn = document.createElement('button');
+                btn.classList.add('card-yellow');
+                btn.textContent = 'Play';
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    on_yellow_action(card);
+                });
+                cardDiv.appendChild(btn);
+            }
         }
 
         // Update player stats
@@ -390,7 +404,6 @@ function on_init(view) {
                 activePlayer = view.prompt.player.toLowerCase();
                 moveHandToSelect(activePlayer);
             }
-            //send_action("DISTRIBUTE", `${view.prompt.action.cards[0]} Frodo`);
         } else {
             reset_all_card_states();
         }

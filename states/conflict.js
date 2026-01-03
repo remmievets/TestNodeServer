@@ -75,8 +75,12 @@ function resolve_reward(ctx, path) {
             ctx.push_advance_state('action_roll_die');
             break;
         case 'card':
-            // Give the reward to the current player
-            give_cards(ctx.game, ctx.game.currentPlayer, pathData[curIndex].cards);
+            if (ctx.game.loc === 'helmsdeep' && ctx.game.globals.discard_helms_deep_feature_cards) {
+                ctx.log('Remaining feature cards have been discarded');
+            } else {
+                // Give the reward to the current player
+                give_cards(ctx.game, ctx.game.currentPlayer, pathData[curIndex].cards);
+            }
             break;
         default:
             break;

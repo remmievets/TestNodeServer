@@ -23,6 +23,7 @@ Work list
     - [Bill the pony: One player: Use this card as 1 shield or life token (both anytime and specific)]
 - Any time yellow cards
     - Gandalf Foresight: One player: Rearrange top 3 tiles
+        - Any conflict state
     - Gandalf Healing: One player: 2 healing
     - Gandalf Persistence: One player: Draw 4 Hobbit cards
     - [Gandalf Firestorm: Defeat any 2 foes]

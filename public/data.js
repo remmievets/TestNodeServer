@@ -4,6 +4,10 @@ const data = {
     GANDALF_DECK_FOES: [60, 67],
     RIVENDELL_DECK: [102, 113],
     LOTHLORIEN_DECK: [85, 96],
+    PIPE_CARD: 101,
+    RIDERS_OF_ROHAN: 77,
+    EOWYN_CARD: 99,
+    GOLLUM_CARD: 114,
     cards: [
         {
             /// 0
@@ -759,7 +763,7 @@ const data = {
         },
         {
             /// 28 (96)
-            name: 'Bow',
+            name: 'Belt',
             type: 'yellow',
             action: 'One player: Do not roll one die',
             deck: 'Lothlorien',
@@ -806,7 +810,7 @@ const data = {
         },
         {
             /// 34 (102)
-            name: 'Bow',
+            name: 'Mithril',
             type: 'yellow',
             action: 'One player: Ignore effects after one die roll',
             deck: 'Rivendell',

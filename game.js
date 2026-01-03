@@ -65,7 +65,9 @@ const initialGame = {
         Fatty: structuredClone(initialPlayer),
     },
     /// @brief game
-    globals: { discard_helms_deep_feature_cards: false },
+    globals: {
+        discard_helms_deep_feature_cards: false,
+    },
     loc: 'bagend',
     log: [],
     undo: [],
@@ -134,10 +136,6 @@ function use_ring_handler() {
     push_advance_state('turn_play_ring');
 }
 
-function yellow_handler() {
-    // Create global state for yellow cards
-}
-
 function undo_handler() {
     console.log('UNDO');
     pop_undo(game);
@@ -149,7 +147,6 @@ function debug_handler() {
 
 const oldglobalButtons = {
     use_ring: use_ring_handler,
-    yellow: yellow_handler,
     undo: undo_handler,
     debug: debug_handler,
 };
@@ -177,8 +174,6 @@ function add_global_buttons(prompt) {
     if (game.conflict.active === true && game.conflict.ringUsed === false) {
         prompt.buttons['use_ring'] = '/gUse Ring';
     }
-    // Play Yellow
-    prompt.buttons['yellow'] = '/yYellow Card';
     // Debug
     if (DEBUG) {
         prompt.buttons['debug'] = '/bDEBUG';
@@ -189,7 +184,8 @@ function add_global_buttons(prompt) {
 
     for (const r of reactions) {
         if (r.when(ctx, state)) {
-            prompt.buttons[r.id] = r.label;
+            //console.log(r.id);
+            //prompt.buttons[r.id] = r.label;
         }
     }
 
@@ -201,12 +197,15 @@ function check_end_of_game() {
     if (get_active_player_list(game).length == 0) {
         log('All players have become corrupted');
         advance_state('global_game_end', { victory: false, reason: 'All players corrupted' });
+        return false;
     }
     // Ring bearer was corrupted
     if (game.players?.[game.ringBearer]?.active === false) {
         log('The ring-bearer has become corrupted');
         advance_state('global_game_end', { victory: false, reason: 'Ring bearer corrupted' });
+        return false;
     }
+    return true;
 }
 
 //////////////////////
@@ -276,6 +275,15 @@ function execute_callback(callbackFunc, args) {
     }
 }
 
+function execute_yellow(card, args) {
+    const ctx = make_ctx();
+    if (typeof globalButtons[card] === 'function') {
+        globalButtons[card](ctx, args);
+    } else {
+        throw new Error(`Game does not support move "${card}"`);
+    }
+}
+
 function execute_state() {
     let curstate;
     const ctx = make_ctx();
@@ -302,15 +310,16 @@ function execute_state() {
         // Determine if a players state has changed to inactive
         update_player_active(game);
 
-        // Do another loop if player in prompt is not active
-        if (game.prompt && game.prompt.player !== undefined && !game.players[game.prompt.player]?.active) {
-            console.log(`inactive player ${game.prompt.player} ${game.state}`);
-            game.prompt = null;
-            resume_previous_state();
-        }
-
         // Determine if the game has ended
-        check_end_of_game();
+        if (check_end_of_game()) {
+            // If the game has not ended then check if the current player is still active
+            // Do another loop if player in prompt is not active
+            if (game.prompt && game.prompt.player !== undefined && !game.players[game.prompt.player]?.active) {
+                console.log(`inactive player ${game.prompt.player} ${game.state}`);
+                game.prompt = null;
+                resume_previous_state();
+            }
+        }
     } while (!game.prompt);
 }
 
@@ -319,6 +328,7 @@ function execute_state() {
 const moveHandlers = {
     RESET: (func, args) => setup_game(),
     BUTTON: (func, args) => execute_callback(func, args),
+    YELLOW: (card, args) => execute_yellow(card, args),
 };
 
 export function startGame(gameId) {

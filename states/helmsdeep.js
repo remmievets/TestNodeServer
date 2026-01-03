@@ -72,6 +72,9 @@ const helmsdeep_riders_of_rohan = {
             ctx.game.sauron -= 1;
             ctx.log('Sauron advances to space ' + ctx.game.sauron);
             ctx.push_advance_state('action_roll_die', { player: ctx.game.ringBearer });
+        } else if (ctx.game.globals.discard_helms_deep_feature_cards) {
+            ctx.log('First part of friendship is complete');
+            ctx.log('Remaining feature cards have been discarded');
         } else {
             ctx.log('First part of friendship is complete');
             // Give active player the card
