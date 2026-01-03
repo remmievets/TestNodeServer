@@ -274,18 +274,18 @@ function on_init(view) {
             cardDiv.classList.add('card', `card_${card}`);
             cardContainer.appendChild(cardDiv);
             // Yellow card action button
-            const cardData = data.cards[card];
-            if (cardData.type === 'yellow') {
-                console.log('Yellow card found');
-                console.log(card);
-                const btn = document.createElement('button');
-                btn.classList.add('card-yellow');
-                btn.textContent = 'Play';
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    on_yellow_action(card);
-                });
-                cardDiv.appendChild(btn);
+            if (view.prompt.yellow.includes(card)) {
+                const cardData = data.cards[card];
+                if (cardData.type === 'yellow') {
+                    const btn = document.createElement('button');
+                    btn.classList.add('card-yellow');
+                    btn.textContent = 'Play';
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        on_yellow_action(card);
+                    });
+                    cardDiv.appendChild(btn);
+                }
             }
         }
 

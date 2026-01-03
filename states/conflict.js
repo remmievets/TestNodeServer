@@ -4,6 +4,7 @@ import {
     give_cards,
     draw_cards,
     discard_cards,
+    play_cards,
     find_player_with_card,
     set_of_player_cards,
     reshuffle_deck,
@@ -355,10 +356,8 @@ const turn_play_cards = {
     },
     card(ctx, cardArray) {
         const cardInt = parseInt(cardArray[0], 10); // Convert to int if needed
-        const rt = discard_cards(ctx.game, ctx.game.currentPlayer, cardInt);
+        const rt = play_cards(ctx.game, ctx.game.currentPlayer, cardInt);
         if (rt.count > 0) {
-            // Create log record of transaction
-            ctx.log(`${ctx.game.currentPlayer} plays C${cardInt}`);
             // Keep track of which card was played unless pippin is the current player
             const cardData = data.cards[cardInt];
             // Pippin: can play any two cards

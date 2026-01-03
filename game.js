@@ -13,6 +13,7 @@ import {
     give_cards,
     draw_cards,
     discard_cards,
+    play_cards,
     set_of_player_cards,
     reshuffle_deck,
 } from './utils/cards.js';
@@ -182,10 +183,10 @@ function add_global_buttons(prompt) {
     const ctx = make_ctx();
     const state = states[game.state];
 
+    prompt.yellow = [];
     for (const r of reactions) {
         if (r.when(ctx, state)) {
-            //console.log(r.id);
-            //prompt.buttons[r.id] = r.label;
+            prompt.yellow.push(r.id);
         }
     }
 
@@ -278,7 +279,7 @@ function execute_callback(callbackFunc, args) {
 function execute_yellow(card, args) {
     const ctx = make_ctx();
     if (typeof globalButtons[card] === 'function') {
-        globalButtons[card](ctx, args);
+        globalButtons[card](ctx, card, args);
     } else {
         throw new Error(`Game does not support move "${card}"`);
     }

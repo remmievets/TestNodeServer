@@ -64,6 +64,32 @@ export function discard_cards(game, p, cards) {
     };
 }
 
+export function play_cards(game, p, cards) {
+    let discardValue = 0;
+    let discardCount = 0;
+    const cardList = Array.isArray(cards) ? cards : [cards];
+    for (const card of cardList) {
+        // Convert card to int to make sure all cards are integer values
+        const cardInt = parseInt(card, 10);
+        // Ensure the card actually exists in hand
+        if (util.set_has(game.players[p].hand, cardInt)) {
+            // Create log record of transaction
+            game.log.push(`${p} plays C${cardInt}`);
+            // Remove the card from hand
+            util.set_delete(game.players[p].hand, cardInt);
+            discardCount++;
+            // Get the value of the card
+            if (data.cards[cardInt].count) {
+                discardValue += data.cards[cardInt].count;
+            }
+        }
+    }
+    return {
+        count: discardCount,
+        value: discardValue,
+    };
+}
+
 // Find out who is holding a card or null if no one has the card
 export function find_player_with_card(game, card) {
     // Convert card to int to make sure all cards are integer values
