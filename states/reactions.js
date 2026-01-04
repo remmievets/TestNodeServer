@@ -35,6 +35,8 @@ const reactions = [
         action: (ctx, card, player) => {
             ctx.log('One player: Rearrange top 3 tiles');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
+            // Discard shields - TBD
+            // Play card issue with gandalf cards - TBD
             // Push special action - TBD
         },
     },
@@ -42,10 +44,12 @@ const reactions = [
         // Gandalf: Magic
         //  turn_resolve_tile
         id: 61,
-        when: (ctx, state, player) => (state === 'turn_resolve_tile'),
+        when: (ctx, state, player) => ctx.game.state === 'turn_resolve_tile',
         action: (ctx, card) => {
             ctx.log('After moving the event marker ignore the event');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
+            // Discard shields - TBD
+            // Play card issue with gandalf cards - TBD
             // TBD - immediate
         },
     },
@@ -56,7 +60,10 @@ const reactions = [
         action: (ctx, card, player) => {
             ctx.log('One player: Heal 2');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
-            // Push heal any player action - TBD
+            // Discard shields - TBD
+            // Play card issue with gandalf cards - TBD
+            // Push heal any player action
+            ctx.push_advance_state('action_heal_player', { count: 2 });
         },
     },
     {
@@ -67,6 +74,8 @@ const reactions = [
         action: (ctx, card, player) => {
             ctx.log('Active player: Wild 2');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
+            // Discard shields - TBD
+            // Play card issue with gandalf cards - TBD
             ctx.push_advance_state('turn_play_path', { path: 'wild', value: 2 });
         },
     },
@@ -77,17 +86,21 @@ const reactions = [
         action: (ctx, card, player) => {
             ctx.log('One player: Draw 4 Hobbit cards');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
-            // TBD - immediate
+            // Discard shields - TBD
+            // Play card issue with gandalf cards - TBD
+            ctx.push_advance_state('action_draw_cards', { count: 4 });
         },
     },
     {
         // Gandalf: Defiance
         //  Multiple - on sauron move
         id: 65,
-        when: (ctx, state) => true,
+        when: (ctx, state) => true, // TBD
         action: (ctx, card, player) => {
             ctx.log('Sauron does not move');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
+            // Discard shields - TBD
+            // Play card issue with gandalf cards - TBD
             // TBD - immediate
         },
     },
@@ -99,7 +112,9 @@ const reactions = [
         action: (ctx, card, player) => {
             ctx.log('Instead of rolling the die, place it with the white side up');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
-            // TBD - immediate
+            // Discard shields - TBD
+            // Play card issue with gandalf cards - TBD
+            ctx.game.action.roll = 6;
         },
     },
     {
@@ -119,7 +134,9 @@ const reactions = [
         action: (ctx, card) => {
             ctx.log('You may allocate 3 heals among the players');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
-            // Push heal any player action 3 times - TBD
+            ctx.push_advance_state('action_heal_player');
+            ctx.push_advance_state('action_heal_player');
+            ctx.push_advance_state('action_heal_player');
         },
     },
     {
@@ -129,18 +146,19 @@ const reactions = [
         action: (ctx, card) => {
             ctx.log('One player: heal');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
-            // Push heal any player action - TBD
+            ctx.push_advance_state('action_heal_player');
         },
     },
     {
         // Phial
         //  turn_reveal_tiles
         id: 86,
-        when: (ctx, state) => (state === 'turn_resolve_tile'),
+        when: (ctx, state) => ctx.game.state === 'turn_resolve_tile',
         action: (ctx, card) => {
             ctx.log('Active player: Do not reveal the next tile');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
-            // TBD - immediate
+            // Advance to next turn phase
+            ctx.advance_state('turn_play_pick');
         },
     },
     {
@@ -150,25 +168,25 @@ const reactions = [
         action: (ctx, card) => {
             ctx.log('One player: Draw Hobbit cards to increase hand to 6 cards');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
-            // TBD - immediate
+            ctx.push_advance_state('action_draw_cards', { count: 6, limit: 6 });
         },
     },
     {
         // Belt
         //  Multiple - Prior to rolling a die
         id: 96,
-        when: (ctx, state) => true, // TBD
+        when: (ctx, state) => ctx.game.action.roll < 0, // Still issues here - TBD
         action: (ctx, card) => {
             ctx.log('One player: Do not roll one die');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
-            // TBD - immediate
+            ctx.game.action.roll = 6;
         },
     },
     {
         // Mithril
         //  action_roll_die
         id: 102,
-        when: (ctx, state) => (state === 'action_roll_die'),
+        when: (ctx, state) => ctx.game.state === 'action_roll_die',
         action: (ctx, card) => {
             ctx.log('One player: Ignore effects after one die roll');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
@@ -180,7 +198,7 @@ const reactions = [
         // Athelas
         //  conflict_decent_into_darkness
         id: 106,
-        when: (ctx, state) => (state === 'conflict_decent_into_darkness'),
+        when: (ctx, state) => ctx.game.state === 'conflict_decent_into_darkness',
         action: (ctx, card) => {
             ctx.log('One player: Ignore any effects of missing life tokens once only');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
@@ -192,7 +210,7 @@ const reactions = [
         // Staff
         //  turn_resolve_tile
         id: 108,
-        when: (ctx, state) => (state === 'turn_resolve_tile'),
+        when: (ctx, state) => ctx.game.state === 'turn_resolve_tile',
         action: (ctx, card) => {
             ctx.log('Ignore one tile showing a sundial and three items');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);

@@ -46,6 +46,7 @@ const bagend_preparations = {
     init(ctx, args) {
         ctx.log('=! Preparations');
         ctx.log('Ring-bearer may roll and reveal 4 hobbit cards face up to distribute');
+        ctx.game.action.roll = -1;
     },
     prompt(ctx) {
         return {
@@ -60,8 +61,12 @@ const bagend_preparations = {
     roll(ctx) {
         // Once we roll we are done with this current state, so setup next state
         ctx.advance_state('bagend_preparations_cards');
+        // If card not played then perform die roll
+        if (ctx.game.action.roll < 0) {
+            ctx.game.action.roll = util.roll_d6();
+        }
         // Now push state to queue and interrupt with dice roll
-        ctx.push_advance_state('action_roll_die', { roll: util.roll_d6() });
+        ctx.push_advance_state('action_roll_die', { roll: ctx.game.action.roll });
     },
     pass(ctx) {
         ctx.log('Ring-bearer passes');

@@ -274,7 +274,7 @@ function on_init(view) {
             cardDiv.classList.add('card', `card_${card}`);
             cardContainer.appendChild(cardDiv);
             // Yellow card action button
-            if (view.prompt.yellow.includes(card)) {
+            if (view.prompt.yellow?.includes(card)) {
                 const cardData = data.cards[card];
                 if (cardData.type === 'yellow') {
                     const btn = document.createElement('button');

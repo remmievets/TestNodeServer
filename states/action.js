@@ -187,17 +187,17 @@ const action_roll_die = {
     init(ctx, args) {
         // Save parameters
         ctx.game.action.player = args.player ?? ctx.game.currentPlayer;
-        ctx.game.action.count = args.roll ?? -1;
-        if (ctx.game.action.count > 0) {
+        ctx.game.action.roll = args.roll ?? -1;
+        if (ctx.game.action.roll > 0) {
             // Skip dialog to roll dice
-            ctx.log(ctx.game.action.player + ' rolls a D' + ctx.game.action.count);
+            ctx.log(ctx.game.action.player + ' rolls a D' + ctx.game.action.roll);
         }
         // Resolution of die has not been completed
         ctx.game.action.resolved = false;
     },
     prompt(ctx) {
         const buttons = {};
-        if (ctx.game.action.count < 0) {
+        if (ctx.game.action.roll < 0) {
             buttons['roll'] = 'Roll';
         } else if (ctx.game.action.resolved === false) {
             buttons['resolve'] = 'Resolve';
@@ -212,13 +212,13 @@ const action_roll_die = {
         };
     },
     roll(ctx) {
-        ctx.game.action.count = util.roll_d6();
-        ctx.log(ctx.game.action.player + ' rolls a D' + ctx.game.action.count);
+        ctx.game.action.roll = util.roll_d6();
+        ctx.log(ctx.game.action.player + ' rolls a D' + ctx.game.action.roll);
     },
     resolve(ctx) {
         ctx.game.action.resolved = true;
         const p = ctx.game.action.player;
-        switch (ctx.game.action.count) {
+        switch (ctx.game.action.roll) {
             case 1:
                 ctx.game.players[p].corruption += 1;
                 ctx.log(p + ' increases corruption by 1 to ' + ctx.game.players[p].corruption);
@@ -263,11 +263,86 @@ const action_roll_die = {
     },
 };
 
+const action_pick_player = {
+    init(ctx, args) {
+        ctx.game.action.message = args.message;
+    },
+    prompt(ctx) {
+        const buttons = {};
+        const plist = get_active_player_list(ctx.game);
+        for (const p of plist) {
+            buttons[`pick ${p}`] = p;
+        }
+        return {
+            message: ctx.game.action.message,
+            buttons,
+        };
+    },
+    pick(ctx, args) {
+        // Restore prior state
+        ctx.resume_previous_state();
+        // Update prior state action with selected player
+        ctx.game.action.player = args;
+    },
+};
+
+const action_heal_player = {
+    init(ctx, args) {
+        ctx.game.action.player = args.player ?? undefined;
+        ctx.game.action.count = args.count ?? 1;
+        // Need to select a player first
+        if (!ctx.game.action.player) {
+            ctx.push_advance_state('action_pick_player', { message: 'Select player to heal' });
+        }
+    },
+    fini(ctx) {
+        const action = ctx.game.action;
+        if (action.player) {
+            ctx.game.players[action.player].corruption -= action.count;
+            if (ctx.game.players[action.player].corruption < 0) {
+                ctx.game.players[action.player].corruption = 0;
+            }
+            ctx.log(`${action.player} heals ${action.count} spaces to ${ctx.game.players[action.player].corruption}`);
+            ctx.resume_previous_state();
+        }
+    },
+};
+
+const action_draw_cards = {
+    init(ctx, args) {
+        ctx.game.action.player = args.player ?? undefined;
+        ctx.game.action.count = args.count ?? 1;
+        ctx.game.action.limit = args.limit ?? 99;
+        // Need to select a player first
+        if (!ctx.game.action.player) {
+            ctx.push_advance_state('action_pick_player', { message: 'Select player to draw cards' });
+        }
+    },
+    fini(ctx) {
+        const action = ctx.game.action;
+        const p = action.player;
+        const player = ctx.game.players[p];
+        const handSize = player.hand.length;
+        const limit = action.limit;
+        // Determine the number of cards to draw
+        const spaceRemaining = Math.max(0, limit - handSize);
+        const drawCount = Math.min(action.count, spaceRemaining);
+        // Give player COUNT cards, but not to exceed LIMIT
+        for (let i = 0; i < drawCount; i++) {
+            give_cards(ctx.game, p, deal_card(ctx.game));
+        }
+        ctx.resume_previous_state();
+    },
+};
+
 export function action_states() {
     return {
         action_discard,
         action_discard_group,
         action_discard_item_group,
         action_roll_die,
+        action_pick_player,
+        action_heal_player,
+        action_draw_cards,
     };
 }
