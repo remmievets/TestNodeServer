@@ -124,7 +124,7 @@ const reactions = [
         action: (ctx, card) => {
             ctx.log('One player: May pass shields to one other player');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
-            // Push special action - TBD
+            ctx.push_advance_state('action_pass_shields');
         },
     },
     {
@@ -225,7 +225,7 @@ const reactions = [
         action: (ctx, card) => {
             ctx.log('One player: May pass 1 card to another player');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
-            // Push special action - TBD
+            ctx.push_advance_state('action_pass_cards');
         },
     },
 ];

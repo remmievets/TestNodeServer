@@ -259,7 +259,10 @@ const action_roll_die = {
         }
     },
     fini(ctx) {
+        const die_roll = ctx.game.action.roll;
         ctx.resume_previous_state();
+        // After resume state, let calling state know the die roll value
+        ctx.game.action.roll = die_roll;
     },
 };
 
@@ -335,6 +338,94 @@ const action_draw_cards = {
     },
 };
 
+const action_pass_cards = {
+    init(ctx, args) {
+        ctx.game.action.player = args.player ?? undefined;
+        ctx.game.action.count = args.count ?? 1;
+        // Need to select a player to receive card
+        if (!ctx.game.action.player) {
+            ctx.push_advance_state('action_pick_player', { message: 'Select player to receive card' });
+        }
+    },
+    prompt(ctx) {
+        if (ctx.game.action.count <= 0) {
+            return null;
+        }
+        // Get list of cards for the entire group of active players
+        const active_players = get_active_player_list(ctx.game);
+        let allCards = [];
+
+        for (const p of active_players) {
+            const cardInfo = count_card_type_by_player(ctx.game, p, 'card');
+            allCards.push(...cardInfo.cardList);
+        }
+
+        return {
+            message: `Select ${ctx.game.action.count} cards to give to ${ctx.game.action.player}`,
+            cards: allCards.slice(),
+        };
+    },
+    card(ctx, cardArray) {
+        for (const card of cardArray) {
+            // Find who is holding card - this does not accept an array
+            const p = find_player_with_card(ctx.game, card);
+            if (p) {
+                discard_cards(ctx.game, p, card);
+                give_cards(ctx.game, ctx.game.action.player, card);
+                ctx.game.action.count -= 1;
+            }
+        }
+    },
+    fini(ctx) {
+        ctx.resume_previous_state();
+    },
+};
+
+const action_pass_shields = {
+    init(ctx, args) {
+        ctx.game.action.source = undefined;
+        ctx.game.action.player = args.player ?? undefined;
+        // Need to select a player to receive shields
+        if (!ctx.game.action.player) {
+            ctx.push_advance_state('action_pick_player', { message: 'Select player to receive shields' });
+        }
+    },
+    prompt(ctx) {
+        // Create a button for each item/player which can be discarded
+        const buttons = {};
+        if (!ctx.game.action.source) {
+            // Any player with shields can be the source
+            const players = get_active_players_with_resource(ctx.game, 'shield');
+            for (const p of players) {
+                buttons[`give ${p}`] = `${p}`;
+            }
+        } else if (ctx.game.players[ctx.game.action.source].shield > 0) {
+            buttons[`give ${ctx.game.action.source}`] = `${ctx.game.action.source}`;
+        } else {
+            return null;
+        }
+        buttons['done'] = 'Done';
+        return {
+            message: `Select player to give shield to (${ctx.game.action.player})`,
+            buttons,
+        };
+    },
+    give(ctx, args) {
+        const source_player = args[0];
+        ctx.log(`${source_player} gives shield to ${ctx.game.action.player}`);
+        // Remove shield from source player
+        ctx.game.players[source_player].shield -= 1;
+        // Add shield to receive player
+        ctx.game.players[ctx.game.action.player].shield += 1;
+    },
+    done(ctx) {
+        ctx.resume_previous_state();
+    },
+    fini(ctx) {
+        ctx.resume_previous_state();
+    },
+};
+
 export function action_states() {
     return {
         action_discard,
@@ -344,5 +435,7 @@ export function action_states() {
         action_pick_player,
         action_heal_player,
         action_draw_cards,
+        action_pass_cards,
+        action_pass_shields,
     };
 }

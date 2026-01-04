@@ -1,6 +1,9 @@
 Work list
 - Buy/play gandalf cards
+    - Need to setup playing of gandalf cards on client
+    - Implement gandalf card in server
 - Play yellow cards
+    - Fix when dice roll card can be played
 - Specific Response Yellow cards
     - Gandalf Magic: After moving the event marker ignore the event
         - Conflict - turn_resolve_tile
