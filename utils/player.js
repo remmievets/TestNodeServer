@@ -15,6 +15,9 @@ const TURN_ORDER = ['Frodo', 'Sam', 'Pippin', 'Merry', 'Fatty'];
 export function count_card_type_by_player(game, p, cardType, allowedColors = ['white', 'grey', 'yellow']) {
     let cardValue = 0;
     let cardArray = [];
+    let cardCostMet = true;
+    const counts = {};
+    counts['wild'] = 0;
 
     // Normalize: always work with an array of card types (strings)
     const cardTypes = Array.isArray(cardType) ? cardType : [cardType];
@@ -41,12 +44,31 @@ export function count_card_type_by_player(game, p, cardType, allowedColors = ['w
                 if (allowedColors.includes(cardData.type)) {
                     cardValue += cardData.count;
                     util.set_add(cardArray, c);
+                    // Keep track of counts for each card type
+                    if (cardData.quest === 'wild' || isFrodoWild) {
+                        counts['wild'] += cardData.count;
+                    } else {
+                        counts[cardData.quest] = (counts[cardData.quest] ?? 0) + cardData.count;
+                    }
                 }
             }
         }
     }
 
-    return { value: cardValue, cardList: cardArray };
+    // If not tracking cards then determine card cost
+    if (!cardType.includes('card')) {
+        for (const quest in cardTypes) {
+            const have = counts[quest] ?? 0;
+            const missing = Math.max(0, 1 - have);
+            if (counts['wild'] < missing) {
+                cardCostMet = false;
+                break;
+            }
+            counts['wild'] -= missing;
+        }
+    }
+
+    return { value: cardValue, cardList: cardArray, costMet: cardCostMet };
 }
 
 export function distribute_card_from_select(game, p, cardInt) {

@@ -38,8 +38,8 @@ const helmsdeep_wormtongue = {
         const plist = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
         for (const p of plist) {
             const cardInfo = count_card_type_by_player(ctx.game, p, ['friendship', 'fight']);
-            if (cardInfo.value >= 2) {
-                buttons[`discard ${p}`] = `${p} (${cardInfo.value}/${cardInfo.cardList.length})`;
+            if (cardInfo.costMet) {
+                buttons[`discard ${p}`] = `${p}`;
             }
         }
         buttons['bad'] = 'Discard Helms Deep feature cards';
@@ -51,7 +51,7 @@ const helmsdeep_wormtongue = {
     discard(ctx, args) {
         ctx.resume_previous_state();
         const p = args[0];
-        ctx.log(`${p} will discard 2 hiding`);
+        ctx.log(`${p} will discard 1 friendship and 1 fight`);
         ctx.push_advance_state('action_discard', { player: p, count: 2, type: ['friendship', 'fight'] });
     },
     bad(ctx) {
