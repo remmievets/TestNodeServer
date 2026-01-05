@@ -22,7 +22,6 @@ export function count_card_type_by_player(game, p, cardType, allowedColors = ['w
 
     for (const c of game.players[p].hand) {
         const cardData = data.cards[c];
-
         // If card then include regardless of quest type
         if (cardType.includes('card')) {
             // Filter by color
@@ -34,7 +33,6 @@ export function count_card_type_by_player(game, p, cardType, allowedColors = ['w
         } else if (cardData.quest && questTypes.some((q) => cardTypes.includes(q))) {
             // Frodo: treat white as wild
             const isFrodoWild = p === 'Frodo' && cardData.type === 'white';
-
             // Determine if we are looking for a quest type
             // Include if card matches a quest we are looking for or the card is wild
             // Frodo special ability - treat white cards as wild

@@ -111,6 +111,7 @@ const lothlorien_test_of_gladriel = {
         ctx.log('EACH PLAYER: Discard WILD otherwise roll die');
         ctx.game.currentPlayer = ctx.game.ringBearer;
         ctx.game.action.playerList = get_active_players_in_order(ctx.game, ctx.game.currentPlayer);
+        ctx.game.action.roll = -1;
     },
     prompt(ctx) {
         // Once all players have completed then exit
@@ -139,8 +140,14 @@ const lothlorien_test_of_gladriel = {
     roll(ctx) {
         // Save current player
         ctx.game.currentPlayer = ctx.game.action.playerList.shift();
+        // If card not played then perform die roll
+        let saved_roll = ctx.game.action.roll;
+        if (saved_roll < 0) {
+            saved_roll = util.roll_d6();
+        }
+        ctx.game.action.roll = -1;
         // Push action to roll die with player prior to switching players
-        ctx.push_advance_state('action_roll_die', { player: ctx.game.currentPlayer, roll: util.roll_d6() });
+        ctx.push_advance_state('action_roll_die', { player: ctx.game.currentPlayer, roll: saved_roll });
     },
     fini(ctx) {
         // Advance to next state

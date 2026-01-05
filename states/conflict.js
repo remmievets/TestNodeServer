@@ -447,22 +447,22 @@ const turn_play_path = {
 
 const turn_play_ring = {
     init(ctx, args) {
-        const symbolsSam = [0, 1, 1, 1, 1, 1, 0];
-        const symbolsOth = [0, 1, 2, 3, 2, 1, 0];
         // Roll die for ring
-        ctx.game.action.roll = util.roll_d6();
-        // Movement from ring is 4 - die roll symbols
-        if (ctx.game.ringBearer === 'Sam') {
-            ctx.game.action.count = 4 - symbolsSam[ctx.game.action.roll];
-        } else {
-            ctx.game.action.count = 4 - symbolsOth[ctx.game.action.roll];
-        }
+        ctx.game.action.roll_return = -1;
         // Resolve die roll results
-        ctx.push_advance_state('action_roll_die', { player: ctx.game.ringBearer, roll: ctx.game.action.roll });
+        ctx.push_advance_state('action_roll_die', { player: ctx.game.ringBearer, roll: ctx.game.action.roll_return });
         // Mark ring used
         ctx.game.conflict.ringUsed = true;
     },
     prompt(ctx) {
+        const symbolsSam = [0, 1, 1, 1, 1, 1, 0];
+        const symbolsOth = [0, 1, 2, 3, 2, 1, 0];
+        // Movement from ring is 4 - die roll symbols
+        if (ctx.game.ringBearer === 'Sam') {
+            ctx.game.action.count = 4 - symbolsSam[ctx.game.action.roll_return];
+        } else {
+            ctx.game.action.count = 4 - symbolsOth[ctx.game.action.roll_return];
+        }
         if (ctx.game.action.count <= 0) {
             return null;
         }
@@ -643,7 +643,7 @@ const conflict_player_destroy_ring_attempt = {
     init(ctx, args) {
         ctx.game.action.player = args.player;
         ctx.log(`${ctx.game.action.player} attempts to destroy the ring`);
-        ctx.push_advance_state('action_roll_die', { player: ctx.game.action.player, roll: util.roll_d6() });
+        ctx.push_advance_state('action_roll_die', { player: ctx.game.action.player });
     },
     fini(ctx) {
         // Is player still alive?

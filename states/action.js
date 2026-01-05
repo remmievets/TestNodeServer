@@ -262,7 +262,7 @@ const action_roll_die = {
         const die_roll = ctx.game.action.roll;
         ctx.resume_previous_state();
         // After resume state, let calling state know the die roll value
-        ctx.game.action.roll = die_roll;
+        ctx.game.action.roll_return = die_roll;
     },
 };
 

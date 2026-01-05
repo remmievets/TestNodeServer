@@ -131,7 +131,7 @@ const shelobslair_pool = {
     prompt(ctx) {
         // Build buttons dynamically
         const buttons = {};
-        const players = get_active_players_with_resource(ctx.game, 'shield');
+        const players = get_active_players_with_resource(ctx.game, 'shield', 5);
         for (const p of players) {
             buttons[`discard ${p}`] = `${p}`;
         }

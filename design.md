@@ -43,3 +43,5 @@ Work list
 - Popup text for cards with card text on yellow cards
 
 Errors
+count_card_type_by_player
+    This does list card types, but does not guarentee that all types have at least one possible play

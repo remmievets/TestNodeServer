@@ -39,7 +39,7 @@ const helmsdeep_wormtongue = {
         for (const p of plist) {
             const cardInfo = count_card_type_by_player(ctx.game, p, ['friendship', 'fight']);
             if (cardInfo.value >= 2) {
-                buttons[`discard ${p}`] = p;
+                buttons[`discard ${p}`] = `${p} (${cardInfo.value}/${cardInfo.cardList.length})`;
             }
         }
         buttons['bad'] = 'Discard Helms Deep feature cards';
