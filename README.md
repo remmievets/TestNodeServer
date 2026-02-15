@@ -12,16 +12,13 @@
 1. Install nvm
 
 ```
+sudo apt update && sudo apt upgrade -y
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-```
-
-2. Reload shell configuration
-
-```
 source ~/.bashrc
+nvm --version
 ```
 
-3. Install Node.js
+2. Install Node.js
 
 ```
 nvm install 18

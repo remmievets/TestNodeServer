@@ -254,6 +254,20 @@ function on_init(view) {
         const cardDiv = document.createElement('div');
         cardDiv.classList.add('card', `card_${card}`);
         ui.gandalf_hand.appendChild(cardDiv);
+        // Yellow card action button
+        if (view.prompt.yellow?.includes(card)) {
+            const cardData = data.cards[card];
+            if (cardData.type === 'yellow') {
+                const btn = document.createElement('button');
+                btn.classList.add('card-yellow');
+                btn.textContent = 'Play';
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    on_yellow_action(card);
+                });
+                cardDiv.appendChild(btn);
+            }
+        }
     }
 
     // Fellowship location

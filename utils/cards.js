@@ -90,6 +90,21 @@ export function play_cards(game, p, cards) {
     };
 }
 
+export function play_gandalf_cards(game, cards) {
+    const cardList = Array.isArray(cards) ? cards : [cards];
+    for (const card of cardList) {
+        // Convert card to int to make sure all cards are integer values
+        const cardInt = parseInt(card, 10);
+        // Ensure the card actually exists in hand
+        if (util.set_has(game.gandalf, cardInt)) {
+            // Create log record of transaction
+            game.log.push(`C${cardInt} is played`);
+            // Remove the card from hand
+            util.set_delete(game.gandalf, cardInt);
+        }
+    }
+}
+
 // Find out who is holding a card or null if no one has the card
 export function find_player_with_card(game, card) {
     // Convert card to int to make sure all cards are integer values

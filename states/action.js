@@ -426,6 +426,30 @@ const action_pass_shields = {
     },
 };
 
+const action_play_gandalf = {
+    init(init, args) {
+        /// TBD - maybe capture card being played
+    },
+    prompt(ctx) {
+        const buttons = {};
+        const players = get_active_players_with_resource(ctx.game, 'shield', 5);
+        for (const p of players) {
+            buttons[`give ${p}`] = `${p}`;
+        }
+        return {
+            message: `Select player pay for gandalf card`,
+            buttons,
+        };
+    },
+    give(ctx, args) {
+        const source_player = args[0];
+        ctx.log(`${source_player} spends 5 shields for gandalf card`);
+        // Remove shield from source player
+        ctx.game.players[source_player].shield -= 5;
+        ctx.resume_previous_state();
+    }
+};
+
 export function action_states() {
     return {
         action_discard,
@@ -437,5 +461,6 @@ export function action_states() {
         action_draw_cards,
         action_pass_cards,
         action_pass_shields,
+        action_play_gandalf,
     };
 }

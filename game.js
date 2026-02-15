@@ -181,11 +181,10 @@ function add_global_buttons(prompt) {
     }
 
     const ctx = make_ctx();
-    const state = states[game.state];
 
     prompt.yellow = [];
     for (const r of reactions) {
-        if (r.when(ctx, state)) {
+        if (r.when(ctx, r.id)) {
             prompt.yellow.push(r.id);
         }
     }
