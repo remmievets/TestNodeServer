@@ -1,4 +1,5 @@
 Work list
+
 - Buy/play gandalf cards
     - Need to setup playing of gandalf cards on client
     - Implement gandalf card in server
@@ -37,11 +38,17 @@ Work list
     - Miruvor: One player: May pass 1 card to another player
     - [Gandalf's letter: Call one Gandalf card without discarding 5 shields]
     - [Fire brand: Defeat any 1 foe]
-- *** Discard feature cards need to prevent giving helms deep feature cards
+- \*\*\* Discard feature cards need to prevent giving helms deep feature cards
 
 - Client Side
 - Popup text for cards with card text on yellow cards
 
+Gandalf cards
+
+    - Foresight - Rearrange top 3 tiles
+    - Magic - after moving the event marker ignore the event
+    - Defiance - sauron move
+
 Errors
 count_card_type_by_player
-    This does list card types, but does not guarentee that all types have at least one possible play
+This does list card types, but does not guarentee that all types have at least one possible play

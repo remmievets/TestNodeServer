@@ -426,7 +426,7 @@ const action_pass_shields = {
     },
 };
 
-const action_play_gandalf = {
+const action_pay_gandalf = {
     init(init, args) {
         /// TBD - maybe capture card being played
     },
@@ -447,7 +447,7 @@ const action_play_gandalf = {
         // Remove shield from source player
         ctx.game.players[source_player].shield -= 5;
         ctx.resume_previous_state();
-    }
+    },
 };
 
 export function action_states() {
@@ -461,6 +461,6 @@ export function action_states() {
         action_draw_cards,
         action_pass_cards,
         action_pass_shields,
-        action_play_gandalf,
+        action_pay_gandalf,
     };
 }

@@ -118,6 +118,11 @@ const lothlorien_test_of_gladriel = {
         if (ctx.game.action.playerList.length <= 0) {
             return null;
         }
+        // Force special action when die roll is populated
+        if (ctx.game.action.roll > 0)
+        {
+            return null;
+        }
         // Build buttons dynamically
         const buttons = {};
         const cardInfo = count_card_type_by_player(ctx.game, ctx.game.action.playerList[0], 'wild');
@@ -138,18 +143,21 @@ const lothlorien_test_of_gladriel = {
         ctx.push_advance_state('action_discard', { player: ctx.game.currentPlayer, count: 1, type: 'wild' });
     },
     roll(ctx) {
-        // Save current player
-        ctx.game.currentPlayer = ctx.game.action.playerList.shift();
-        // If card not played then perform die roll
-        let saved_roll = ctx.game.action.roll;
-        if (saved_roll < 0) {
-            saved_roll = util.roll_d6();
-        }
-        ctx.game.action.roll = -1;
-        // Push action to roll die with player prior to switching players
-        ctx.push_advance_state('action_roll_die', { player: ctx.game.currentPlayer, roll: saved_roll });
+        // Roll die
+        ctx.game.action.roll = util.roll_d6();
     },
     fini(ctx) {
+        // Special case - handle die roll
+        if (ctx.game.action.roll > 0)
+        {
+            const p = ctx.game.action.playerList.shift();
+            const saved_roll = ctx.game.action.roll;
+            ctx.game.action.roll = -1;
+            // Push action to roll die with player prior to switching players
+            ctx.push_advance_state('action_roll_die', { player: p, roll: saved_roll });
+            // Loop back around to prompt
+            return;
+        }
         // Advance to next state
         ctx.advance_state('conflict_board_start', { name: 'Helms Deep', loc: 'helmsdeep' });
     },

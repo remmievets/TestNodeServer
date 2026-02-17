@@ -33,28 +33,29 @@ const reactions = [
         // Gandalf: Foresight
         //  Any conflict state, or when conflict is active
         id: 60,
-        when: (ctx, card) => ctx.game.conflict.active && (get_active_players_with_resource(ctx.game, 'shield', 5).length > 0),
+        when: (ctx, card) => ctx.game.conflict.active && get_active_players_with_resource(ctx.game, 'shield', 5).length > 0,
         action: (ctx, card) => {
             ctx.log('One player: Rearrange top 3 tiles');
             play_gandalf_cards(ctx.game, card);
             // Push special action
             //      TBD
             // Push pick player to pay for gandalf card
-            ctx.push_advance_state('action_play_gandalf', { card: card });
+            ctx.push_advance_state('action_pay_gandalf', { card: card });
         },
     },
     {
         // Gandalf: Magic
         //  turn_resolve_tile
         id: 61,
-        when: (ctx, card) => (ctx.game.state === 'turn_resolve_tile') && (get_active_players_with_resource(ctx.game, 'shield', 5).length > 0),
+        when: (ctx, card) =>
+            ctx.game.state === 'turn_resolve_tile' && get_active_players_with_resource(ctx.game, 'shield', 5).length > 0,
         action: (ctx, card) => {
             ctx.log('After moving the event marker ignore the event');
             play_gandalf_cards(ctx.game, card);
             // Push special action
             //      TBD
             // Push pick player to pay for gandalf card
-            ctx.push_advance_state('action_play_gandalf', { card: card });
+            ctx.push_advance_state('action_pay_gandalf', { card: card });
         },
     },
     {
@@ -67,21 +68,21 @@ const reactions = [
             // Push heal any player action
             ctx.push_advance_state('action_heal_player', { count: 2 });
             // Push pick player to pay for gandalf card
-            ctx.push_advance_state('action_play_gandalf', { card: card });
+            ctx.push_advance_state('action_pay_gandalf', { card: card });
         },
     },
     {
         // Gandalf: Guidance
         //  conflict is active
         id: 63,
-        when: (ctx, card) => ctx.game.conflict.active && (get_active_players_with_resource(ctx.game, 'shield', 5).length > 0),
+        when: (ctx, card) => ctx.game.conflict.active && get_active_players_with_resource(ctx.game, 'shield', 5).length > 0,
         action: (ctx, card) => {
             ctx.log('Active player: Wild 2');
             play_gandalf_cards(ctx.game, card);
             // Push action to play 2 wild card in value
             ctx.push_advance_state('turn_play_path', { path: 'wild', value: 2 });
             // Push pick player to pay for gandalf card
-            ctx.push_advance_state('action_play_gandalf', { card: card });
+            ctx.push_advance_state('action_pay_gandalf', { card: card });
         },
     },
     {
@@ -94,36 +95,35 @@ const reactions = [
             // Push draw cards
             ctx.push_advance_state('action_draw_cards', { count: 4 });
             // Push pick player to pay for gandalf card
-            ctx.push_advance_state('action_play_gandalf', { card: card });
+            ctx.push_advance_state('action_pay_gandalf', { card: card });
         },
     },
     {
         // Gandalf: Defiance
         //  Multiple - on sauron move
         id: 65,
-        when: (ctx, card) => (get_active_players_with_resource(ctx.game, 'shield', 5).length > 0), // TBD
+        when: (ctx, card) => get_active_players_with_resource(ctx.game, 'shield', 5).length > 0, // TBD
         action: (ctx, card) => {
             ctx.log('Sauron does not move');
             play_gandalf_cards(ctx.game, card);
             // Push special action
             //      TBD
             // Push pick player to pay for gandalf card
-            ctx.push_advance_state('action_play_gandalf', { card: card });
+            ctx.push_advance_state('action_pay_gandalf', { card: card });
         },
     },
     {
         // Gandalf: Integrity
         //  Multiple - prior to a die roll
         id: 66,
-        when: (ctx, card) => (get_active_players_with_resource(ctx.game, 'shield', 5).length > 0), // TBD
+        when: (ctx, card) => ctx.game.action.roll < 0 && get_active_players_with_resource(ctx.game, 'shield', 5).length > 0,
         action: (ctx, card) => {
             ctx.log('Instead of rolling the die, place it with the white side up');
             play_gandalf_cards(ctx.game, card);
             // Push resolve die roll
-            //      TBD
             ctx.game.action.roll = 6;
             // Push pick player to pay for gandalf card
-            ctx.push_advance_state('action_play_gandalf', { card: card });
+            ctx.push_advance_state('action_pay_gandalf', { card: card });
         },
     },
     {
@@ -162,7 +162,7 @@ const reactions = [
         // Phial
         //  turn_reveal_tiles
         id: 86,
-        when: (ctx, card) => (ctx.game.state === 'turn_resolve_tile') && (find_player_with_card(ctx.game, card) != null),
+        when: (ctx, card) => ctx.game.state === 'turn_resolve_tile' && find_player_with_card(ctx.game, card) != null,
         action: (ctx, card) => {
             ctx.log('Active player: Do not reveal the next tile');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
@@ -184,7 +184,7 @@ const reactions = [
         // Belt
         //  Multiple - Prior to rolling a die
         id: 96,
-        when: (ctx, card) => (ctx.game.action.roll < 0) && (find_player_with_card(ctx.game, card) != null), // Still issues here - TBD
+        when: (ctx, card) => ctx.game.action.roll < 0 && find_player_with_card(ctx.game, card) != null,
         action: (ctx, card) => {
             ctx.log('One player: Do not roll one die');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
@@ -195,7 +195,7 @@ const reactions = [
         // Mithril
         //  action_roll_die
         id: 102,
-        when: (ctx, card) => (ctx.game.state === 'action_roll_die') && (find_player_with_card(ctx.game, card) != null),
+        when: (ctx, card) => ctx.game.state === 'action_roll_die' && find_player_with_card(ctx.game, card) != null,
         action: (ctx, card) => {
             ctx.log('One player: Ignore effects after one die roll');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
@@ -207,7 +207,7 @@ const reactions = [
         // Athelas
         //  conflict_decent_into_darkness
         id: 106,
-        when: (ctx, card) => (ctx.game.state === 'conflict_decent_into_darkness') && (find_player_with_card(ctx.game, card) != null),
+        when: (ctx, card) => ctx.game.state === 'conflict_decent_into_darkness' && find_player_with_card(ctx.game, card) != null,
         action: (ctx, card) => {
             ctx.log('One player: Ignore any effects of missing life tokens once only');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
@@ -219,7 +219,7 @@ const reactions = [
         // Staff
         //  turn_resolve_tile
         id: 108,
-        when: (ctx, card) => (ctx.game.state === 'turn_resolve_tile') && (find_player_with_card(ctx.game, 108) != null),
+        when: (ctx, card) => ctx.game.state === 'turn_resolve_tile' && find_player_with_card(ctx.game, 108) != null,
         action: (ctx, card) => {
             ctx.log('Ignore one tile showing a sundial and three items');
             play_cards(ctx.game, find_player_with_card(ctx.game, card), card);
