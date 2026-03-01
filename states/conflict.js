@@ -144,6 +144,8 @@ const turn_resolve_tile = {
     init(ctx, args) {
         // Save the tile we are attempting to resolve
         ctx.game.action.lasttile = args.lasttile;
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 1;
     },
     prompt(ctx) {
         // Build buttons dynamically
@@ -264,8 +266,8 @@ const turn_resolve_tile = {
         ctx.advance_state('turn_reveal_tiles');
     },
     sauron(ctx) {
-        ctx.game.sauron -= 1;
-        ctx.log('Sauron moves to ' + ctx.game.sauron);
+        ctx.game.sauron -= ctx.game.action.sauron_move;
+        ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
         // Draw another tile
         ctx.advance_state('turn_reveal_tiles');
     },

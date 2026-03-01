@@ -65,13 +65,15 @@ const helmsdeep_riders_of_rohan = {
     init(ctx, args) {
         ctx.log('If Friendship is complete then active player receives the Riders of Rohan card');
         ctx.log('Otherwise move Sauron and Ring-bearer rolls die');
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 1;
     },
     fini(ctx) {
         ctx.resume_previous_state();
         if (ctx.game.conflict.friendship < 7) {
             ctx.log('First part of friendship is NOT complete');
-            ctx.game.sauron -= 1;
-            ctx.log('Sauron advances to space ' + ctx.game.sauron);
+            ctx.game.sauron -= ctx.game.action.sauron_move;
+            ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
             ctx.push_advance_state('action_roll_die', { player: ctx.game.ringBearer });
         } else if (ctx.game.globals.discard_helms_deep_feature_cards) {
             ctx.log('First part of friendship is complete');
@@ -155,6 +157,8 @@ const helmsdeep_orcs_storm = {
     init(ctx, args) {
         ctx.log('Group discard heart, sun, and ring tokens');
         ctx.log('Otherwise move Sauron 2 spaces');
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 2;
     },
     prompt(ctx) {
         let ringCount = 0;
@@ -182,8 +186,8 @@ const helmsdeep_orcs_storm = {
         ctx.push_advance_state('action_discard_item_group', { count: 3, type: 'life_token' });
     },
     sauron(ctx) {
-        ctx.game.sauron -= 2;
-        ctx.log('Sauron advances to space ' + ctx.game.sauron);
+        ctx.game.sauron -= ctx.game.action.sauron_move;
+        ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
     },
     fini(ctx) {
@@ -195,11 +199,12 @@ const helmsdeep_orcs_conquer = {
     init(ctx, args) {
         ctx.log('If second Travelling complete then move Sauron 2 spaces');
         ctx.log('Otherwise move Sauron 2 spaces and ring-bearer 2 dice');
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 2;
     },
     fini(ctx) {
-        ctx.resume_previous_state();
-        ctx.game.sauron -= 2;
-        ctx.log('Sauron advances to space ' + ctx.game.sauron);
+        ctx.game.sauron -= ctx.game.action.sauron_move;
+        ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
         if (ctx.game.conflict.travel < 10) {
             ctx.log('Travelling is NOT complete');
             ctx.push_advance_state('action_roll_die', { player: ctx.game.ringBearer });
@@ -207,6 +212,7 @@ const helmsdeep_orcs_conquer = {
         } else {
             ctx.log('Travelling is complete');
         }
+        ctx.resume_previous_state();
     },
 };
 

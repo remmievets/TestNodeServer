@@ -130,6 +130,8 @@ const bagend_nazgul_appears = {
         ctx.log('=! Nazgul Appears');
         ctx.log('One player must discard 2 hiding or move sauron');
         ctx.game.currentPlayer = ctx.game.ringBearer;
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 1;
     },
     prompt(ctx) {
         // Build buttons dynamically
@@ -156,8 +158,8 @@ const bagend_nazgul_appears = {
         ctx.push_advance_state('action_discard', { count: 2, type: 'hide' });
     },
     sauron(ctx) {
-        ctx.game.sauron -= 1;
-        ctx.log('Sauron advances to space ' + ctx.game.sauron);
+        ctx.game.sauron -= ctx.game.action.sauron_move;
+        ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
         ctx.advance_state('rivendell_elrond');
     },
 };

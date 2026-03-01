@@ -207,6 +207,8 @@ const mordor_dark_forces = {
     init(ctx, args) {
         ctx.log('Group discards 7 cards');
         ctx.log('Otherwise, move sauron 3 spaces');
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 3;
     },
     prompt(ctx) {
         // Build buttons dynamically
@@ -227,8 +229,8 @@ const mordor_dark_forces = {
         ctx.push_advance_state('action_discard_group', { count: 7, type: 'card' });
     },
     sauron(ctx) {
-        ctx.game.sauron -= 3;
-        ctx.log('Sauron advances to space ' + ctx.game.sauron);
+        ctx.game.sauron -= ctx.game.action.sauron_move;
+        ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
     },
 };

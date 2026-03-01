@@ -30,6 +30,8 @@ const moria_speak_friend = {
     init(ctx, args) {
         ctx.log('Group discard friendship and wild');
         ctx.log('Otherwise, sauron moves 1 space');
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 1;
     },
     prompt(ctx) {
         // Build buttons dynamically
@@ -59,8 +61,8 @@ const moria_speak_friend = {
         ctx.push_advance_state('action_discard_group', { count: 2, type: ['friendship', 'wild'] });
     },
     sauron(ctx) {
-        ctx.game.sauron -= 1;
-        ctx.log('Sauron advances to space ' + ctx.game.sauron);
+        ctx.game.sauron -= ctx.game.action.sauron_move;
+        ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
     },
 };
@@ -78,8 +80,7 @@ const moria_watcher = {
             return null;
         }
         // Force special action when die roll is populated
-        if (ctx.game.action.roll > 0)
-        {
+        if (ctx.game.action.roll > 0) {
             return null;
         }
         // Build buttons dynamically
@@ -106,8 +107,7 @@ const moria_watcher = {
     },
     fini(ctx) {
         // Special case - handle die roll
-        if (ctx.game.action.roll > 0)
-        {
+        if (ctx.game.action.roll > 0) {
             const p = ctx.game.action.playerList.shift();
             const saved_roll = ctx.game.action.roll;
             ctx.game.action.roll = -1;
@@ -128,6 +128,8 @@ const moria_stone = {
         ctx.game.action.card = deal_card(ctx.game);
         ctx.game.action.type = data.cards[ctx.game.action.card].quest;
         ctx.game.action.count = 2;
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 1;
     },
     prompt(ctx) {
         if (ctx.game.action.count <= 0) {
@@ -153,8 +155,8 @@ const moria_stone = {
         }
     },
     sauron(ctx) {
-        ctx.game.sauron -= 1;
-        ctx.log('Sauron advances to space ' + ctx.game.sauron);
+        ctx.game.sauron -= ctx.game.action.sauron_move;
+        ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
         // Force next event to occur
         ctx.game.conflict.eventValue += 1;
@@ -172,13 +174,15 @@ const moria_trapped = {
     init(ctx, args) {
         ctx.log('Travelling and Hiding must be complete');
         ctx.log('Otherwise, Sauron moves 2 and ring bearer rolls die');
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 2;
     },
     fini(ctx) {
         ctx.resume_previous_state();
         // Check if negative event should occur
         if (ctx.game.conflict.travel < 7 || ctx.game.conflict.hide < 7) {
-            ctx.game.sauron -= 2;
-            ctx.log('Sauron advances to space ' + ctx.game.sauron);
+            ctx.game.sauron -= ctx.game.action.sauron_move;
+            ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
             ctx.push_advance_state('action_roll_die', { player: ctx.game.ringBearer });
         }
     },
@@ -188,6 +192,8 @@ const moria_orcs_attack = {
     init(ctx, args) {
         ctx.log('Group discard 5 fight');
         ctx.log('Otherwise, Sauron moves 2');
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 2;
     },
     prompt(ctx) {
         // Build buttons dynamically
@@ -214,8 +220,8 @@ const moria_orcs_attack = {
         ctx.push_advance_state('action_discard_group', { count: 5, type: 'fight' });
     },
     sauron(ctx) {
-        ctx.game.sauron -= 2;
-        ctx.log('Sauron advances to space ' + ctx.game.sauron);
+        ctx.game.sauron -= ctx.game.action.sauron_move;
+        ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
     },
 };

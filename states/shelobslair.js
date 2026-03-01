@@ -127,6 +127,8 @@ const shelobslair_pool = {
     init(ctx, args) {
         ctx.log('One player discard 5 shields then each player draws 1 Hobbit card');
         ctx.log('Otherwise move sauron 2 spaces');
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 2;
     },
     prompt(ctx) {
         // Build buttons dynamically
@@ -153,8 +155,8 @@ const shelobslair_pool = {
         ctx.resume_previous_state();
     },
     sauron(ctx) {
-        ctx.game.sauron -= 2;
-        ctx.log('Sauron advances to space ' + ctx.game.sauron);
+        ctx.game.sauron -= ctx.game.action.sauron_move;
+        ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
     },
 };
@@ -211,6 +213,8 @@ const shelobslair_appears = {
     init(ctx, args) {
         ctx.log('Active player rolls the die twice');
         ctx.log('Otherwise move sauron 2 spaces');
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 1;
     },
     prompt(ctx) {
         // Build buttons dynamically
@@ -229,8 +233,8 @@ const shelobslair_appears = {
         ctx.push_advance_state('action_roll_die', { player: ctx.game.currentPlayer });
     },
     sauron(ctx) {
-        ctx.game.sauron -= 2;
-        ctx.log('Sauron advances to space ' + ctx.game.sauron);
+        ctx.game.sauron -= ctx.game.action.sauron_move;
+        ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
     },
 };
@@ -239,6 +243,8 @@ const shelobslair_attacks = {
     init(ctx, args) {
         ctx.log('Group discards 7 fight cards');
         ctx.log('Otherwise move sauron 3 spaces');
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 3;
     },
     prompt(ctx) {
         // Build buttons dynamically
@@ -265,8 +271,8 @@ const shelobslair_attacks = {
         ctx.push_advance_state('action_discard_group', { count: 7, type: 'fight' });
     },
     sauron(ctx) {
-        ctx.game.sauron -= 3;
-        ctx.log('Sauron advances to space ' + ctx.game.sauron);
+        ctx.game.sauron -= ctx.game.action.sauron_move;
+        ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
         ctx.resume_previous_state();
     },
 };

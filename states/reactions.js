@@ -52,8 +52,10 @@ const reactions = [
         action: (ctx, card) => {
             ctx.log('After moving the event marker ignore the event');
             play_gandalf_cards(ctx.game, card);
-            // Push special action
-            //      TBD
+            // Advance event value without resolving event
+            ctx.game.conflict.eventValue += 1;
+            // Go back to revealing tiles
+            ctx.advance_state('turn_reveal_tiles');
             // Push pick player to pay for gandalf card
             ctx.push_advance_state('action_pay_gandalf', { card: card });
         },
@@ -102,12 +104,12 @@ const reactions = [
         // Gandalf: Defiance
         //  Multiple - on sauron move
         id: 65,
-        when: (ctx, card) => get_active_players_with_resource(ctx.game, 'shield', 5).length > 0, // TBD
+        when: (ctx, card) => ctx.game.action.sauron_move > 0 && get_active_players_with_resource(ctx.game, 'shield', 5).length > 0,
         action: (ctx, card) => {
             ctx.log('Sauron does not move');
             play_gandalf_cards(ctx.game, card);
             // Push special action
-            //      TBD
+            ctx.game.action.sauron_move = 0;
             // Push pick player to pay for gandalf card
             ctx.push_advance_state('action_pay_gandalf', { card: card });
         },

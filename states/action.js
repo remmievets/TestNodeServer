@@ -194,6 +194,8 @@ const action_roll_die = {
         }
         // Resolution of die has not been completed
         ctx.game.action.resolved = false;
+        // Indicate potential sauron move in this action
+        ctx.game.action.sauron_move = 1;
     },
     prompt(ctx) {
         const buttons = {};
@@ -250,8 +252,8 @@ const action_roll_die = {
                 ctx.push_advance_state('action_discard', { player: p, count: discardCount, type: 'card' });
                 break;
             case 5:
-                ctx.game.sauron -= 1;
-                ctx.log('Sauron advances to space ' + ctx.game.sauron);
+                ctx.game.sauron -= ctx.game.action.sauron_move;
+                ctx.log('Sauron advances ' + ctx.game.action.sauron_move + ' to space ' + ctx.game.sauron);
                 break;
             default:
                 // No damage

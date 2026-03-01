@@ -47,7 +47,6 @@ Gandalf cards
 
     - Foresight - Rearrange top 3 tiles
     - Magic - after moving the event marker ignore the event
-    - Defiance - sauron move
 
 Errors
 count_card_type_by_player

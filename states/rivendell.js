@@ -112,8 +112,7 @@ const rivendell_fellowship = {
             return null;
         }
         // Force special action when die roll is populated
-        if (ctx.game.action.roll > 0)
-        {
+        if (ctx.game.action.roll > 0) {
             return null;
         }
         // Build buttons dynamically
@@ -140,8 +139,7 @@ const rivendell_fellowship = {
     },
     fini(ctx) {
         // Special case - handle die roll
-        if (ctx.game.action.roll > 0)
-        {
+        if (ctx.game.action.roll > 0) {
             const p = ctx.game.action.playerList.shift();
             const saved_roll = ctx.game.action.roll;
             ctx.game.action.roll = -1;
